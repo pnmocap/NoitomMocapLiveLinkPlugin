@@ -38,6 +38,7 @@ public class NeuronLiveLink : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+                "MocapApiAdapter",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
