@@ -3,6 +3,7 @@
 
 #include "CoreMinimal.h"
 #include "MocapStructs.h"
+#include "GameFramework/Actor.h"
 #include "MocapAppManager.generated.h"
 
 UCLASS()
@@ -12,11 +13,15 @@ class AMocapAppManager : public AActor
 
 public:
     AMocapAppManager();
+    AMocapAppManager(const FObjectInitializer& ObjectInitializer);
 
     ~AMocapAppManager();
 
     UFUNCTION(BlueprintCallable, Category = MocapApi)
     AMocapAppManager* GetInstance();
+
+    UPROPERTY(Category = CaliActor, VisibleAnywhere, BlueprintReadOnly)
+        class USceneComponent* DefaultSceneRoot;
 
     // Called when the game starts
     virtual void BeginPlay() override;
@@ -57,12 +62,15 @@ public:
     UMocapApp* GetDefaultMocapApp();
 
     UFUNCTION(BlueprintCallable, Category=MocapApi)
-    FString GetDefaultAppName() { return TEXT("Default"); }
+    FString GetDefaultAppName() const { return TEXT("Default"); }
 
+    UFUNCTION(BlueprintCallable, Category = MocapApi)
+    void DumpApp(const FString& AppName);
 private:
-    static AMocapAppManager* s_instance;
-    
+ 
     void DestroyApp(UMocapApp*App);
 
     TMap<FString, UMocapApp*> Applications;
+
+    void InitializeDefaults();
 };

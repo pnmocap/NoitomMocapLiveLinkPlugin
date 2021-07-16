@@ -211,6 +211,7 @@ public:
 
     const FString GetLastErrorMessage();
 
+    void DumpData();
 private:
     bool IsConnecting = false;
     int LastError = 0;
@@ -219,7 +220,10 @@ private:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = true), Category = "MocapApi")
     FString AppHandleInternal;// store handler use string because uint64 cannot expose to blueprint
 
+    uint64 AppHandle;
+
     bool HandleAvatarUpdateEvent(uint64 Avatarhandle);
+    void CheckAvatarJoint(uint64 Avatarhandle, uint64 JointHandle, const FMocapAvatar& avatar);
 
     bool HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle);
 

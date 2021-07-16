@@ -1,5 +1,6 @@
 #include "MocapStructs.h"
 #include "MocapApi.h"
+#include "MocapApiLog.h"
 #include "Misc/ScopeLock.h"
 
 #define ReturnIFError(...) if (mcpError!=MocapApi::Error_None) { \
@@ -137,11 +138,18 @@ bool UMocapApp::Connect()
         ReturnFalseIFError();
     }
 
+    AppHandle = appcliation;
     AppHandleInternal = FString::Printf(TEXT("%lld"), appcliation);
 
     mcpError = mcpApplication->OpenApplication(appcliation);
     ReturnFalseIFError();
 
+    IsConnecting = true;
+    UE_LOG(LogMocapApi, Log, TEXT("App %s: %llu handle %s Connect ok."),
+        *AppName,
+        *GetConnectionString(),
+        AppHandle
+    );
     return true;
 }
 
@@ -152,7 +160,7 @@ void UMocapApp::Disconnect()
     ExtraErrorMsg = TEXT("");
 
     MocapApi::MCPApplicationHandle_t appcliation;
-    appcliation = FCString::Strtoui64(*AppHandleInternal, nullptr, 10);
+    appcliation = AppHandle;
 
     MocapApi::IMCPApplication* mcpApplication = nullptr;
     MocapApi::EMCPError mcpError = MocapApi::MCPGetGenericInterface(MocapApi::IMCPApplication_Version,
@@ -162,7 +170,12 @@ void UMocapApp::Disconnect()
     mcpError = mcpApplication->CloseApplication(appcliation);
     ReturnIFError();
 
+    AppHandle = 0;
     AppHandleInternal = TEXT("0");
+    IsConnecting = false;
+    UE_LOG(LogMocapApi, Log, TEXT("App %s Disconnect."),
+        *AppName
+    );
 }
 
 bool UMocapApp::PollEvents()
@@ -172,7 +185,7 @@ bool UMocapApp::PollEvents()
     ExtraErrorMsg = TEXT("");
 
     MocapApi::MCPApplicationHandle_t appcliation;
-    appcliation = FCString::Strtoui64(*AppHandleInternal, nullptr, 10);
+    appcliation = AppHandle;
 
     MocapApi::IMCPApplication* mcpApplication = nullptr;
     MocapApi::EMCPError mcpError = MocapApi::MCPGetGenericInterface(MocapApi::IMCPApplication_Version,
@@ -343,6 +356,11 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
         reinterpret_cast<void**>(&avatarMgr));
     ReturnFalseIFError();
 
+    MocapApi::IMCPJoint * mcpJoint = nullptr;
+    mcpError = MocapApi::MCPGetGenericInterface(MocapApi::IMCPJoint_Version,
+        reinterpret_cast<void **>(&mcpJoint));
+    ReturnFalseIFError();
+
     const char* AvatarName = nullptr;
     mcpError = avatarMgr->GetAvatarName(&AvatarName, Avatarhandle);
     ReturnFalseIFError();
@@ -359,7 +377,10 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
     MocapApi::MCPJointHandle_t RootJoint = 0;
     mcpError = avatarMgr->GetAvatarRootJoint(&RootJoint, Avatarhandle);
     ReturnFalseIFError();
-    avatar.RootJointTag = RootJoint;
+    MocapApi::EMCPJointTag RootJointTag;
+    mcpJoint->GetJointTag(&RootJointTag, RootJoint);
+    avatar.RootJointTag = RootJointTag;
+    avatar.BoneParents[RootJointTag] = MocapApi::JointTag_Invalid;
 
     uint32 AvatarIdx;
     mcpError = avatarMgr->GetAvatarIndex(&AvatarIdx, Avatarhandle);
@@ -373,12 +394,7 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
     {
         TArray<uint64> JointsHandle;
         JointsHandle.SetNum(Count);
-        mcpError = avatarMgr->GetAvatarJoints(nullptr, &Count, Avatarhandle);
-        ReturnFalseIFError();
-
-        MocapApi::IMCPJoint * mcpJoint = nullptr;
-        mcpError = MocapApi::MCPGetGenericInterface(MocapApi::IMCPJoint_Version,
-            reinterpret_cast<void **>(&mcpJoint));
+        mcpError = avatarMgr->GetAvatarJoints(JointsHandle.GetData(), &Count, Avatarhandle);
         ReturnFalseIFError();
 
         MocapApi::EMCPJointTag jointTag;
@@ -407,6 +423,8 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
         }
     }
     
+    //CheckAvatarJoint(Avatarhandle, RootJoint, avatar);
+
     // rigid bodies
     uint32 rigidbodyCount = 64;
     mcpError = avatarMgr->GetAvatarRigidBodies(nullptr, &rigidbodyCount, Avatarhandle);
@@ -425,6 +443,72 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
     }
 
     return true;
+}
+
+void UMocapApp::CheckAvatarJoint(uint64 Avatarhandle, uint64 JointHandle, const FMocapAvatar& avatar)
+{
+#define CheckName(A, B) { \
+    FString N = UTF8_TO_TCHAR(B); \
+    FString M(A.ToString()); \
+    if (!N.Equals(M, ESearchCase::IgnoreCase)) { \
+        UE_LOG(LogMocapApi, Error, TEXT("NameCheck Failed %d : except %s got %s"), jointTag, *M, *N); \
+    } \
+}
+#define CheckVector(A, BX, BY, BZ) { \
+    FVector V(BX, BY, BZ); \
+    if (!V.Equals(A, 0.001)) { \
+        UE_LOG(LogMocapApi, Error, TEXT("VectorCheck Failed %d : except %s got %s"), jointTag, *A.ToString(), *V.ToString());\
+    } \
+}
+#define CheckQuat(A, BX, BY, BZ, BW) { \
+    FQuat Q(BX, BY, BZ, BW); \
+    if (!Q.Equals(A, 0.001)) { \
+        UE_LOG(LogMocapApi, Error, TEXT("QuatCheck Failed %d : except %s got %s"), jointTag, *A.ToString(), *Q.ToString());\
+    } \
+}
+#define CheckParent(A, B) { \
+    if (!A==B) { \
+        UE_LOG(LogMocapApi, Error, TEXT("ParentCheck Failed %d : except %d got %d"), jointTag, A, B); \
+    } \
+}
+
+    MocapApi::IMCPJoint* jointMgr = nullptr;
+    MocapApi::EMCPError mcpError = MocapApi::MCPGetGenericInterface(MocapApi::IMCPJoint_Version,
+        reinterpret_cast<void**>(&jointMgr));
+
+    MocapApi::EMCPJointTag jointTag;
+    jointMgr->GetJointTag(&jointTag, JointHandle);
+
+    const char* name = nullptr;
+    jointMgr->GetJointName(&name, JointHandle);
+    CheckName(avatar.BoneNames[jointTag], name);
+
+    float x, y, z, w;
+    jointMgr->GetJointLocalPosition(&x, &y, &z, JointHandle);
+    CheckVector(avatar.LocalPositions[jointTag], x, y, z);
+
+    jointMgr->GetJointLocalRotation(&x, &y, &z, &w, JointHandle);
+    CheckQuat(avatar.LocalRotation[jointTag], x, y, z, w);
+
+    uint32_t numberOfChildren = 0;
+    jointMgr->GetJointChild(nullptr, &numberOfChildren, JointHandle);
+    if (numberOfChildren > 0) {
+        TArray<MocapApi::MCPJointHandle_t> joints;
+        joints.SetNumZeroed(numberOfChildren);
+        jointMgr->GetJointChild(&joints[0], &numberOfChildren, JointHandle);
+
+        MocapApi::EMCPJointTag ChildTag;
+        for (auto j : joints) {
+            jointMgr->GetJointTag(&ChildTag, j);
+            CheckParent(jointTag, avatar.BoneParents[ChildTag]);
+            CheckAvatarJoint(Avatarhandle, j, avatar);
+        }
+    }
+
+#undef CheckName
+#undef CheckVector
+#undef CheckQuat
+#undef CheckParent
 }
 
 bool UMocapApp::HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle)
@@ -446,4 +530,45 @@ bool UMocapApp::HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle)
     RigidBodyMgr->GetRigidBodyJointTag(&Tag, RigidBodyHandle);
     rigid.JointTag = Tag;
     return true;
+}
+
+void UMocapApp::DumpData()
+{
+    UE_LOG(LogMocapApi, Log, TEXT("Name: %s %s Connected: %s"),
+        *AppName,
+        *GetConnectionString(),
+        IsConnecting? TEXT("TRUE"): TEXT("FALSE")
+    );
+    UE_LOG(LogMocapApi, Log, TEXT("RigidBodies Num: %d Avatars Num: %d"),
+        RigidBodies.Num(),
+        Avatars.Num()
+    );
+    UE_LOG(LogMocapApi, Log, TEXT("==== RigidBodies ===="));
+    for (auto& rigid : RigidBodies)
+    {
+        const FMocapRigidBody& r = rigid.Value;
+        UE_LOG(LogMocapApi, Log, TEXT("%d: %d L%s R%s"),
+            r.ID, r.Status, *r.Position.ToString(), *r.Rotation.ToString()
+        );
+    }
+    UE_LOG(LogMocapApi, Log, TEXT("==== Avatars ===="));
+    for (auto& It : Avatars)
+    {
+        const FMocapAvatar& a = It.Value;
+        UE_LOG(LogMocapApi, Log, TEXT("%d: %s %d"),
+            a.Index, *a.Name, a.RootJointTag
+        );
+        const int JointCount = a.BoneNames.Num();
+        for (int i = 0; i < JointCount; ++i)
+        {
+            UE_LOG(LogMocapApi, Log, TEXT("%d(%s):%d L(%s) R(%s) D(%s)"),
+                i,
+                *a.BoneNames[i].ToString(),
+                a.BoneParents[i],
+                *a.LocalPositions[i].ToString(),
+                *a.LocalRotation[i].ToString(),
+                *a.DefaultLocalPositions[i].ToString()
+            );
+        }
+    }
 }

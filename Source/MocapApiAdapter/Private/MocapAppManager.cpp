@@ -1,19 +1,37 @@
 #include "MocapAppManager.h"
+#include "MocapApiLog.h"
 
-AMocapAppManager* AMocapAppManager::s_instance = nullptr;
+static AMocapAppManager* s_instance = nullptr;
 
 AMocapAppManager::AMocapAppManager()
 {
+    InitializeDefaults();
+}
+
+AMocapAppManager::AMocapAppManager(const FObjectInitializer& ObjectInitializer)
+{
+    // Forward to default constructor (we don't use ObjectInitializer for anything, this is for compatibility with inherited classes that call Super( ObjectInitializer )
+    InitializeDefaults();
+}
+
+void AMocapAppManager::InitializeDefaults()
+{
     // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
     PrimaryActorTick.bCanEverTick = true;
-    
+    PrimaryActorTick.bStartWithTickEnabled = true;
+    PrimaryActorTick.SetTickFunctionEnable(true);
+
+    DefaultSceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+    SetRootComponent(DefaultSceneRoot);
+
     if (s_instance == nullptr)
     {
         s_instance = this;
     }
     else
     {
-        UE_LOG(LogTemp, Error, TEXT("Create more than one AMocapAppManager"));
+        UE_LOG(LogMocapApi, Error, TEXT("Create more than one AMocapAppManager Already has %s but current %s"), *s_instance->GetFName().ToString(), *this->GetFName().ToString());
+        s_instance = this;
     }
 }
 
@@ -29,6 +47,7 @@ AMocapAppManager* AMocapAppManager::GetInstance()
 
 void AMocapAppManager::BeginPlay()
 {
+    Super::BeginPlay();
     if (AutoStartDefault)
     {
         StartDefaultApplication();
@@ -37,6 +56,7 @@ void AMocapAppManager::BeginPlay()
 
 void AMocapAppManager::Tick(float DeltaSeconds)
 {
+    Super::Tick(DeltaSeconds);
     for (auto& It : Applications)
     {
         It.Value->PollEvents();
@@ -46,6 +66,7 @@ void AMocapAppManager::Tick(float DeltaSeconds)
 void AMocapAppManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     DestroyAllApplications();
+    Super::EndPlay(EndPlayReason);
 }
 
 bool AMocapAppManager::StartDefaultApplication()
@@ -120,6 +141,15 @@ UMocapApp* AMocapAppManager::GetMocapApp(const FString& AppName)
 UMocapApp* AMocapAppManager::GetDefaultMocapApp()
 {
     return GetMocapApp(GetDefaultAppName());
+}
+
+void AMocapAppManager::DumpApp(const FString& AppName)
+{
+    UMocapApp** App = Applications.Find(AppName);
+    if (App)
+    {
+        (*App)->DumpData();
+    }
 }
 
 void AMocapAppManager::DestroyApp(UMocapApp*App)
