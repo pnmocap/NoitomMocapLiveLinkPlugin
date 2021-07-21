@@ -8,7 +8,7 @@
 
 class FNeuronLiveLinkSource;
 
-class FMocapAppClient : FRunnable
+class FMocapAppClient : public FRunnable
 {
 public:
     FMocapAppClient(bool IsUDP, const FString& RemoteIP, int Port, const FString& RotationOrder);

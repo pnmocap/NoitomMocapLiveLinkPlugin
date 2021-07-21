@@ -66,7 +66,7 @@ bool FMocapAppClient::Init()
 
 uint32 FMocapAppClient::Run()
 {
-    while (true)
+    while (bRunning)
     {
         PollEvents();
         FPlatformProcess::Sleep(1.0f/60);
@@ -170,8 +170,10 @@ void FMocapAppClient::PollEvents()
                     BaseData->MetaData.SceneTime = QualifiedTime;
 
                     FLiveLinkTransformFrameData& TransformData = *Frame.Cast<FLiveLinkTransformFrameData>();
-                    TransformData.Transform.SetLocation(RigidData->Position);
-                    TransformData.Transform.SetRotation(RigidData->Rotation);
+                    const FVector& P = RigidData->Position;
+                    const FQuat& Q = RigidData->Rotation;
+                    TransformData.Transform.SetLocation(P);
+                    TransformData.Transform.SetRotation(Q);
 
                     Source->PushTrackerFrameData(Subject, Frame);
                 }
