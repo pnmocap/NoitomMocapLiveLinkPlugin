@@ -26,6 +26,9 @@ public class NeuronLiveLink : ModuleRules
 			new string[]
 			{
 				"Core",
+                "LiveLinkInterface",
+                "LiveLink",
+                "Networking",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -39,6 +42,8 @@ public class NeuronLiveLink : ModuleRules
 				"Slate",
 				"SlateCore",
                 "MocapApiAdapter",
+                "Sockets",
+                "InputCore",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

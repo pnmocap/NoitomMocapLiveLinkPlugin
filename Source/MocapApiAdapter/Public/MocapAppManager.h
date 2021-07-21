@@ -7,7 +7,7 @@
 #include "MocapAppManager.generated.h"
 
 UCLASS()
-class AMocapAppManager : public AActor
+class MOCAPAPIADAPTER_API AMocapAppManager : public AActor
 {
     GENERATED_BODY()
 

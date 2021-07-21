@@ -23,12 +23,14 @@ FMocapAvatar::FMocapAvatar()
     const int Count = MocapApi::JointTag_JointsCount;
     BoneNames.SetNum(Count);
     BoneParents.SetNum(Count);
+    HasLocalPositions.SetNum(Count);
     DefaultLocalPositions.SetNum(Count);
     LocalPositions.SetNum(Count);
     LocalRotation.SetNum(Count);
 
     for (int i = 0; i < Count; ++i)
     {
+        HasLocalPositions[i] = false;
         BoneParents[i] = -1;
     }
 }
@@ -197,7 +199,9 @@ bool UMocapApp::PollEvents()
 
     mcpError = mcpApplication->PollApplicationNextEvent(nullptr, &unEvent, appcliation);
     ReturnFalseIFError("PollApplicationNextEvent Get num");
-    if (unEvent > 0) {
+
+    bool hasUnhandledEvents = unEvent > 0;
+    if (hasUnhandledEvents) {
         events.AddUninitialized(unEvent);
         for (auto & e : events) {
             e.size = sizeof(MocapApi::MCPEvent_t);
@@ -205,18 +209,18 @@ bool UMocapApp::PollEvents()
         mcpError = mcpApplication->PollApplicationNextEvent(events.GetData(), &unEvent, appcliation);
         ReturnFalseIFError("PollApplicationNextEvent");
     }
-    if (unEvent > 0) {
+    if (hasUnhandledEvents) {
         FScopeLock Lock(&CriticalSection);
         for (const auto & e : events) {
             if (e.eventType == MocapApi::MCPEvent_AvatarUpdated) {
                 HandleAvatarUpdateEvent(e.eventData.motionData.avatarHandle);
             }
             else if (e.eventType == MocapApi::MCPEvent_RigidBodyUpdated) {
-                //HandleRigidBodyUpdateEvent()
+                //HandleRigidBodyUpdateEvent(, 0)
             }
         }
     }
-    return true;
+    return hasUnhandledEvents;
 }
 
 void UMocapApp::GetAllRigidBodyIDs(TArray<int>& IDArray)
@@ -236,7 +240,7 @@ bool UMocapApp::GetRigidBody(const int ID, FVector& Position, FRotator& Rotation
 bool UMocapApp::GetRigidBodyPose(const int ID, FVector& Position, FQuat& Rotation, int& Status, int& JointTag)
 {
     FScopeLock Lock(&CriticalSection);
-    const FMocapRigidBody* RigidBody = RigidBodies.Find(ID);
+    const FMocapRigidBody* RigidBody = GetRigidBody(ID);
     if (RigidBody != nullptr)
     {
         Position = RigidBody->Position;
@@ -248,17 +252,30 @@ bool UMocapApp::GetRigidBodyPose(const int ID, FVector& Position, FQuat& Rotatio
     return false;
 }
 
+const FMocapRigidBody* UMocapApp::GetRigidBody(const int ID)
+{
+    return RigidBodies.Find(ID);
+}
+
 void UMocapApp::GetAllAvatarNames(TArray<FString>& NameArray)
 {
     FScopeLock Lock(&CriticalSection);
     Avatars.GetKeys(NameArray);
 }
 
-bool UMocapApp::GetAvatarData(const FString& AvatarName, TArray<FVector>& LocalPositions, TArray<FRotator>& LocalRotation)
+bool UMocapApp::GetAvatarData(const FString& AvatarName, TArray<FVector>& LocalPositions, TArray<FRotator>& LocalRotations)
 {
     const FMocapAvatar* Data = GetAvatarData(AvatarName);
     if (Data != nullptr)
     {
+        int Num = Data->BoneNames.Num();
+        LocalPositions.SetNum(Num);
+        LocalRotations.SetNum(Num);
+        for (int i = 0; i < Num; ++i)
+        {
+            LocalPositions[i] = Data->HasLocalPositions[i]? Data->LocalPositions[i]: Data->DefaultLocalPositions[i];
+            LocalRotations[i] = Data->LocalRotation[i].Rotator();
+        }
         return true;
     }
     return false;
@@ -387,6 +404,9 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
     ReturnFalseIFError();
     avatar.Index = AvatarIdx;
 
+    FMocapTimeCode& TC = avatar.ReceiveTime;
+    avatarMgr->GetAvatarPostureTimeCode(&TC.Hour, &TC.Minute, &TC.Second, &TC.Frame, &TC.Rate, Avatarhandle);
+
     uint32 Count = 0;
     mcpError = avatarMgr->GetAvatarJoints(nullptr, &Count, Avatarhandle);
     ReturnFalseIFError();
@@ -416,7 +436,9 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
             mcpJoint->GetJointDefaultLocalPosition(&d.X, &d.Y, &d.Z, handle);
 
             FVector& p = avatar.LocalPositions[jointTag];
-            mcpJoint->GetJointLocalPosition(&p.X, &p.Y, &p.Z, handle);
+            mcpError = mcpJoint->GetJointLocalPosition(&p.X, &p.Y, &p.Z, handle);
+
+            avatar.HasLocalPositions[jointTag] = (mcpError == MocapApi::EMCPError::Error_None);
 
             FQuat& q = avatar.LocalRotation[jointTag];
             mcpJoint->GetJointLocalRotation(&q.X, &q.Y, &q.Z, &q.W, handle);
@@ -426,7 +448,7 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
     //CheckAvatarJoint(Avatarhandle, RootJoint, avatar);
 
     // rigid bodies
-    uint32 rigidbodyCount = 64;
+    uint32 rigidbodyCount = 0;
     mcpError = avatarMgr->GetAvatarRigidBodies(nullptr, &rigidbodyCount, Avatarhandle);
     ReturnFalseIFError();
     if (rigidbodyCount > 0)
@@ -438,7 +460,7 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
 
         for (uint64 handle : rigidHandles)
         {
-            HandleRigidBodyUpdateEvent(handle);
+            HandleRigidBodyUpdateEvent(handle, AvatarIdx);
         }
     }
 
@@ -471,6 +493,11 @@ void UMocapApp::CheckAvatarJoint(uint64 Avatarhandle, uint64 JointHandle, const 
         UE_LOG(LogMocapApi, Error, TEXT("ParentCheck Failed %d : except %d got %d"), jointTag, A, B); \
     } \
 }
+#define CheckBool(A, B) { \
+    if ((A)!=(B)) { \
+        UE_LOG(LogMocapApi, Error, TEXT("BoolCheck Failed %d : except %d got %d"), jointTag, (A)?1:0, (B)?1:0); \
+    } \
+}
 
     MocapApi::IMCPJoint* jointMgr = nullptr;
     MocapApi::EMCPError mcpError = MocapApi::MCPGetGenericInterface(MocapApi::IMCPJoint_Version,
@@ -484,8 +511,13 @@ void UMocapApp::CheckAvatarJoint(uint64 Avatarhandle, uint64 JointHandle, const 
     CheckName(avatar.BoneNames[jointTag], name);
 
     float x, y, z, w;
-    jointMgr->GetJointLocalPosition(&x, &y, &z, JointHandle);
-    CheckVector(avatar.LocalPositions[jointTag], x, y, z);
+    mcpError = jointMgr->GetJointLocalPosition(&x, &y, &z, JointHandle);
+    bool HasPos = (mcpError==MocapApi::EMCPError::Error_None);
+    CheckBool(avatar.HasLocalPositions[jointTag], HasPos);
+    if (HasPos || avatar.HasLocalPositions[jointTag])
+    {
+        CheckVector(avatar.LocalPositions[jointTag], x, y, z);
+    }
 
     jointMgr->GetJointLocalRotation(&x, &y, &z, &w, JointHandle);
     CheckQuat(avatar.LocalRotation[jointTag], x, y, z, w);
@@ -511,7 +543,7 @@ void UMocapApp::CheckAvatarJoint(uint64 Avatarhandle, uint64 JointHandle, const 
 #undef CheckParent
 }
 
-bool UMocapApp::HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle)
+bool UMocapApp::HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle, int ReservedData)
 {
     MocapApi::IMCPRigidBody* RigidBodyMgr = nullptr;
     MocapApi::EMCPError mcpError = MocapApi::MCPGetGenericInterface(MocapApi::IMCPRigidBody_Version,
@@ -529,6 +561,8 @@ bool UMocapApp::HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle)
     MocapApi::EMCPJointTag Tag;
     RigidBodyMgr->GetRigidBodyJointTag(&Tag, RigidBodyHandle);
     rigid.JointTag = Tag;
+
+    rigid.Reserved = ReservedData;
     return true;
 }
 

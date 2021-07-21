@@ -128,6 +128,18 @@ struct FMocapRigidBody
     
     UPROPERTY()
     int JointTag;
+
+    UPROPERTY()
+    int Reserved; // used to store avatar id
+};
+
+struct FMocapTimeCode
+{
+    uint32 Hour;
+    uint32 Minute;
+    uint32 Second;
+    uint32 Frame;
+    uint32 Rate;
 };
 
 
@@ -147,11 +159,16 @@ struct FMocapAvatar
     UPROPERTY()
     int RootJointTag;
 
+    FMocapTimeCode ReceiveTime;
+
     UPROPERTY()
     TArray<FName> BoneNames; //[tag] = name
 
     UPROPERTY()
     TArray<int> BoneParents; //[tag] = parentTag -1 if is root
+
+    UPROPERTY()
+    TArray<bool> HasLocalPositions;
 
     UPROPERTY()
     TArray<FVector> DefaultLocalPositions;
@@ -164,7 +181,7 @@ struct FMocapAvatar
 };
 
 UCLASS()
-class UMocapApp : public UObject
+class MOCAPAPIADAPTER_API UMocapApp : public UObject
 {
     GENERATED_BODY()
 
@@ -198,17 +215,23 @@ public:
 
     bool GetRigidBodyPose(const int ID, FVector& Position, FQuat& Rotation, int& Status, int& JointTag);
 
+    const FMocapRigidBody* GetRigidBody(const int ID);
+
     UFUNCTION(BlueprintCallable, Category=MocapApi)
     void GetAllAvatarNames(TArray<FString>& NameArray);
 
     UFUNCTION(BlueprintCallable, Category=MocapApi)
-    bool GetAvatarData(const FString& AvatarName, TArray<FVector>& LocalPositions, TArray<FRotator>& LocalRotation);
+    bool GetAvatarData(const FString& AvatarName, TArray<FVector>& LocalPositions, TArray<FRotator>& LocalRotations);
 
     UFUNCTION(BlueprintCallable, Category=MocapApi)
     bool GetAvatarStaticData(const FString& AvatarName, int& RootJointTag, TArray<FName>& BoneNames, TArray<int>& BoneParents, TArray<FVector>& DefaultLocalPositions);
 
+    UFUNCTION(BlueprintCallable, Category = MocapApi)
+    bool GetIsConnecting() const { return IsConnecting; };
+    
     const FMocapAvatar* GetAvatarData(const FString& AvatarName);
 
+    UFUNCTION(BlueprintCallable, Category = MocapApi)
     const FString GetLastErrorMessage();
 
     void DumpData();
@@ -225,7 +248,7 @@ private:
     bool HandleAvatarUpdateEvent(uint64 Avatarhandle);
     void CheckAvatarJoint(uint64 Avatarhandle, uint64 JointHandle, const FMocapAvatar& avatar);
 
-    bool HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle);
+    bool HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle, int ReservedData = 0);
 
     TMap<int,FMocapRigidBody> RigidBodies;
     TMap<FString, FMocapAvatar> Avatars;
