@@ -42,7 +42,7 @@ const FString UMocapApp::GetConnectionString()
 {
     //AppSettings.
     FString ProtocolStr = TEXT("udp");
-    if (AppSettings.Protocol == EAppProtocol::TCP)
+    if (AppSettings.Protocol == EMCAppProtocol::TCP)
     {
         ProtocolStr = TEXT("tcp");
     }
@@ -89,7 +89,7 @@ bool UMocapApp::Connect()
     mcpError = mcpSettings->SetSettingsBvhTransformation(EnableTrans, mcpSettingsHandle);
     ReturnFalseIFError();
 
-    bool isUDP = AppSettings.Protocol == EAppProtocol::UDP;
+    bool isUDP = AppSettings.Protocol == EMCAppProtocol::UDP;
     const char* IPAddress = FTCHARToUTF8(*AppSettings.RemoteIP).Get();
     int Port = AppSettings.Port;
     if (isUDP)

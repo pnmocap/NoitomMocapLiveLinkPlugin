@@ -50,10 +50,10 @@ class NEURONLIVELINK_API UNeuronLiveLinkRemapAsset : public ULiveLinkRetargetAss
     UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "AxisNeuron Live Link Retarget", meta = (NeverAsPin, EditCondition = "bEnableBoneNamePrefix"))
         FString BoneNamePrefix;
 
-    UPROPERTY(EditAnywhere, meta = (InlineEditConditionToggle), Category = "AxisNeuron Live Link Retarget")
+    UPROPERTY(EditAnywhere, meta = (InlineEditConditionToggle), Category = "AxisNeuron Bone Mapping")
         bool bEnableBoneMapping = false;
 
-    UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "AxisNeuron Live Link Retarget", meta = (NeverAsPin, EditCondition = "bEnableBoneMapping"))
+    UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "AxisNeuron Bone Mapping", meta = (NeverAsPin, EditCondition = "bEnableBoneMapping"))
         TMap<FName, FName> BoneMapping;
 
 private:

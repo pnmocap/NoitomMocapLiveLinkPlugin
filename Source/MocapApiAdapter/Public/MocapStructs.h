@@ -6,7 +6,7 @@
 
 
 UENUM(BlueprintType)
-enum class EBvhRotationOrder : uint8
+enum class EMCBvhRotationOrder : uint8
 {
     XYZ = 0,
     XZY = 1,
@@ -17,7 +17,7 @@ enum class EBvhRotationOrder : uint8
 };
 
 UENUM(BlueprintType)
-enum class EBvhDataFormat : uint8
+enum class EMCBvhDataFormat : uint8
 {
     String = 0,
     BinaryWithOldFrameHeader = 1,
@@ -26,7 +26,7 @@ enum class EBvhDataFormat : uint8
 };
 
 UENUM(BlueprintType)
-enum class EAppProtocol : uint8
+enum class EMCAppProtocol : uint8
 {
     UDP = 0,
     TCP = 1,
@@ -34,12 +34,12 @@ enum class EAppProtocol : uint8
 
 
 USTRUCT(BlueprintType)
-struct FAppSettings
+struct FMCAppSettings
 {
     GENERATED_BODY()
 
     UPROPERTY()
-    EAppProtocol Protocol = EAppProtocol::UDP;
+    EMCAppProtocol Protocol = EMCAppProtocol::UDP;
 
     UPROPERTY()
     FString RemoteIP = TEXT("127.0.0.1");
@@ -48,14 +48,14 @@ struct FAppSettings
     int Port = 7003;
 
     UPROPERTY()
-    EBvhRotationOrder BvhRotation = EBvhRotationOrder::YXZ;
+    EMCBvhRotationOrder BvhRotation = EMCBvhRotationOrder::YXZ;
 
     UPROPERTY()
-    EBvhDataFormat bvhDataFormat = EBvhDataFormat::Binary;
+    EMCBvhDataFormat bvhDataFormat = EMCBvhDataFormat::Binary;
 };
 
 UENUM(BlueprintType)
-enum class EUpAxis : uint8 {
+enum class EMCUpAxis : uint8 {
     Unknown = 0,
     X = 1,
     Y = 2,
@@ -63,50 +63,50 @@ enum class EUpAxis : uint8 {
 };
 
 UENUM(BlueprintType)
-enum class EFrontAxis : uint8 {
+enum class EMCFrontAxis : uint8 {
     Unknown = 0,
     ParityEven = 1, 
     ParityOdd = 2
 };
 
 UENUM(BlueprintType)
-enum class ECoordSystem : uint8 {
+enum class EMCCoordSystem : uint8 {
     RightHanded = 0,
     LeftHanded
 };
 
 UENUM(BlueprintType)
-enum class ERotatingDirection : uint8 {
+enum class EMCRotatingDirection : uint8 {
     CW = 0,
     CCW,
 };
 
 UENUM(BlueprintType)
-enum class EDistanceUnit : uint8 
+enum class EMCDistanceUnit : uint8 
 {
-    Centimeter,
+    Centimeter = 0,
     Meter,
 };
 
 USTRUCT(BlueprintType)
-struct FRenderSetting
+struct FMCRenderSetting
 {
     GENERATED_BODY()
 
     UPROPERTY()
-    EUpAxis Up = EUpAxis::Z;
+    EMCUpAxis Up = EMCUpAxis::Z;
 
     UPROPERTY()
-    EFrontAxis Front = EFrontAxis::ParityEven;
+    EMCFrontAxis Front = EMCFrontAxis::ParityEven;
 
     UPROPERTY()
-    ECoordSystem Coord = ECoordSystem::LeftHanded;
+    EMCCoordSystem Coord = EMCCoordSystem::LeftHanded;
 
     UPROPERTY()
-    ERotatingDirection RotatingDir = ERotatingDirection::CW;
+    EMCRotatingDirection RotatingDir = EMCRotatingDirection::CW;
 
     UPROPERTY()
-    EDistanceUnit Unit = EDistanceUnit::Centimeter;
+    EMCDistanceUnit Unit = EMCDistanceUnit::Centimeter;
 };
 
 USTRUCT(BlueprintType)
@@ -191,10 +191,10 @@ public:
         FString AppName;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MocapApi")
-        FAppSettings AppSettings;
+        FMCAppSettings AppSettings;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MocapApi")
-        FRenderSetting RenderSettings;
+        FMCRenderSetting RenderSettings;
 
     UFUNCTION(BlueprintCallable, Category=MocapApi)
     const FString GetConnectionString();

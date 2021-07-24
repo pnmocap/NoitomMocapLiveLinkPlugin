@@ -4,23 +4,23 @@
 #include "Roles/LiveLinkTransformTypes.h"
 #include "Roles/LiveLinkAnimationTypes.h"
 
-static TMap<FString, EBvhRotationOrder> OrderMap = {
-    { TEXT("XYZ"), EBvhRotationOrder::XYZ },
-    { TEXT("XZY"), EBvhRotationOrder::XZY },
-    { TEXT("YXZ"), EBvhRotationOrder::YXZ },
-    { TEXT("YZX"), EBvhRotationOrder::YZX },
-    { TEXT("ZXY"), EBvhRotationOrder::ZXY },
-    { TEXT("ZYZ"), EBvhRotationOrder::ZYX },
+static TMap<FString, EMCBvhRotationOrder> OrderMap = {
+    { TEXT("XYZ"), EMCBvhRotationOrder::XYZ },
+    { TEXT("XZY"), EMCBvhRotationOrder::XZY },
+    { TEXT("YXZ"), EMCBvhRotationOrder::YXZ },
+    { TEXT("YZX"), EMCBvhRotationOrder::YZX },
+    { TEXT("ZXY"), EMCBvhRotationOrder::ZXY },
+    { TEXT("ZYZ"), EMCBvhRotationOrder::ZYX },
 };
 
-EBvhRotationOrder GetRotationOrderFromString(const FString& RotationOrder)
+EMCBvhRotationOrder GetRotationOrderFromString(const FString& RotationOrder)
 {
-    EBvhRotationOrder* Order = OrderMap.Find(RotationOrder);
+    EMCBvhRotationOrder* Order = OrderMap.Find(RotationOrder);
     if (Order != nullptr)
     {
         return *Order;
     }
-    return EBvhRotationOrder::YXZ;
+    return EMCBvhRotationOrder::YXZ;
 }
 
 FQualifiedFrameTime GetTimecode(const FMocapTimeCode& tc)
@@ -34,11 +34,11 @@ FMocapAppClient::FMocapAppClient(bool IsUDP, const FString& RemoteIP, int Port, 
     : Thread(nullptr)
     , bRunning(true)
 {
-    Sett.Protocol = IsUDP? EAppProtocol::UDP: EAppProtocol::TCP;
+    Sett.Protocol = IsUDP? EMCAppProtocol::UDP: EMCAppProtocol::TCP;
     Sett.RemoteIP = RemoteIP;
     Sett.Port = Port;
-    Sett.bvhDataFormat = EBvhDataFormat::Binary;
-    Sett.BvhRotation = EBvhRotationOrder::YXZ;
+    Sett.bvhDataFormat = EMCBvhDataFormat::Binary;
+    Sett.BvhRotation = EMCBvhRotationOrder::YXZ;
     StartApplication();
 }
 
@@ -87,7 +87,7 @@ bool FMocapAppClient::StartApplication()
     App = NewObject<UMocapApp>();
     App->AddToRoot();
     App->AppSettings = Sett;
-    FRenderSetting RenderSettings;
+    FMCRenderSetting RenderSettings;
     App->RenderSettings = RenderSettings;
     AppName = App->GetConnectionString();
     App->AppName = AppName;

@@ -45,7 +45,7 @@ public:
     bool GetAvatarStaticData(const FString& AvatarName, int& RootJointTag, TArray<FName>& BoneNames, TArray<int>& BoneParents, TArray<FVector>& DefaultLocalPositions);
 private:
     FString AppName;
-    FAppSettings Sett;
+    FMCAppSettings Sett;
     UMocapApp* App;
     FRunnableThread* Thread;
     FThreadSafeBool bRunning;

@@ -79,8 +79,8 @@ bool AMocapAppManager::StartDefaultApplication()
     bool Result = App != nullptr;
     if (!App)
     {
-        FAppSettings Sett;
-        FRenderSetting RenderSettings;
+        FMCAppSettings Sett;
+        FMCRenderSetting RenderSettings;
         Sett.Protocol = DefaultProtocol;
         Sett.RemoteIP = DefaultRemoteIP;
         Sett.Port = DefaultPort;
@@ -93,7 +93,7 @@ bool AMocapAppManager::StartDefaultApplication()
     return Result;
 }
 
-bool AMocapAppManager::StartApplication(const FString& AppName, const FAppSettings& AppSettings, const FRenderSetting& RenderSettings)
+bool AMocapAppManager::StartApplication(const FString& AppName, const FMCAppSettings& AppSettings, const FMCRenderSetting& RenderSettings)
 {
     UMocapApp* App = GetMocapApp(AppName);
     if (!App)
@@ -109,7 +109,7 @@ bool AMocapAppManager::StartApplication(const FString& AppName, const FAppSettin
     {
         App->Connect();
     }
-    return App;
+    return App!=nullptr;
 }
 
 void AMocapAppManager::DestroyApplication(const FString& AppName)

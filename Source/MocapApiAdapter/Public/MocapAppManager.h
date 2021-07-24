@@ -32,7 +32,7 @@ public:
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
     UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category="MocapApi|Setting")
-    EAppProtocol DefaultProtocol = EAppProtocol::UDP;
+    EMCAppProtocol DefaultProtocol = EMCAppProtocol::UDP;
 
     UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "MocapApi|Setting")
     FString DefaultRemoteIP = TEXT("127.0.0.1");
@@ -47,7 +47,7 @@ public:
     bool StartDefaultApplication();
 
     UFUNCTION(BlueprintCallable, Category=MocapApi)
-    bool StartApplication(const FString& AppName, const FAppSettings& AppSettings, const FRenderSetting& RenderSettings);
+    bool StartApplication(const FString& AppName, const FMCAppSettings& AppSettings, const FMCRenderSetting& RenderSettings);
     
     UFUNCTION(BlueprintCallable, Category=MocapApi)
     void DestroyApplication(const FString& AppName);
