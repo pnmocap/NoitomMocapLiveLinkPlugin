@@ -66,11 +66,18 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = MocapApi)
     void DumpApp(const FString& AppName);
+
+    UFUNCTION(BlueprintCallable, Category = MocapApi)
+    void GetAvatarBuildinBoneNameAndParents(TArray<FName>& BoneNames, TArray<int>& Parents);
+
 private:
  
     void DestroyApp(UMocapApp*App);
 
     TMap<FString, UMocapApp*> Applications;
+
+    static TArray<FName> AvatarBoneNames;
+    static TArray<int> AvatarBoneParents;
 
     void InitializeDefaults();
 };

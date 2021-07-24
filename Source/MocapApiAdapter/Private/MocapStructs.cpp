@@ -15,6 +15,9 @@
     return false; \
 }
 
+TArray<FName> UMocapApp::AvatarBoneNames;
+TArray<int> UMocapApp::AvatarBoneParents;
+
 FMocapAvatar::FMocapAvatar()
     : Index(-1)
     , Name()
@@ -48,7 +51,6 @@ const FString UMocapApp::GetConnectionString()
 
 bool UMocapApp::Connect()
 {
-
     // reset Error
     LastError = 0;
     ExtraErrorMsg = TEXT("");
@@ -88,7 +90,7 @@ bool UMocapApp::Connect()
     ReturnFalseIFError();
 
     bool isUDP = AppSettings.Protocol == EAppProtocol::UDP;
-    const char* IPAddress = TCHAR_TO_UTF8(*AppSettings.RemoteIP);
+    const char* IPAddress = FTCHARToUTF8(*AppSettings.RemoteIP).Get();
     int Port = AppSettings.Port;
     if (isUDP)
     {
@@ -147,11 +149,12 @@ bool UMocapApp::Connect()
     ReturnFalseIFError();
 
     IsConnecting = true;
-    UE_LOG(LogMocapApi, Log, TEXT("App %s: %llu handle %s Connect ok."),
+    UE_LOG(LogMocapApi, Log, TEXT("App (%s) %s handle %llu Connect ok."),
         *AppName,
         *GetConnectionString(),
         AppHandle
     );
+
     return true;
 }
 
@@ -385,7 +388,7 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
     {
         return false;
     }
-    FString Name = UTF8_TO_TCHAR(AvatarName);
+    FString Name = FUTF8ToTCHAR(AvatarName).Get();
     
     FMocapAvatar& avatar = Avatars.FindOrAdd(Name);
     avatar.Name = Name;
@@ -426,7 +429,7 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
             mcpJoint->GetJointName(&cJointName, handle);
             if (cJointName)
             {
-                avatar.BoneNames[jointTag] = UTF8_TO_TCHAR(cJointName);
+                avatar.BoneNames[jointTag] = FUTF8ToTCHAR(cJointName).Get();
             }
             parentJointTag = MocapApi::JointTag_Invalid;
             mcpJoint->GetJointParentJointTag(&parentJointTag, jointTag);
@@ -470,7 +473,7 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
 void UMocapApp::CheckAvatarJoint(uint64 Avatarhandle, uint64 JointHandle, const FMocapAvatar& avatar)
 {
 #define CheckName(A, B) { \
-    FString N = UTF8_TO_TCHAR(B); \
+    FString N = FUTF8ToTCHAR(B).Get(); \
     FString M(A.ToString()); \
     if (!N.Equals(M, ESearchCase::IgnoreCase)) { \
         UE_LOG(LogMocapApi, Error, TEXT("NameCheck Failed %d : except %s got %s"), jointTag, *M, *N); \
@@ -611,6 +614,60 @@ void UMocapApp::DumpData()
                 *a.LocalRotation[i].ToString(),
                 *a.DefaultLocalPositions[i].ToString()
             );
+        }
+    }
+}
+
+TArray<FName> UMocapApp::GetAvatarBuildinBoneNames()
+{
+    if (AvatarBoneNames.Num() <= 0)
+    {
+        InitAvatarBuildinInfo();
+    }
+    return AvatarBoneNames;
+}
+
+TArray<int> UMocapApp::GetAvatarBuildinParentIds()
+{
+    if (AvatarBoneParents.Num() <= 0)
+    {
+        InitAvatarBuildinInfo();
+    }
+    return AvatarBoneParents;
+}
+
+void UMocapApp::InitAvatarBuildinInfo()
+{
+    MocapApi::IMCPJoint * mcpJoint = nullptr;
+    MocapApi::EMCPError mcpError = MocapApi::MCPGetGenericInterface(MocapApi::IMCPJoint_Version,
+        reinterpret_cast<void **>(&mcpJoint));
+
+    const int JointCount = MocapApi::JointTag_JointsCount;
+    AvatarBoneNames.SetNumUninitialized(JointCount);
+    AvatarBoneParents.SetNumUninitialized(JointCount);
+    const char* TagName;
+    MocapApi::EMCPJointTag ParentTag;
+    for (int joint = 0; joint < JointCount; ++joint)
+    {
+        mcpError = mcpJoint->GetJointNameByTag(&TagName, (MocapApi::EMCPJointTag)joint);
+        if (mcpError == MocapApi::Error_None)
+        {
+            FUTF8ToTCHAR conv(TagName);
+            AvatarBoneNames[joint] = conv.Get();
+        }
+        else
+        {
+            AvatarBoneNames[joint] = TEXT("Unknown");
+        }
+
+        mcpError = mcpJoint->GetJointParentJointTag(&ParentTag, (MocapApi::EMCPJointTag)joint);
+        if (mcpError == MocapApi::Error_None)
+        {
+            AvatarBoneParents[joint] = (int)ParentTag;
+        }
+        else
+        {
+            AvatarBoneParents[joint] = (int)MocapApi::JointTag_Invalid;
         }
     }
 }

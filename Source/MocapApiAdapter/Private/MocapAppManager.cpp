@@ -3,6 +3,9 @@
 
 static AMocapAppManager* s_instance = nullptr;
 
+TArray<FName> AMocapAppManager::AvatarBoneNames;
+TArray<int> AMocapAppManager::AvatarBoneParents;
+
 AMocapAppManager::AMocapAppManager()
 {
     InitializeDefaults();
@@ -155,4 +158,15 @@ void AMocapAppManager::DumpApp(const FString& AppName)
 void AMocapAppManager::DestroyApp(UMocapApp*App)
 {
     App->Disconnect();
+}
+
+void AMocapAppManager::GetAvatarBuildinBoneNameAndParents(TArray<FName>& BoneNames, TArray<int>& Parents)
+{
+    if (AvatarBoneNames.Num() == 0)
+    {
+        AvatarBoneNames = UMocapApp::GetAvatarBuildinBoneNames();
+        AvatarBoneParents = UMocapApp::GetAvatarBuildinParentIds();
+    }
+    BoneNames = AvatarBoneNames;
+    Parents = AvatarBoneParents;
 }

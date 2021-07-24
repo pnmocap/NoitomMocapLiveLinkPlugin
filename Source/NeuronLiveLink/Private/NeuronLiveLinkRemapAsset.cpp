@@ -417,11 +417,23 @@ void UNeuronLiveLinkRemapAsset::GetSkeletonForwardVector_Implementation( TEnumAs
 
 FName UNeuronLiveLinkRemapAsset::GetBonePrefix_Implementation( ) const
 {
-	return NAME_None;
+    if (bEnableBoneNamePrefix)
+    {
+        return FName(BoneNamePrefix);
+    }
+    return NAME_None;
 }
 
 FName UNeuronLiveLinkRemapAsset::GetRemappedBoneName_Implementation( FName BoneName ) const
 {
+    if (bEnableBoneMapping)
+    {
+        const FName* MappedName = BoneMapping.Find(BoneName);
+        if (MappedName != nullptr)
+        {
+            return *MappedName;
+        }
+    }
 	if (GetBonePrefix( ) != NAME_None)
 	{
 		return FName( *(GetBonePrefix( ).ToString( ) + BoneName.ToString( )) );

@@ -234,6 +234,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = MocapApi)
     const FString GetLastErrorMessage();
 
+    static TArray<FName> GetAvatarBuildinBoneNames();
+    static TArray<int> GetAvatarBuildinParentIds();
+
     void DumpData();
 private:
     bool IsConnecting = false;
@@ -252,6 +255,9 @@ private:
 
     TMap<int,FMocapRigidBody> RigidBodies;
     TMap<FString, FMocapAvatar> Avatars;
+    static TArray<FName> AvatarBoneNames;
+    static TArray<int> AvatarBoneParents;
+    static void InitAvatarBuildinInfo();
 
     mutable FCriticalSection CriticalSection;
 };

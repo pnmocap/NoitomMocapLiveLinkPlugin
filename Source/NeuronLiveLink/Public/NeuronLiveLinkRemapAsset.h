@@ -5,11 +5,11 @@
 #include "LiveLinkRetargetAsset.h"
 #include "Roles/LiveLinkAnimationTypes.h"
 #include "Animation/AnimTypes.h"
-
+#include "NeuronBoneMappingInfo.h"
 #include "NeuronLiveLinkRemapAsset.generated.h"
 
 UCLASS(Blueprintable)
-class UNeuronLiveLinkRemapAsset : public ULiveLinkRetargetAsset
+class NEURONLIVELINK_API UNeuronLiveLinkRemapAsset : public ULiveLinkRetargetAsset
 {
 	GENERATED_UCLASS_BODY()
 
@@ -44,18 +44,31 @@ class UNeuronLiveLinkRemapAsset : public ULiveLinkRetargetAsset
 	UFUNCTION( BlueprintCallable, BlueprintNativeEvent, Category = "AxisNeuron Live Link Retarget" )
 		void GetSkeletonForwardVector( TEnumAsByte<EAxisOption::Type>& Axis )const;
 
+    UPROPERTY(EditAnywhere, meta = (InlineEditConditionToggle), Category = "AxisNeuron Live Link Retarget")
+        bool bEnableBoneNamePrefix = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "AxisNeuron Live Link Retarget", meta = (NeverAsPin, EditCondition = "bEnableBoneNamePrefix"))
+        FString BoneNamePrefix;
+
+    UPROPERTY(EditAnywhere, meta = (InlineEditConditionToggle), Category = "AxisNeuron Live Link Retarget")
+        bool bEnableBoneMapping = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "AxisNeuron Live Link Retarget", meta = (NeverAsPin, EditCondition = "bEnableBoneMapping"))
+        TMap<FName, FName> BoneMapping;
+
 private:
 
 	void OnBlueprintClassCompiled (UBlueprint* TargetBlueprint);
 
 	// Name mapping between source bone name and transformed bone name
 	// (returned from GetRemappedBoneName)
-	TMap<FName, FName> BoneNameMap;
+    TMap<FName, FName> BoneNameMap;
 
 	// Name mapping between source curve name and transformed curve name
 	// (returned from GetRemappedCurveName)
 	TMap<FName, FName> CurveNameMap;
 
+private:
 	/** Blueprint.OnCompiled delegate handle */
 	FDelegateHandle OnBlueprintCompiledDelegate;
 
