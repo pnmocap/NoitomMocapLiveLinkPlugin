@@ -426,19 +426,20 @@ FName UNeuronLiveLinkRemapAsset::GetBonePrefix_Implementation( ) const
 
 FName UNeuronLiveLinkRemapAsset::GetRemappedBoneName_Implementation( FName BoneName ) const
 {
+    FString MappedNameStr = BoneName.ToString();
     if (bEnableBoneMapping)
     {
         const FName* MappedName = BoneMapping.Find(BoneName);
         if (MappedName != nullptr)
         {
-            return *MappedName;
+            MappedNameStr = MappedName->ToString();
         }
     }
-	if (GetBonePrefix( ) != NAME_None)
+	if (GetBonePrefix() != NAME_None)
 	{
-		return FName( *(GetBonePrefix( ).ToString( ) + BoneName.ToString( )) );
+		return FName( *(GetBonePrefix().ToString() + MappedNameStr) );
 	}
-	return BoneName;
+	return FName(MappedNameStr);
 }
 
 FName UNeuronLiveLinkRemapAsset::GetRemappedCurveName_Implementation( FName CurveName ) const
