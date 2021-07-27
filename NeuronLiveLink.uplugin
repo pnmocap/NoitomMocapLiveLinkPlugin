@@ -22,6 +22,12 @@
             "WhitelistPlatforms": [ "Win64" ]
         },
         {
+            "Name": "NeuronLiveLinkEditor",
+            "Type": "Editor",
+            "LoadingPhase": "Default",
+            "WhitelistPlatforms": [ "Win64" ]
+        },
+        {
             "Name": "MocapApiAdapter",
             "Type": "Runtime",
             "LoadingPhase": "Default",
