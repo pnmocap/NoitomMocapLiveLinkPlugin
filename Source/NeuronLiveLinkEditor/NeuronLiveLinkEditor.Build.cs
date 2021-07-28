@@ -63,6 +63,7 @@ public class NeuronLiveLinkEditor : ModuleRules
 				"UnrealEd",
 				"WorkspaceMenuStructure",
 				"NeuronLiveLink",
+				"ContentBrowser",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

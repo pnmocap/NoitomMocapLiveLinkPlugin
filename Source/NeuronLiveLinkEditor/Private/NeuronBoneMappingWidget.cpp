@@ -180,6 +180,7 @@ void SNeuronBoneMappingWidget::OnCheckboxStateChanged(ECheckBoxState State)
 
 TSharedRef<SWidget> SNeuronBoneMappingWidget::CreateDstBoneSelectWidgetMenu()
 {
+    BuildDstBoneList();
     TSharedPtr<SSearchBox> SearchWidgetToFocus = NULL;
     TSharedRef<SBorder> MenuWidget = SNew(SBorder)
         .Padding(6)
@@ -223,6 +224,7 @@ TSharedRef<SWidget> SNeuronBoneMappingWidget::CreateDstBoneSelectWidgetMenu()
         ];
 
     DstBoneSelectBtn->SetMenuContentWidgetToFocus(SearchWidgetToFocus);
+    DstBoneListView->RequestListRefresh();
 
     return MenuWidget;
 }
