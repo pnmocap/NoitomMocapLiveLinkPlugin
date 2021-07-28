@@ -31,10 +31,7 @@ void FNeuronLiveLinkRemapAssetDetailCustomization::CustomizeDetails(IDetailLayou
 
 	if (UNeuronLiveLinkRemapAsset* SelectedPtr = Cast<UNeuronLiveLinkRemapAsset>(SelectedObjects[0].Get()))
 	{
-		//Hide the Map default UI
-		//TSharedRef<IPropertyHandle> ControllersProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UNeuronLiveLinkRemapAsset, BoneNameMap));
-		//ControllersProperty->MarkHiddenByCustomization();
-        FName BonePrefix = SelectedPtr->GetBonePrefix();
+		FName BonePrefix = SelectedPtr->GetBonePrefix();
         CandidateBoneNames.Reset();
         if (SelectedPtr->bEnableBoneMapping)
         {
@@ -43,50 +40,36 @@ void FNeuronLiveLinkRemapAssetDetailCustomization::CustomizeDetails(IDetailLayou
             TSharedRef<IPropertyHandle> ControllersProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UNeuronLiveLinkRemapAsset, BoneMapping));
             ControllersProperty->MarkHiddenByCustomization();
 
-            //Get hook to the controller map. If that fails, early exit
-            //TSharedPtr<IPropertyHandleMap> MapHandle = ControllersProperty->AsMap();
-            //if (MapHandle.IsValid())
-            //{
-                uint32 Count = NeuronBoneNames.Num();
-                //MapHandle->GetNumElements(Count);
-
-                for (uint32 i = 0; i < Count; ++i)
-                {
-                    //TSharedPtr<IPropertyHandle> EntryHandle = ControllersProperty->GetChildHandle(i);
-                    //if (!EntryHandle.IsValid())
-                    //{
-                    //    continue;
-                    //}
-
-                    FName FromName = NeuronBoneNames[i];
-                    //FName ToName;
-                    //TSharedPtr<IPropertyHandle> KeyHandle = EntryHandle->GetKeyHandle();
-                    //KeyHandle->GetValue(FromName);
-                    //EntryHandle->GetValue(ToName);
-
-                    IDetailCategoryBuilder& Category = DetailBuilder.EditCategory(BoneMappingCategory);
-                    //Category.AddProperty(EntryHandle);
-                    FDetailWidgetRow& MergeRow = Category.AddCustomRow(LOCTEXT("BoneMapping", "BoneMapping"))
-                        .WholeRowContent()
+            
+            uint32 Count = NeuronBoneNames.Num();
+                
+            for (uint32 i = 0; i < Count; ++i)
+            {
+                FName FromName = NeuronBoneNames[i];
+                    
+                IDetailCategoryBuilder& Category = DetailBuilder.EditCategory(BoneMappingCategory);
+                //Category.AddProperty(EntryHandle);
+                FDetailWidgetRow& MergeRow = Category.AddCustomRow(LOCTEXT("BoneMapping", "BoneMapping"))
+                    .WholeRowContent()
+                    [
+                        SNew(SSplitter)
+                        .Orientation(EOrientation::Orient_Horizontal)
+                        + SSplitter::Slot()
+                        .Value(0.1f)
                         [
-                            SNew(SSplitter)
-                            .Orientation(EOrientation::Orient_Horizontal)
-                            + SSplitter::Slot()
-                            .Value(0.1f)
-                            [
-                                SNew(STextBlock)
-                                .Text(FText::FromString(FString::FromInt(i)))
-                            ]
-                            +SSplitter::Slot()
-                            .Value(0.9f)
-                            [
-                                SNew(SNeuronBoneMappingWidget)
-                                .Asset(SelectedPtr)
-                                .SrcBoneName(FromName)
-                                .BoneNameList(&CandidateBoneNames)
-                                .Tooltip(LOCTEXT("EditDstBoneName", "Edit name"))
-                            ]
-                    ];
+                            SNew(STextBlock)
+                            .Text(FText::FromString(FString::FromInt(i)))
+                        ]
+                        +SSplitter::Slot()
+                        .Value(0.9f)
+                        [
+                            SNew(SNeuronBoneMappingWidget)
+                            .Asset(SelectedPtr)
+                            .SrcBoneName(FromName)
+                            .BoneNameList(&CandidateBoneNames)
+                            .Tooltip(LOCTEXT("EditDstBoneName", "Edit name"))
+                        ]
+                ];
             }
 
             IDetailCategoryBuilder& Category = DetailBuilder.EditCategory(BoneMappingCategory);
@@ -125,6 +108,7 @@ void FNeuronLiveLinkRemapAssetDetailCustomization::CustomizeDetails(IDetailLayou
                     ]
                 ];
         }
+
 	}
 }
 
