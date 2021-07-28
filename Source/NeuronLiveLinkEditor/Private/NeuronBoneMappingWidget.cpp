@@ -323,7 +323,11 @@ TSharedRef<ITableRow> SNeuronBoneMappingWidget::OnGenerateWidgetItem(TSharedPtr<
 
 void SNeuronBoneMappingWidget::OnBoneListSelectionChanged(TSharedPtr<FName> BoneInfo, ESelectInfo::Type SelectInfo)
 {
-    DstBoneWidget->SetText(FText::FromString(BoneInfo->ToString()));
+    if (BoneInfo.IsValid())
+    {
+        DstBoneSelectBtn->SetIsOpen(false);
+        DstBoneWidget->SetText(FText::FromString(BoneInfo->ToString()));
+    }
 }
 
 #undef LOCTEXT_NAMESPACE

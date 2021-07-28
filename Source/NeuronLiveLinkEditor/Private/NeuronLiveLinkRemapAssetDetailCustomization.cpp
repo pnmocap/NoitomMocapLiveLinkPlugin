@@ -31,24 +31,49 @@ void FNeuronLiveLinkRemapAssetDetailCustomization::CustomizeDetails(IDetailLayou
 
 	if (UNeuronLiveLinkRemapAsset* SelectedPtr = Cast<UNeuronLiveLinkRemapAsset>(SelectedObjects[0].Get()))
 	{
+        EditedObject = SelectedPtr;
 		FName BonePrefix = SelectedPtr->GetBonePrefix();
         CandidateBoneNames.Reset();
-        if (SelectedPtr->bEnableBoneMapping)
+        IDetailCategoryBuilder& Category = DetailBuilder.EditCategory(BoneMappingCategory);
+        TSharedRef<IPropertyHandle> EnableBoneMappingProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UNeuronLiveLinkRemapAsset, bEnableBoneMapping));
+        
+        bool Enabled = SelectedPtr->bEnableBoneMapping;
+        Category.AddCustomRow(LOCTEXT("BoneMappingEnable", "BoneMappingEnableBtn"))
+            .WholeRowContent()
+            [
+                SNew(SHorizontalBox)
+                .IsEnabled(true)
+                + SHorizontalBox::Slot()
+                .FillWidth(1.0f)
+                .HAlign(HAlign_Left)
+                [
+                    SNew(STextBlock)
+                    .Text(LOCTEXT("BoneMappingEnableLabel", "Enable BoneMapping"))
+                ]
+                + SHorizontalBox::Slot()
+                .FillWidth(0.5f)
+                .HAlign(HAlign_Left)
+                [
+                    SNew(SCheckBox)
+                    .IsChecked(Enabled ? ECheckBoxState::Checked : ECheckBoxState::Unchecked)
+                .OnCheckStateChanged(this, &FNeuronLiveLinkRemapAssetDetailCustomization::OnEnableMappingCheckboxStateChanged)
+                ]
+            ];
+
+        //if (SelectedPtr->bEnableBoneMapping)
         {
             TArray<FName> NeuronBoneNames = UMocapApp::GetAvatarBuildinBoneNames();
 
             TSharedRef<IPropertyHandle> ControllersProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UNeuronLiveLinkRemapAsset, BoneMapping));
             ControllersProperty->MarkHiddenByCustomization();
 
-            
             uint32 Count = NeuronBoneNames.Num();
-                
+            BoneMappingWidgets.Reset(Count);
             for (uint32 i = 0; i < Count; ++i)
             {
                 FName FromName = NeuronBoneNames[i];
-                    
-                IDetailCategoryBuilder& Category = DetailBuilder.EditCategory(BoneMappingCategory);
                 //Category.AddProperty(EntryHandle);
+                TSharedPtr<SNeuronBoneMappingWidget> Wid;
                 FDetailWidgetRow& MergeRow = Category.AddCustomRow(LOCTEXT("BoneMapping", "BoneMapping"))
                     .WholeRowContent()
                     [
@@ -63,16 +88,17 @@ void FNeuronLiveLinkRemapAssetDetailCustomization::CustomizeDetails(IDetailLayou
                         +SSplitter::Slot()
                         .Value(0.9f)
                         [
-                            SNew(SNeuronBoneMappingWidget)
+                            SAssignNew(Wid, SNeuronBoneMappingWidget)
+                            .IsEnabled(Enabled)
                             .Asset(SelectedPtr)
                             .SrcBoneName(FromName)
                             .BoneNameList(&CandidateBoneNames)
                             .Tooltip(LOCTEXT("EditDstBoneName", "Edit name"))
                         ]
                 ];
+                BoneMappingWidgets.AddUnique(Wid);
             }
 
-            IDetailCategoryBuilder& Category = DetailBuilder.EditCategory(BoneMappingCategory);
             FDetailWidgetRow& MergeRow = Category.AddCustomRow(LOCTEXT("PickSkeletonButton", "PickSkeletonButton"))
                 .WholeRowContent()
                 [
@@ -94,6 +120,7 @@ void FNeuronLiveLinkRemapAssetDetailCustomization::CustomizeDetails(IDetailLayou
                         [
                             SAssignNew(SkeletonPickerComboButton, SComboButton)
                             //.ButtonStyle(FEditorStyle::Get(), "NoBorder")
+                            .IsEnabled(Enabled)
                             .ContentPadding(1.f)
                             .Visibility(EVisibility::Visible)
                             .OnGetMenuContent(this, &FNeuronLiveLinkRemapAssetDetailCustomization::MakeSkeletonPickerMenu)
@@ -154,6 +181,21 @@ void FNeuronLiveLinkRemapAssetDetailCustomization::OnAssetSelectedFromPicker(con
             FName BoneName = RefSkeleton.GetBoneName(BoneIdx);
             CandidateBoneNames.AddUnique(MakeShared<FName>(BoneName));
         }
+    }
+}
+
+void FNeuronLiveLinkRemapAssetDetailCustomization::OnEnableMappingCheckboxStateChanged(ECheckBoxState State)
+{
+    bool Enabled = State == ECheckBoxState::Checked;
+    if (EditedObject.IsValid())
+    {
+        UNeuronLiveLinkRemapAsset* SelectedPtr = Cast<UNeuronLiveLinkRemapAsset>(EditedObject.Get());
+        SelectedPtr->bEnableBoneMapping = Enabled;
+        for (auto& W : BoneMappingWidgets)
+        {
+            W->SetEnabled(Enabled);
+        }
+        SkeletonPickerComboButton->SetEnabled(Enabled);
     }
 }
 

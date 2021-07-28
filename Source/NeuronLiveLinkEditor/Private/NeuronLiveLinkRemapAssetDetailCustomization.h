@@ -21,6 +21,8 @@ public:
 	
     TSharedRef<SWidget> MakeSkeletonPickerMenu();
     void OnAssetSelectedFromPicker(const FAssetData& AssetData);
+
+    void OnEnableMappingCheckboxStateChanged(ECheckBoxState State);
 protected:
 	/** LiveLinkComponent on which we're acting */
 	TWeakObjectPtr<UNeuronLiveLinkRemapAsset> EditedObject;
@@ -31,4 +33,7 @@ protected:
     TSharedPtr<STextBlock> SkeletonNameBlock;
     TSharedPtr<SComboButton> SkeletonPickerComboButton;
     TArray<TSharedPtr<FName>> CandidateBoneNames;
+
+    TArray<TSharedPtr<SNeuronBoneMappingWidget>> BoneMappingWidgets;
+
 };
