@@ -14,6 +14,7 @@ public:
 	{
 		FPropertyEditorModule& PropertyEditorModule = FModuleManager::Get().LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
 		PropertyEditorModule.RegisterCustomClassLayout(UNeuronLiveLinkRemapAsset::StaticClass()->GetFName(), FOnGetDetailCustomizationInstance::CreateStatic(&FNeuronLiveLinkRemapAssetDetailCustomization::MakeInstance));
+        PropertyEditorModule.NotifyCustomizationModuleChanged();
 	}
 	
 	virtual void ShutdownModule() override
@@ -24,7 +25,9 @@ public:
 			if (PropertyEditorModule)
 			{
 				PropertyEditorModule->UnregisterCustomClassLayout(UNeuronLiveLinkRemapAsset::StaticClass()->GetFName());
+                PropertyEditorModule->NotifyCustomizationModuleChanged();
 			}
+            
 		}
 	}
 
