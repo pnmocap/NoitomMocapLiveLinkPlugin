@@ -13,7 +13,7 @@ namespace UnrealBuildTool.Rules
             Type = ModuleType.CPlusPlus;
             PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
-            if (!System.IO.Directory.Exists(Path.Combine(ModuleDirectory, @"Private")))
+            if (!System.IO.Directory.Exists(System.IO.Path.Combine(ModuleDirectory, @"Private")))
             {
                 bUsePrecompiled = true;
             }
