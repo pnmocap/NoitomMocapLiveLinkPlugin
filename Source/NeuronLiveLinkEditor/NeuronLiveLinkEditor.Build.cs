@@ -7,8 +7,17 @@ public class NeuronLiveLinkEditor : ModuleRules
 	public NeuronLiveLinkEditor(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-		
-		PublicIncludePaths.AddRange(
+
+        if (!System.IO.Directory.Exists(Path.Combine(ModuleDirectory, @"Private")))
+        {
+            bUsePrecompiled = true;
+        }
+        else
+        {
+            bPrecompile = true;
+        }
+
+        PublicIncludePaths.AddRange(
 			new string[] {
 				// ... add public include paths required here ...
 			}

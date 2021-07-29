@@ -13,6 +13,15 @@ namespace UnrealBuildTool.Rules
             Type = ModuleType.CPlusPlus;
             PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
+            if (!System.IO.Directory.Exists(Path.Combine(ModuleDirectory, @"Private")))
+            {
+                bUsePrecompiled = true;
+            }
+            else
+            {
+                bPrecompile = true;
+            }
+
             PublicIncludePaths.AddRange(
                 new string[] {
                     // ... add public include paths required here ...
