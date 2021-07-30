@@ -71,7 +71,7 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 		AN_LOG( Error, TEXT( "Cannot find [WithDisplacement] property in Axis Studio BVH stream data." ) );
 	}
 
-	bool bWithDisplacement = (Out_WithDisplacement > 0.5f);
+	bool bWithDisplacement = bUseDisplacementData && (Out_WithDisplacement > 0.5f);
 
 	// SourceBoneNames是BoneLists里预定义的BoneName
 	const TArray<FName>& SourceBoneNames = InSkeletonData->GetBoneNames ();
@@ -160,7 +160,7 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 		// MeshBone Count
 		int32 MeshBoneCount = BoneContainerRef.GetNumBones( );
 
-		WorldRotations.Init (FQuat::Identity, MeshBoneCount);
+        WorldRotations.Init (FQuat::Identity, MeshBoneCount);
 		WorldPositions.Init (FVector::ZeroVector, MeshBoneCount);
 		const TArray<FTransform>& MeshBoneRefPose = BoneContainerRef.GetRefPoseArray( );
 		for (int32 Index = 0; Index < MeshBoneCount; Index++)
@@ -180,6 +180,7 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 				Rotation = T0.GetRotation( );
 				Position = T0.GetLocation( );
 			}
+
 			WorldRotations[Index] = Rotation;
 			WorldPositions[Index] = Position;
 		}
@@ -214,10 +215,11 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 				Rotation = T0.GetRotation( );
 				Position = T0.GetLocation( );
 			}
-			CompactRefPoseRotation[Index] = Rotation;
-			CompactRefPoseLocation[Index] = Position;
 
-			int32 LocalMeshIndex = BoneContainerRef.MakeMeshPoseIndex( CPIndex ).GetInt( );
+            CompactRefPoseRotation[Index] = Rotation;
+			CompactRefPoseLocation[Index] = Position;
+            
+            int LocalMeshIndex = BoneContainerRef.MakeMeshPoseIndex(CPIndex).GetInt();
 			WorldRotations[LocalMeshIndex] = CompactRefPoseRotation[Index];
 			WorldPositions[LocalMeshIndex] = CompactRefPoseLocation[Index];
 		}

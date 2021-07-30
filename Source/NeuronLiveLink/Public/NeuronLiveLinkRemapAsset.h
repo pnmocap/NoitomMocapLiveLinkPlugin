@@ -51,10 +51,13 @@ class NEURONLIVELINK_API UNeuronLiveLinkRemapAsset : public ULiveLinkRetargetAss
         FString BoneNamePrefix;
 
     UPROPERTY(EditAnywhere, meta = (InlineEditConditionToggle), Category = "AxisNeuron Bone Mapping")
-        bool bEnableBoneMapping = false;
+        bool bEnableBoneMapping = true;
 
     UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "AxisNeuron Bone Mapping", meta = (NeverAsPin, EditCondition = "bEnableBoneMapping"))
         TMap<FName, FName> BoneMapping;
+
+    UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "AxisNeuron Live Link Retarget")
+        bool bUseDisplacementData = true;
 
 private:
 
