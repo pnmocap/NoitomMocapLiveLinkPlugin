@@ -55,6 +55,11 @@ void FNeuronLiveLinkSource::ReceiveClient (ILiveLinkClient* InClient, FGuid InSo
 
     FString IP = RemoteEndpoint.Address.ToString();
     int Port = RemoteEndpoint.Port;
+    if (IsUDP)
+    {
+        IP = LocalEndpoint.Address.ToString();
+        Port = LocalEndpoint.Port;
+    }
     mocapClient = new FMocapAppClient(IsUDP, IP, Port, RotationOrder);
     if (mocapClient)
     {
