@@ -216,6 +216,11 @@ void SNeuronLiveLinkSourceFactory::OnRemoteEndpointChanged( const FText& NewValu
 			RemoteEndpoint.Address = FIPv4Address::Any;
 			RemoteEndpoint.Port = DEFAULT_REMOTEPORT;
 			EditabledTextPin->SetText( FText::FromString( RemoteEndpoint.ToString( ) ) );
+            TSharedPtr<SCheckBox> CheckBoxPin = Checkbox.Pin();
+            if (CheckBoxPin)
+            {
+                CheckBoxPin->SetIsChecked(ECheckBoxState::Unchecked);
+            }
 		}
 	}
 }
@@ -231,6 +236,11 @@ void SNeuronLiveLinkSourceFactory::OnLocalEndpointChanged( const FText& NewValue
 			LocalEndpoint.Address = FIPv4Address::Any;
 			LocalEndpoint.Port = DEFAULT_LOCALPORT;
 			EditabledTextPin->SetText( FText::FromString( LocalEndpoint.ToString( ) ) );
+            TSharedPtr<SCheckBox> CheckBoxPin = Checkbox.Pin();
+            if (CheckBoxPin)
+            {
+                CheckBoxPin->SetIsChecked(ECheckBoxState::Checked);
+            }
 		}
 	}
 }

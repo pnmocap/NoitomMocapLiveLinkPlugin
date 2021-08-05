@@ -34,9 +34,9 @@ public:
 
     const FString GetStatus();
 
-    void GetAllRigidBodyIDs(TArray<int>& IDArray);
+    void GetAllRigidBodyNames(TArray<FString>& NameArray);
 
-    bool GetRigidBodyPose(const int ID, FVector& Position, FQuat& Rotation, int& Status, int& JointTag);
+    bool GetRigidBodyPose(const FString& RigidName, FVector& Position, FQuat& Rotation, int& Status, int& JointTag);
 
     void GetAllAvatarNames(TArray<FString>& NameArray);
 

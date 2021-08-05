@@ -1,5 +1,6 @@
 #include "MocapClient.h"
 #include "MocapStructs.h"
+#include "MocapAppManager.h"
 #include "NeuronLiveLinkSource.h"
 #include "Roles/LiveLinkTransformTypes.h"
 #include "Roles/LiveLinkAnimationTypes.h"
@@ -149,19 +150,28 @@ void FMocapAppClient::PollEvents()
                     FrameData.Transforms.Add(FTransform(Data->LocalRotation[i], Data->LocalPositions[i]));
                 }
                 
-                Source->PushAvatarFrameData(FName(AvatarName), PropertyNames, Frame);
+                FName AvatarSubjectName = Data->Name;
+                if (!FMocapAppManager::GetInstance().IsNameUsedByApp(AvatarSubjectName, App))
+                {
+                    AvatarSubjectName = FMocapAppManager::CombineNameWithAppName(AvatarName, App);
+                }
+
+                Source->PushAvatarFrameData(AvatarSubjectName, PropertyNames, Frame);
             }
 
-            TArray<int> Rigids;
-            App->GetAllRigidBodyIDs(Rigids);
+            TArray<FString> Rigids;
+            App->GetAllRigidBodyNames(Rigids);
 
-            for (int id : Rigids)
+            for (FString Name : Rigids)
             {
-                const FMocapRigidBody* RigidData = App->GetRigidBody(id);
+                const FMocapRigidBody* RigidData = App->GetRigidBody(Name);
                 if (RigidData)
                 {
-                    FString NameStr = FString::Printf(TEXT("Avatar[%d] Bone[%d] Id[%d]"), RigidData->Reserved, RigidData->JointTag, RigidData->ID);
-                    FName Subject = FName(NameStr);
+                    FName Subject = RigidData->Name;
+                    if (!FMocapAppManager::GetInstance().IsNameUsedByApp(Subject, App))
+                    {
+                        Subject = FMocapAppManager::CombineNameWithAppName(Name, App);
+                    }
                     
                     FLiveLinkFrameDataStruct Frame = FLiveLinkFrameDataStruct(FLiveLinkTransformFrameData::StaticStruct());
                     
@@ -198,19 +208,19 @@ const FString FMocapAppClient::GetStatus()
     return Status;
 }
 
-void FMocapAppClient::GetAllRigidBodyIDs(TArray<int>& IDArray)
+void FMocapAppClient::GetAllRigidBodyNames(TArray<FString>& NameArray)
 {
     if (App)
     {
-        App->GetAllRigidBodyIDs(IDArray);
+        App->GetAllRigidBodyNames(NameArray);
     }
 }
 
-bool FMocapAppClient::GetRigidBodyPose(const int ID, FVector& Position, FQuat& Rotation, int& Status, int& JointTag)
+bool FMocapAppClient::GetRigidBodyPose(const FString& RigidName, FVector& Position, FQuat& Rotation, int& Status, int& JointTag)
 {
     if (App)
     {
-        return GetRigidBodyPose(ID, Position, Rotation, Status, JointTag);
+        return App->GetRigidBodyPose(RigidName, Position, Rotation, Status, JointTag);
     }
     return false;
 }

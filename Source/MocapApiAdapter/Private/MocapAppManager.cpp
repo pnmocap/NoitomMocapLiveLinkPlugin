@@ -1,6 +1,149 @@
 #include "MocapAppManager.h"
 #include "MocapApiLog.h"
 
+FMocapAppManager* FMocapAppManager::s_instance = nullptr;
+bool FMocapAppManager::NewAppUSeShortName = false;
+
+FMocapAppManager& FMocapAppManager::GetInstance()
+{
+    if (s_instance == nullptr)
+    {
+        s_instance = new FMocapAppManager();
+    }
+    return *s_instance;
+}
+
+bool FMocapAppManager::AddMocapApp(UMocapApp* App)
+{
+    if (App)
+    {
+        FName AppName(App->AppName);
+        if (RunningApps.Find(AppName) == nullptr)
+        {
+            RunningApps.Add(AppName, App);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool FMocapAppManager::RemoveMocapApp(UMocapApp* App)
+{
+    if (App)
+    {
+        RunningApps.Remove(FName(App->AppName));
+        TArray<FName> NamesInApp;
+        for (auto& It : NameResolver)
+        {
+            if (It.Value == App)
+            {
+                NamesInApp.AddUnique(It.Key);
+            }
+        }
+        for (auto& Name : NamesInApp)
+        {
+            NameResolver.Remove(Name);
+        }
+
+        return true;
+    }
+    return false;
+}
+
+UMocapApp* FMocapAppManager::GetMocapAppByName(FName AppName)
+{
+    return *RunningApps.Find(AppName);
+}
+
+void FMocapAppManager::EachRunningApp(MocapAppVisitor& Visitor)
+{
+    for (auto& It : RunningApps)
+    {
+        Visitor.Visit(It.Value);
+    }
+}
+
+const FMocapRigidBody* FMocapAppManager::GetRigidBody(FName RigidName)
+{
+    UMocapApp** App = NameResolver.Find(RigidName);
+    if (App != nullptr)
+    {
+        return (*App)->GetRigidBody(RigidName.ToString());
+    }
+    return nullptr;
+}
+
+const FMocapAvatar* FMocapAppManager::GetAvatarData(FName AvatarName)
+{
+    UMocapApp** App = NameResolver.Find(AvatarName);
+    if (*App != nullptr)
+    {
+        return (*App)->GetAvatarData(AvatarName.ToString());
+    }
+    return nullptr;
+}
+
+void FMocapAppManager::OnRecieveMocapData(FName DataName, UMocapApp* theApp)
+{
+    FScopeLock Lock(&CriticalSection);
+    UMocapApp** App = NameResolver.Find(DataName);
+    if (App != nullptr)
+    {
+        if (*App != theApp)
+        {
+            // Already have the same name on App
+            if (NewAppUSeShortName)
+            {
+                NameResolver.Add(DataName, theApp);
+            }
+            FName NameWithAppName = CombineNameWithAppName(DataName.ToString(), theApp);
+            NameResolver.Add(NameWithAppName, theApp);
+        }
+    }
+    else
+    {
+        // add new key paire to NameResolver
+        NameResolver.Add(DataName, theApp);
+        FName NameWithAppName = CombineNameWithAppName(DataName.ToString(), theApp);
+        NameResolver.Add(NameWithAppName, theApp);
+    }
+}
+
+bool FMocapAppManager::IsNameUsedByApp(FName DataName, UMocapApp* theApp)
+{
+    UMocapApp** App = NameResolver.Find(DataName);
+    if (App != nullptr)
+    {
+        return (*App == theApp);
+    }
+    return false;
+}
+
+FName FMocapAppManager::CombineNameWithAppName(const FString& Name, UMocapApp* App)
+{
+    if (App)
+    {
+        return FName(FString::Printf(TEXT("%s@%s"), *Name, *App->AppName));
+    }
+    else
+    {
+        return FName(Name);
+    }
+}
+
+FString FMocapAppManager::ReduceAppName(FName Name)
+{
+    FString Result = Name.ToString();
+    int32 Index;
+    bool find = Result.FindChar('@', Index);
+    if (find)
+    {
+        Result.MidInline(0, Index);
+    }
+    return Result;
+}
+
+
 static AMocapAppManager* s_instance = nullptr;
 
 TArray<FName> AMocapAppManager::AvatarBoneNames;
@@ -51,19 +194,30 @@ AMocapAppManager* AMocapAppManager::GetInstance()
 void AMocapAppManager::BeginPlay()
 {
     Super::BeginPlay();
-    if (AutoStartDefault)
+    if (AutoStartMocapApp)
     {
-        StartDefaultApplication();
+        for (auto& Sett : MocapAppSettings)
+        {
+            StartApplication(Sett);
+        }
     }
 }
+
+class PollAppEventVisitor : public MocapAppVisitor
+{
+    virtual void Visit(UMocapApp* App) override
+    {
+        App->PollEvents();
+    }
+};
 
 void AMocapAppManager::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
-    for (auto& It : Applications)
-    {
-        It.Value->PollEvents();
-    }
+
+    // poll events on tick
+    PollAppEventVisitor PollVisitor;
+    FMocapAppManager::GetInstance().EachRunningApp(PollVisitor);
 }
 
 void AMocapAppManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -72,29 +226,9 @@ void AMocapAppManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
     Super::EndPlay(EndPlayReason);
 }
 
-bool AMocapAppManager::StartDefaultApplication()
+bool AMocapAppManager::StartApplication(const FMCAppSettings& AppSettings)
 {
-    const FString& DefaultAppName = GetDefaultAppName();
-    UMocapApp* App = GetMocapApp(DefaultAppName);
-    bool Result = App != nullptr;
-    if (!App)
-    {
-        FMCAppSettings Sett;
-        FMCRenderSetting RenderSettings;
-        Sett.Protocol = DefaultProtocol;
-        Sett.RemoteIP = DefaultRemoteIP;
-        Sett.Port = DefaultPort;
-        Result = StartApplication(DefaultAppName, Sett, RenderSettings);
-    }
-    else
-    {
-        App->Connect();
-    }
-    return Result;
-}
-
-bool AMocapAppManager::StartApplication(const FString& AppName, const FMCAppSettings& AppSettings, const FMCRenderSetting& RenderSettings)
-{
+    const FString& AppName = AppSettings.Name;
     UMocapApp* App = GetMocapApp(AppName);
     if (!App)
     {
@@ -102,8 +236,14 @@ bool AMocapAppManager::StartApplication(const FString& AppName, const FMCAppSett
         App = NewObject<UMocapApp>();
         App->AppName = AppName;
         App->AppSettings = AppSettings;
+        // do not use RenderSettings now
+        FMCRenderSetting RenderSettings;
         App->RenderSettings = RenderSettings;
-        Applications.Add(AppName, App);
+    }
+    else
+    {
+        UE_LOG(LogMocapApi, Warning, TEXT("Already has a mocap app amed %s"), *AppName);
+        return false;
     }
     if (App)
     {
@@ -117,42 +257,47 @@ void AMocapAppManager::DestroyApplication(const FString& AppName)
     UMocapApp* App = GetMocapApp(AppName);
     if (App)
     {
-        Applications.Remove(AppName);
         DestroyApp(App);
     }
 }
 
+class MocapAppNameVisitor : public MocapAppVisitor
+{
+public:
+    virtual void Visit(UMocapApp* App) override
+    {
+        Apps.AddUnique(App);
+    }
+    TArray<UMocapApp*> Apps;
+};
+
 void AMocapAppManager::DestroyAllApplications()
 {
-    for (auto&Elem : Applications)
+    MocapAppNameVisitor Visitor;
+    FMocapAppManager::GetInstance().EachRunningApp(Visitor);
+    for (UMocapApp* App : Visitor.Apps)
     {
-        DestroyApp(Elem.Value);
+        DestroyApp(App);
     }
-    Applications.Empty();
 }
 
 UMocapApp* AMocapAppManager::GetMocapApp(const FString& AppName)
 {
-    UMocapApp** App = Applications.Find(AppName);
-    if (App)
-    {
-        return *App;
-    }
-    return nullptr;
+    return FMocapAppManager::GetInstance().GetMocapAppByName(FName(AppName));
 }
 
-UMocapApp* AMocapAppManager::GetDefaultMocapApp()
+class DumpAppDataVisitor : public MocapAppVisitor
 {
-    return GetMocapApp(GetDefaultAppName());
-}
+    virtual void Visit(UMocapApp* App) override
+    {
+        App->DumpData();
+    }
+};
 
 void AMocapAppManager::DumpApp(const FString& AppName)
 {
-    UMocapApp** App = Applications.Find(AppName);
-    if (App)
-    {
-        (*App)->DumpData();
-    }
+    DumpAppDataVisitor Visitor;
+    FMocapAppManager::GetInstance().EachRunningApp(Visitor);
 }
 
 void AMocapAppManager::DestroyApp(UMocapApp*App)

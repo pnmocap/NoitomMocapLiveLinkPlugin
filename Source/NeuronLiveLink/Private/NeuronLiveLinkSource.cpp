@@ -7,6 +7,7 @@
 #include "Roles/LiveLinkAnimationTypes.h"
 #include "Roles/LiveLinkAnimationRole.h"
 #include "NeuronLiveLinkLog.h"
+#include "MocapAppManager.h"
 
 #define LOCTEXT_NAMESPACE "FNeuronLiveLinkModule"
 
@@ -83,6 +84,20 @@ bool FNeuronLiveLinkSource::RequestSourceShutdown ()
 	return true;
 }
 
+FText FNeuronLiveLinkSource::GetSourceType() const
+{
+    FString HostStr;
+    if (IsUDP)
+    {
+        HostStr = LocalEndpoint.ToString();
+    }
+    else
+    {
+        HostStr = RemoteEndpoint.ToString();
+    }
+    return FText::FromString(FString::Printf(TEXT("%s@%s"), *SourceType.ToString(), *HostStr));
+}
+
 FText FNeuronLiveLinkSource::GetSourceMachineName () const
 {
 	FString HostStr;
@@ -123,7 +138,7 @@ void FNeuronLiveLinkSource::PushAvatarSubject( FName Subject, const TArray<FName
 	}
 
 	if (m_pLiveLinkClient) {
-        FString AvatarName = Subject.ToString();
+        FString AvatarName = FMocapAppManager::ReduceAppName(Subject);
         if (mocapClient)
         {
             int RootJointTag;

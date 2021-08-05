@@ -20,7 +20,7 @@ public:
 	virtual bool IsSourceStillValid () const;
 	virtual bool RequestSourceShutdown ();
 
-	virtual FText GetSourceType( ) const { return SourceType; };
+	virtual FText GetSourceType( ) const;
 	virtual FText GetSourceMachineName () const;
 	virtual FText GetSourceStatus( ) const;
 	//~ End ILiveLinkSource interface

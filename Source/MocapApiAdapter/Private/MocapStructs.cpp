@@ -2,6 +2,7 @@
 #include "MocapApi.h"
 #include "MocapApiLog.h"
 #include "Misc/ScopeLock.h"
+#include "MocapAppManager.h"
 
 #define ReturnIFError(...) if (mcpError!=MocapApi::Error_None) { \
     LastError = mcpError; \
@@ -149,6 +150,8 @@ bool UMocapApp::Connect()
     ReturnFalseIFError();
 
     IsConnecting = true;
+    FMocapAppManager::GetInstance().AddMocapApp(this);
+
     UE_LOG(LogMocapApi, Log, TEXT("App (%s) %s handle %llu Connect ok."),
         *AppName,
         *GetConnectionString(),
@@ -178,6 +181,8 @@ void UMocapApp::Disconnect()
     AppHandle = 0;
     AppHandleInternal = TEXT("0");
     IsConnecting = false;
+
+    FMocapAppManager::GetInstance().RemoveMocapApp(this);
     UE_LOG(LogMocapApi, Log, TEXT("App %s Disconnect."),
         *AppName
     );
@@ -229,24 +234,24 @@ bool UMocapApp::PollEvents()
     return hasUnhandledEvents;
 }
 
-void UMocapApp::GetAllRigidBodyIDs(TArray<int>& IDArray)
+void UMocapApp::GetAllRigidBodyNames(TArray<FString>& NameArray)
 {
     FScopeLock Lock(&CriticalSection);
-    RigidBodies.GetKeys(IDArray);
+    RigidBodies.GetKeys(NameArray);
 }
 
-bool UMocapApp::GetRigidBody(const int ID, FVector& Position, FRotator& Rotation, int& Status, int& JointTag)
+bool UMocapApp::GetRigidBody(const FString& RigidName, FVector& Position, FRotator& Rotation, int& Status, int& JointTag)
 {
     FQuat q;
-    bool Result = GetRigidBodyPose(ID, Position, q, Status, JointTag);
+    bool Result = GetRigidBodyPose(RigidName, Position, q, Status, JointTag);
     Rotation = q.Rotator();
     return Result;
 }
 
-bool UMocapApp::GetRigidBodyPose(const int ID, FVector& Position, FQuat& Rotation, int& Status, int& JointTag)
+bool UMocapApp::GetRigidBodyPose(const FString& RigidName, FVector& Position, FQuat& Rotation, int& Status, int& JointTag)
 {
     FScopeLock Lock(&CriticalSection);
-    const FMocapRigidBody* RigidBody = GetRigidBody(ID);
+    const FMocapRigidBody* RigidBody = GetRigidBody(RigidName);
     if (RigidBody != nullptr)
     {
         Position = RigidBody->Position;
@@ -258,9 +263,9 @@ bool UMocapApp::GetRigidBodyPose(const int ID, FVector& Position, FQuat& Rotatio
     return false;
 }
 
-const FMocapRigidBody* UMocapApp::GetRigidBody(const int ID)
+const FMocapRigidBody* UMocapApp::GetRigidBody(const FString& RigidName)
 {
-    return RigidBodies.Find(ID);
+    return RigidBodies.Find(RigidName);
 }
 
 void UMocapApp::GetAllAvatarNames(TArray<FString>& NameArray)
@@ -394,7 +399,7 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
     FString Name = FUTF8ToTCHAR(AvatarName).Get();
     
     FMocapAvatar& avatar = Avatars.FindOrAdd(Name);
-    avatar.Name = Name;
+    avatar.Name = FName(Name);
 
     // Get Root Joint at Avatar [1/8/2021 brian.wang]
     MocapApi::MCPJointHandle_t RootJoint = 0;
@@ -452,6 +457,7 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
     }
     
     //CheckAvatarJoint(Avatarhandle, RootJoint, avatar);
+    FMocapAppManager::GetInstance().OnRecieveMocapData(avatar.Name, this);
 
     // rigid bodies
     uint32 rigidbodyCount = 0;
@@ -558,8 +564,10 @@ bool UMocapApp::HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle, int ReservedD
 
     int RigidID = 0;
     RigidBodyMgr->GetRigidBodyId(&RigidID, RigidBodyHandle);
-    FMocapRigidBody& rigid = RigidBodies.FindOrAdd(RigidID);
-    rigid.ID = RigidID;
+    FString RigidName = FString::Printf(TEXT("Prop_%d"), RigidID);
+    FMocapRigidBody& rigid = RigidBodies.FindOrAdd(RigidName);
+    //rigid.ID = RigidID;
+    rigid.Name = FName(RigidName);
     FVector p;
     RigidBodyMgr->GetRigidBodyPosition(&p.X, &p.Y, &p.Z, RigidBodyHandle);
     rigid.Position.X = p.X;
@@ -576,7 +584,10 @@ bool UMocapApp::HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle, int ReservedD
     RigidBodyMgr->GetRigidBodyJointTag(&Tag, RigidBodyHandle);
     rigid.JointTag = Tag;
 
-    rigid.Reserved = ReservedData;
+    //rigid.Reserved = ReservedData;
+
+    FMocapAppManager::GetInstance().OnRecieveMocapData(rigid.Name, this);
+
     return true;
 }
 
@@ -595,8 +606,8 @@ void UMocapApp::DumpData()
     for (auto& rigid : RigidBodies)
     {
         const FMocapRigidBody& r = rigid.Value;
-        UE_LOG(LogMocapApi, Log, TEXT("%d: %d L%s R%s"),
-            r.ID, r.Status, *r.Position.ToString(), *r.Rotation.ToString()
+        UE_LOG(LogMocapApi, Log, TEXT("%s: %d L%s R%s"),
+            *r.Name.ToString(), r.Status, *r.Position.ToString(), *r.Rotation.ToString()
         );
     }
     UE_LOG(LogMocapApi, Log, TEXT("==== Avatars ===="));
@@ -604,7 +615,7 @@ void UMocapApp::DumpData()
     {
         const FMocapAvatar& a = It.Value;
         UE_LOG(LogMocapApi, Log, TEXT("%d: %s %d"),
-            a.Index, *a.Name, a.RootJointTag
+            a.Index, *a.Name.ToString(), a.RootJointTag
         );
         const int JointCount = a.BoneNames.Num();
         for (int i = 0; i < JointCount; ++i)

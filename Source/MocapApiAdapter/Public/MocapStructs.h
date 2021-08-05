@@ -39,6 +39,9 @@ struct FMCAppSettings
     GENERATED_BODY()
 
     UPROPERTY()
+    FString Name;
+
+    UPROPERTY()
     EMCAppProtocol Protocol = EMCAppProtocol::UDP;
 
     UPROPERTY()
@@ -115,7 +118,10 @@ struct FMocapRigidBody
     GENERATED_BODY()
 
     UPROPERTY()
-    int ID;
+    FName Name;
+
+    //UPROPERTY()
+    //int ID;
 
     UPROPERTY()
     FVector Position;
@@ -129,8 +135,8 @@ struct FMocapRigidBody
     UPROPERTY()
     int JointTag;
 
-    UPROPERTY()
-    int Reserved; // used to store avatar id
+    //UPROPERTY()
+    //int Reserved; // used to store avatar id
 };
 
 struct FMocapTimeCode
@@ -154,7 +160,7 @@ struct FMocapAvatar
     int Index;
 
     UPROPERTY()
-    FString Name;
+    FName Name;
 
     UPROPERTY()
     int RootJointTag;
@@ -208,14 +214,14 @@ public:
     bool PollEvents();
 
     UFUNCTION(BlueprintCallable, Category=MocapApi)
-    void GetAllRigidBodyIDs(TArray<int>& IDArray);
+    void GetAllRigidBodyNames(TArray<FString>& NameArray);
 
     UFUNCTION(BlueprintCallable, Category=MocapApi)
-    bool GetRigidBody(const int ID, FVector& Position, FRotator& Rotation, int& Status, int& JointTag);
+    bool GetRigidBody(const FString& RigidName, FVector& Position, FRotator& Rotation, int& Status, int& JointTag);
 
-    bool GetRigidBodyPose(const int ID, FVector& Position, FQuat& Rotation, int& Status, int& JointTag);
+    bool GetRigidBodyPose(const FString& RigidName, FVector& Position, FQuat& Rotation, int& Status, int& JointTag);
 
-    const FMocapRigidBody* GetRigidBody(const int ID);
+    const FMocapRigidBody* GetRigidBody(const FString& RigidName);
 
     UFUNCTION(BlueprintCallable, Category=MocapApi)
     void GetAllAvatarNames(TArray<FString>& NameArray);
@@ -253,7 +259,7 @@ private:
 
     bool HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle, int ReservedData = 0);
 
-    TMap<int,FMocapRigidBody> RigidBodies;
+    TMap<FString, FMocapRigidBody> RigidBodies;
     TMap<FString, FMocapAvatar> Avatars;
     static TArray<FName> AvatarBoneNames;
     static TArray<int> AvatarBoneParents;
