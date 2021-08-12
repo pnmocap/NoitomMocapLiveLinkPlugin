@@ -227,7 +227,10 @@ bool UMocapApp::PollEvents()
                 //HandleRigidBodyUpdateEvent(, 0)
             }
             else if (e.eventType == MocapApi::MCPEvent_Error) {
-                UE_LOG(LogMocapApi, Warning, TEXT("Got Error Event %d, Please refer to MocapApi.h enum EMCPError for detail."), e.eventData.systemError.error);
+                LastError = e.eventData.systemError.error;
+                ExtraErrorMsg = FString();
+                UE_LOG(LogMocapApi, Warning, TEXT("Got Error Event %d: %s"), LastError, *GetLastErrorMessage());
+                LastError = MocapApi::Error_None;
             }
         }
     }
