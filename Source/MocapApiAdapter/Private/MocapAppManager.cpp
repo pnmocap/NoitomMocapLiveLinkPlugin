@@ -2,7 +2,7 @@
 #include "MocapApiLog.h"
 
 FMocapAppManager* FMocapAppManager::s_instance = nullptr;
-bool FMocapAppManager::NewAppUSeShortName = false;
+bool FMocapAppManager::NewAppUseShortName = false;
 
 FMocapAppManager& FMocapAppManager::GetInstance()
 {
@@ -92,7 +92,7 @@ void FMocapAppManager::OnRecieveMocapData(FName DataName, UMocapApp* theApp)
         if (*App != theApp)
         {
             // Already have the same name on App
-            if (NewAppUSeShortName)
+            if (NewAppUseShortName)
             {
                 NameResolver.Add(DataName, theApp);
             }
