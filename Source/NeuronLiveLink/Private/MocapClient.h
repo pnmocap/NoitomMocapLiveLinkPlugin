@@ -22,6 +22,8 @@ public:
 
 	virtual void Stop() override;
 
+    virtual void Exit() override;
+
 	//~ End FRunnable interface
 
     bool StartApplication();

@@ -77,7 +77,8 @@ bool FNeuronLiveLinkSource::RequestSourceShutdown ()
 {
     if (mocapClient)
     {
-        mocapClient->Stop();
+        mocapClient->Exit();
+        delete mocapClient;
         mocapClient = nullptr;
     }
 	AN_LOG(Log, TEXT("RequestSourceShutdown"));

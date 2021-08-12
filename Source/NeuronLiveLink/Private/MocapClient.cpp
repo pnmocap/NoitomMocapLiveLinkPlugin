@@ -51,7 +51,7 @@ FMocapAppClient::~FMocapAppClient()
         Thread = nullptr;
     }
 
-    DestroyApplication();
+    Exit();
 }
 
 void FMocapAppClient::SetSource(TSharedPtr<FNeuronLiveLinkSource> Source)
@@ -79,6 +79,16 @@ void FMocapAppClient::Stop()
 {
     bRunning = false;
 }
+
+void FMocapAppClient::Exit()
+{
+    if (bRunning)
+    {
+        Stop();
+    }
+    DestroyApplication();
+}
+
 //~ End FRunnable interface
 
 
