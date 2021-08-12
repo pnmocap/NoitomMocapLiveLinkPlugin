@@ -32,7 +32,7 @@ public:
 
 private:
     static FMocapAppManager* s_instance;
-    static bool NewAppUSeShortName;
+    static bool NewAppUseShortName;
 
     mutable FCriticalSection CriticalSection;
     TMap<FName, UMocapApp*> RunningApps;
