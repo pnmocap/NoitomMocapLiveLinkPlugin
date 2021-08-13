@@ -4,6 +4,7 @@
 #include "Widgets/Input/SSearchBox.h"
 #include "Widgets/Layout/SSeparator.h"
 #include "DetailLayoutBuilder.h"
+#include "Internationalization/Regex.h"
 
 
 #define LOCTEXT_NAMESPACE "NeuronBoneMappingWidget"
@@ -260,6 +261,30 @@ static TArray<FName> BuildInBoneNames = {
     TEXT("foot_r"),
 };
 
+bool IsStringMatchPattern(const FString& Str, const FString& Pattern, ESearchCase::Type SearchCase = ESearchCase::IgnoreCase)
+{
+    const bool useRegx = true; // false;
+    if (useRegx)
+    {
+        if (SearchCase == ESearchCase::CaseSensitive)
+        {
+            FRegexPattern MatherPatter(Pattern);
+            FRegexMatcher Matcher(MatherPatter, Str);
+            return Matcher.FindNext();
+        }
+        else
+        {
+            FRegexPattern MatherPatter(Pattern.ToLower());
+            FRegexMatcher Matcher(MatherPatter, Str.ToLower());
+            return Matcher.FindNext();
+        }
+    }
+    else
+    {
+        return Str.Contains(Pattern, SearchCase);
+    }
+}
+
 void SNeuronBoneMappingWidget::BuildDstBoneList()
 {
     DstBoneCandidates.Reset();
@@ -279,7 +304,7 @@ void SNeuronBoneMappingWidget::BuildDstBoneList()
         {
             TmpStr.ReplaceInline(*PreFix.ToString(), *EmptyStr);
         }
-        if (!HasFilter || TmpStr.Contains(SearchFilterText.ToString()))
+        if (!HasFilter || IsStringMatchPattern(TmpStr, SearchFilterText.ToString()))
         {
             DstBoneCandidates.AddUnique(MakeShared<FName>(FName(*TmpStr)));
         }
@@ -294,7 +319,7 @@ void SNeuronBoneMappingWidget::BuildDstBoneList()
             {
                 TmpStr.ReplaceInline(*PreFix.ToString(), *EmptyStr);
             }
-            if (!HasFilter || TmpStr.Contains(SearchFilterText.ToString()))
+            if (!HasFilter || IsStringMatchPattern(TmpStr, SearchFilterText.ToString()))
             {
                 DstBoneCandidates.AddUnique(MakeShared<FName>(FName(*TmpStr)));
             }
