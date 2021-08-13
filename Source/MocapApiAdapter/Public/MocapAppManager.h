@@ -10,6 +10,7 @@ class MOCAPAPIADAPTER_API MocapAppVisitor
 {
 public:
     virtual void Visit(UMocapApp* App) = 0;
+    virtual ~MocapAppVisitor() {};
 };
 
 class MOCAPAPIADAPTER_API FMocapAppManager
