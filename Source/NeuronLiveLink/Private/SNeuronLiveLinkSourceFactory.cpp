@@ -164,32 +164,32 @@ void SNeuronLiveLinkSourceFactory::Construct( const FArguments& Args )
 										.OnTextCommitted( this, &SNeuronLiveLinkSourceFactory::OnRemoteEndpointChanged )
 								]
 						]
-					+ SVerticalBox::Slot( )
-						.AutoHeight( )
-						[
-							SNew( SHorizontalBox )
-							+ SHorizontalBox::Slot( )
-								.HAlign( HAlign_Left )
-								.FillWidth( 0.5f )
-								[
-									SNew( STextBlock )
-										.Text( LOCTEXT( "NeuronRemoteRotationOrder", "RotationOrder" ) )
-								]
-							+ SHorizontalBox::Slot( )
-								.HAlign( HAlign_Right )
-								.FillWidth( 0.5f )
-								[
-									SAssignNew( RotationOrders, SComboBox<FRotationOrderComboItemType> )
-										.OptionsSource(&Options)
-										.OnSelectionChanged( this, &SNeuronLiveLinkSourceFactory::OnRotationOrderSelectionChanged )
-										.OnGenerateWidget( this, &SNeuronLiveLinkSourceFactory::MakeWidgetForOption )
-										.InitiallySelectedItem(CurrentRotationOrder)
-										[
-											SNew( STextBlock )
-												.Text( this, &SNeuronLiveLinkSourceFactory::GetCurrentItemLabel )
-										]
-								]
-						]
+					//+ SVerticalBox::Slot( )
+					//	.AutoHeight( )
+					//	[
+					//		SNew( SHorizontalBox )
+					//		+ SHorizontalBox::Slot( )
+					//			.HAlign( HAlign_Left )
+					//			.FillWidth( 0.5f )
+					//			[
+					//				SNew( STextBlock )
+					//					.Text( LOCTEXT( "NeuronRemoteRotationOrder", "RotationOrder" ) )
+					//			]
+					//		+ SHorizontalBox::Slot( )
+					//			.HAlign( HAlign_Right )
+					//			.FillWidth( 0.5f )
+					//			[
+					//				SAssignNew( RotationOrders, SComboBox<FRotationOrderComboItemType> )
+					//					.OptionsSource(&Options)
+					//					.OnSelectionChanged( this, &SNeuronLiveLinkSourceFactory::OnRotationOrderSelectionChanged )
+					//					.OnGenerateWidget( this, &SNeuronLiveLinkSourceFactory::MakeWidgetForOption )
+					//					.InitiallySelectedItem(CurrentRotationOrder)
+					//					[
+					//						SNew( STextBlock )
+					//							.Text( this, &SNeuronLiveLinkSourceFactory::GetCurrentItemLabel )
+					//					]
+					//			]
+					//	]
 					+ SVerticalBox::Slot( )
 						.HAlign( HAlign_Right )
 						.AutoHeight( )
@@ -275,15 +275,15 @@ FReply SNeuronLiveLinkSourceFactory::OnOkClicked( )
 		IsUDP = (CheckBoxPin->GetCheckedState( ) == ECheckBoxState::Checked);
 	}
 
-	TSharedPtr<SComboBox<FRotationOrderComboItemType>> RotationOrdersBoxPin = RotationOrders.Pin( );
-	if (!RotationOrdersBoxPin)
-	{
-		return FReply::Handled( );
-	}
-	else
-	{
-		
-	}
+	//TSharedPtr<SComboBox<FRotationOrderComboItemType>> RotationOrdersBoxPin = RotationOrders.Pin( );
+	//if (!RotationOrdersBoxPin)
+	//{
+	//	return FReply::Handled( );
+	//}
+	//else
+	//{
+	//	
+	//}
 
     FString RotationOrder = TEXT("YXZ");
     if (CurrentRotationOrder.IsValid())
