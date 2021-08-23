@@ -64,6 +64,8 @@ void FNeuronLiveLinkRemapAssetDetailCustomization::CustomizeDetails(IDetailLayou
         {
             TArray<FName> NeuronBoneNames = UMocapApp::GetAvatarBuildinBoneNames();
 
+            SNeuronBoneMappingWidget::ConstructBoneFilterMap(NeuronBoneNames);
+
             TSharedRef<IPropertyHandle> ControllersProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(UNeuronLiveLinkRemapAsset, BoneMapping));
             ControllersProperty->MarkHiddenByCustomization();
 

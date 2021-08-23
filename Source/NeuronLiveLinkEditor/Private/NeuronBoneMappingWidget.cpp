@@ -12,6 +12,90 @@
 
 /////////////////////////////////////////////////////
 
+TMap<FName, FString> SNeuronBoneMappingWidget::BoneFilterMap;
+
+static TArray<FString> __Filters = {
+    TEXT("hips|pelvis"),
+    TEXT("upleg|thigh"),
+    TEXT("leg|calf"),
+    TEXT("foot"),
+    TEXT("upleg|thigh"),
+    TEXT("leg|calf"),
+    TEXT("foot"),
+    TEXT("spine"),
+    TEXT("spine"),
+    TEXT("spine"),
+    TEXT("neck"),
+    TEXT("neck"),
+    TEXT("head"),
+    TEXT("shoulder|clavicle"),
+    TEXT("arm"),
+    TEXT("forearm|lowerarm"),
+    TEXT("hand[^timrp]"),
+    TEXT("thumb"),
+    TEXT("thumb"),
+    TEXT("thumb"),
+    TEXT("index"),
+    TEXT("index"),
+    TEXT("index"),
+    TEXT("index"),
+    TEXT("middle"),
+    TEXT("middle"),
+    TEXT("middle"),
+    TEXT("middle"),
+    TEXT("ring"),
+    TEXT("ring"),
+    TEXT("ring"),
+    TEXT("ring"),
+    TEXT("pinky"),
+    TEXT("pinky"),
+    TEXT("pinky"),
+    TEXT("pinky"),
+    TEXT("shoulder|clavicle"),
+    TEXT("arm"),
+    TEXT("forearm|lowerarm"),
+    TEXT("hand[^timrp]"),
+    TEXT("thumb"),
+    TEXT("thumb"),
+    TEXT("thumb"),
+    TEXT("index"),
+    TEXT("index"),
+    TEXT("index"),
+    TEXT("index"),
+    TEXT("middle"),
+    TEXT("middle"),
+    TEXT("middle"),
+    TEXT("middle"),
+    TEXT("ring"),
+    TEXT("ring"),
+    TEXT("ring"),
+    TEXT("ring"),
+    TEXT("rink"),
+    TEXT("rinky"),
+    TEXT("pinky"),
+    TEXT("pinky"),
+    TEXT("spine"),
+};
+
+void SNeuronBoneMappingWidget::ConstructBoneFilterMap(const TArray<FName>& BoneArray)
+{
+    if (BoneFilterMap.Num() == 0)
+    {
+        const int N = __Filters.Num();
+        for (int i = 0; i < BoneArray.Num(); ++i)
+        {
+            if (i < N)
+            {
+                BoneFilterMap.Add(BoneArray[i], __Filters[i]);
+            }
+            else
+            {
+                BoneFilterMap.Add(BoneArray[i], TEXT(""));
+            }
+        }
+    }
+}
+
 void SNeuronBoneMappingWidget::Construct(const FArguments& InArgs)
 {
     if (InArgs._Asset.IsValid())
@@ -183,6 +267,11 @@ void SNeuronBoneMappingWidget::OnCheckboxStateChanged(ECheckBoxState State)
 
 TSharedRef<SWidget> SNeuronBoneMappingWidget::CreateDstBoneSelectWidgetMenu()
 {
+    FString* Filter = BoneFilterMap.Find(SrcBoneName);
+    if (Filter != nullptr)
+    {
+        SearchFilterText = FText::FromString(*Filter);
+    }
     BuildDstBoneList();
     TSharedPtr<SSearchBox> SearchWidgetToFocus = NULL;
     TSharedRef<SBorder> MenuWidget = SNew(SBorder)
@@ -215,6 +304,7 @@ TSharedRef<SWidget> SNeuronBoneMappingWidget::CreateDstBoneSelectWidgetMenu()
                 [
                     SAssignNew(SearchWidgetToFocus, SSearchBox)
                     .SelectAllTextWhenFocused(true)
+                    .InitialText(SearchFilterText)
                     .OnTextChanged(this, &SNeuronBoneMappingWidget::OnFilterTextChanged)
                     .OnTextCommitted(this, &SNeuronBoneMappingWidget::OnFilterTextCommitted)
                     .HintText(NSLOCTEXT("BonePicker", "Search", "Search..."))

@@ -48,6 +48,7 @@ public:
     TSharedRef<ITableRow> OnGenerateWidgetItem(TSharedPtr<FName> InItem, const TSharedRef<STableViewBase>& OwnerTable);
     void OnBoneListSelectionChanged(TSharedPtr<FName> BoneInfo, ESelectInfo::Type SelectInfo);
 
+    static void ConstructBoneFilterMap(const TArray<FName>& BoneArray);
 private: 
     TSharedPtr<SCheckBox> CheckBox;
     TSharedPtr<SEditableTextBox> DstBoneWidget;
@@ -61,4 +62,5 @@ private:
     FName SrcBoneName;
     FName DstBoneName;
     bool IsValid();
+    static TMap<FName, FString> BoneFilterMap;
 };
