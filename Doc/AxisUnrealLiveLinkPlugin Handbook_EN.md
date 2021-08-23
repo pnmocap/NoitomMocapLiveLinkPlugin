@@ -312,7 +312,7 @@ If you are an advance player, you want to do more about retargeting, you can inh
 
 ## 8.2 Put an Skeletal Mesh in your map and setup animation blueprint
 
-​    In the **Content Browser**, locate the Skeletal Mesh you want to add to the map as a Skeletal Mesh Actor. Place it into the map and set its animation class like the following graph, the you can click play button and test your animation. If everything is ok, don't forget to **save** your map and other assets.
+​    In the **Content Browser**, locate the Skeletal Mesh you want to add to the map as a Skeletal Mesh Actor. Place it into the map and set its animation class like the following graph, then you can click play button and test your animation. If everything is ok, don't forget to **save** your map and other assets.
 
 ![LevelBP_SetAnim_1](LevelBP_SetAnim_1.png)
 ![LevelBP_SetAnim_2](LevelBP_SetAnim_2.png)
@@ -347,7 +347,7 @@ You will be presented with a dialog for selecting the target directory. If packa
 |       PN_Avatar.fbx    FBX File for import skeletal animation to unreal engine
 |       
 +---Binaries
-|   \---Win64    Binsries files of the plugin
+|   \---Win64    Binaries files of the plugin
 |           
 +---Content
 |   |   BP_PNSBaseActor.uasset    Base actor for driving skeletal mesh animation in Axis Studio
@@ -361,7 +361,7 @@ You will be presented with a dialog for selecting the target directory. If packa
 |           M_Body_Dark.uasset    Mateial used for PNS_Avatar
 |           M_FaceMask.uasset    Mateial used for PNS_Avatar
 |           M_Logo.uasset    Mateial used for PNS_Avatar
-|           PNS_Actor.uasset     Actor drived form BP_PNSBaseActor to drive default skeletal mesh
+|           PNS_Actor.uasset     Actor derived form BP_PNSBaseActor to drive default skeletal mesh
 |           PNS_Avatar.uasset    Skeletal Mesh
 |           PNS_Avatar_Anim.uasset    Skeletal Mesh animation blueprint 
 |           PNS_Avatar_PhysicsAsset.uasset    PhysicsAsset for skeletal mesh
@@ -414,7 +414,7 @@ You will be presented with a dialog for selecting the target directory. If packa
     |           NeuronLiveLinkSource.h    Live link source for neuron
     |           PNSAnimInstance.h    Blueprint amimation instance(can set subject name) for diving animation data
     |           
-    \---NeuronLiveLinkEditor
+    \---NeuronLiveLinkEditor    Neuron Live Link Editor module
         |   NeuronLiveLinkEditor.Build.cs    Module build file
         |   
         \---Private

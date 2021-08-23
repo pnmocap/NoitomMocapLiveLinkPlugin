@@ -97,6 +97,8 @@ Axis studio作为网络中的服务端向客户端电脑上的应用发送动补
 
 # 4. 快速开始
 
+## 4.1 打开Axis Studio并回放文件
+
 > 下述操作步骤基于Axis Studio2.4.11579.1201, 对于其他版本的操作过程大体相似，这里不再赘述，请参考相关版本的Axis Studio手册查找详细操作步骤。
 >
 > ![AxixVersion](AxixVersion.png)
@@ -557,7 +559,7 @@ Spine3,
     
     
 * 编辑骨头名称前缀
-    
+  
     ![RemapEditor_4](RemapEditor_4.png)
     
     ```2.
@@ -646,106 +648,108 @@ Spine3,
         ![LevelBP_EvtBeginPlay_1](LevelBP_EvtBeginPlay_1.png)
         ![LevelBP_EvtBeginPlay_2](LevelBP_EvtBeginPlay_2.png)
 
-    * Create Set node and connect to **Create Neuron Live Link Source at runtime**.
+    * 创建**LiveLinkHandle**的设置节点并与**Create Neuron Live Link Source at runtime**连接
         ![LevelBP_EvtBeginPlay_3](LevelBP_EvtBeginPlay_3.png)
         ![LevelBP_EvtBeginPlay_4](LevelBP_EvtBeginPlay_4.png)
 
-    * Fill Connection String  Pin in **Create Neuron Live Link Source at runtime**
-        Go back to Live Link Window
+    * 填充**Create Neuron Live Link Source at runtime**的Connection String引脚
+        打开实时链接(Live Link)窗口
         ![LevelBP_ConnectionStr_1](LevelBP_ConnectionStr_1.png)
-        Select Axis Studio source and Click **Show Advanced** in Settings panel
+        选择 Axis Studio源并点击设置面板的显示高级选项(Show Advanced)箭头（如下图中2所示）
         ![LevelBP_ConnectionStr_2](LevelBP_ConnectionStr_2.png)
-        Connect string and Factory will display in the Settings panel. 
+        链接字符串(Connect string)和Factory将在面板中显示出来
 
         ![LevelBP_ConnectionStr_3](LevelBP_ConnectionStr_3.png)
-        Copy Connection String in settings panel and paste it into **Create Neuron Live Link Source at runtime** node in Event Graph.
+        将链接字符串(Connection String)的值拷贝出来并粘贴到关卡蓝图时间图表的**Create Neuron Live Link Source at runtime**节点的Connection String引脚
         ![LevelBP_EvtBeginPlay_5](LevelBP_EvtBeginPlay_5.png)
 
-* Remove live link source and connect to **Event EndPlay** node
+* 移除live link 源处理结构并与**事件结束运行(Event EndPlay)**节点相连
 
-    * Right-Click to create **Event EndPlay**.
+    * 右键在空白处单击以创建 **事件结束运行(Event EndPlay)**.
         ![LevelBP_EvtEndPlay_1](LevelBP_EvtEndPlay_1.png)
-    * Create remove Source Node and link
+    * 创建Remove Source节点并连接
         ![LevelBP_EvtEndPlay_2](LevelBP_EvtEndPlay_2.png)
-    * Create **Get** node and connect to **Remove Source** node
+    * 创建LiveLinkHandle的获取节点并与**Remove Source**节点相连
         ![LevelBP_EvtEndPlay_3](LevelBP_EvtEndPlay_3.png)
 
 * The event graph will show like the following image, Click Compile and Save the level blueprint
 
-    ![LevelBP_Compile](LevelBP_Compile.png)
+    整个事件图表如下图所示,点击编译(Compile)并保存(Save)关卡蓝图
 
+    ![LevelBP_Compile](LevelBP_Compile.png)
+    
     
 
-## 8.2 Put an Skeletal Mesh in your map and setup animation blueprint
+## 8.2 在关卡中放置骨骼网格体(Skeletal Mesh)并设置动画蓝图(animation blueprint)
 
-​    In the **Content Browser**, locate the Skeletal Mesh you want to add to the map as a Skeletal Mesh Actor. Place it into the map and set its animation class like the following graph, the you can click play button and test your animation. If everything is ok, don't forget to **save** your map and other assets.
+​    在**内容管理器(Content Browser)**中, 定位到你要添加到关卡中的骨骼网格体资产并将其作为Skeletal Mesh Actor添加到关卡中并如下图是指它的动画类（Anim Class）。然后就可以点击运行(Play)按钮并测试你的动画效果。 如果一切运行正常,不要忘了保存你的关卡地图和其他资产
 
 ![LevelBP_SetAnim_1](LevelBP_SetAnim_1.png)
 ![LevelBP_SetAnim_2](LevelBP_SetAnim_2.png)
 
-> NOTE: You can also drag your AnimationBlueprint into the viewport directely or use our **PNS_Actor** blueprint class but use you own skeletal mesh and animation blueprint to set you animation character.
+> 注意: 你还可以直接将动画蓝图直接拖拽到关卡的视口或者直接使用我们的**PNS_Actor**蓝图类然后使用你自己的骨骼网格体和动画蓝图来设置你的动画角色
 
-## 8.3 Setup Game Default map
+## 8.3 设置游戏默认地图(Game Default map)
 
-Before packaging your game, you will first need to set a **Game Default Map**, which will load when your packaged game starts. If you do not set a map and are using a blank project, you will only see a black screen when the packaged game starts. If you have used one of the template maps, like the First-Person template or Third Person template, the starting map will be loaded.
+在打包游戏之前, 你首先需要设置**游戏默认地图(Game Default Map)**, 这张地图会在打包的游戏启动时加载。如果你适应的是空工程并且没有设置地图，你打包的游戏启动后将只能看到黑屏，如果你是用的是模板地图比如第一人称模板(First-Person template)或者第三人称模板(Third Person template), 模板的初始地图将会加载
 
-* Click on **Edit > Project Settings > Maps & Modes** in the Editor's main menu.
+* 点击编辑器主菜单的**编辑->项目设置->地图和模式(Edit > Project Settings > Maps & Modes)**
     ![Package_SetMap_1](Package_SetMap_1.png)
 
     ![Package_SetMap_2](Package_SetMap_2.png)
 
-    > Note:  you may also need to specify your own game mode to use your own player character and player controller.
+    > 注意: 你肯同样需要设置你自己的游戏模式(game mode)来使用你自己的玩家角色和玩家控制器
 
-## 8.4 Package your Project to a runnable binary
+## 8.4 将你的工程打包成可执行的二进制程序
 
-Click on File > Package Project > [PlatformName] in the Editor's main menu. (in the graph we select Windows 64-bit platform)
+在编辑器主菜单选择文件->打包项目->\[平台名称\]对工程进行打包 (图中我们选择了Windows 64-bit 平台)
 
 ![Package_MenuAction](Package_MenuAction.png)
 
-You will be presented with a dialog for selecting the target directory. If packaging completes successfully, this directory will then contain the packaged project.
+一个选择目标目录的对话框将会弹出，打包成功后这个目录会包含打包后的项目
 
-# # 9. Plugin Structure
+# 9. 插件结构
 
 ```txt
-|   NeuronLiveLink.uplugin    Plugin description file
-|   BuildInfo    Basic Build info for plugin 
+|   NeuronLiveLink.uplugin    插件描述文件Plugin description file
+|   BuildInfo    插件基本构建信息文件Basic Build info for plugin 
 +---Arts
-|       PN_Avatar.fbx    FBX File for import skeletal animation to unreal engine
+|       PN_Avatar.fbx    本文所有导入到虚幻引擎的FBX文件FBX File for import skeletal animation to unreal engine
 |       
 +---Binaries
-|   \---Win64    Binsries files of the plugin
+|   \---Win64    插件的二进制文件Binaries files of the plugin
 |           
 +---Content
-|   |   BP_PNSBaseActor.uasset    Base actor for driving skeletal mesh animation in Axis Studio
+|   |   BP_PNSBaseActor.uasset    驱动Axis Studio骨骼网格体的Actor基类Base actor for driving skeletal mesh animation in Axis Studio
 |   |   
 |   +---Maps
-|   |       DemoMap.umap    Demo map for use the plugin
-|   |       DemoMap_BuiltData.uasset    Build data for map
+|   |       DemoMap.umap    插件的展示关卡地图Demo map for use the plugin
+|   |       DemoMap_BuiltData.uasset    地图的贴图构建数据注册表Build data for map
 |   |       
 |   \---PNS
-|           M_Body.uasset    Mateial used for PNS_Avatar
-|           M_Body_Dark.uasset    Mateial used for PNS_Avatar
-|           M_FaceMask.uasset    Mateial used for PNS_Avatar
-|           M_Logo.uasset    Mateial used for PNS_Avatar
-|           PNS_Actor.uasset     Actor drived form BP_PNSBaseActor to drive default skeletal mesh
-|           PNS_Avatar.uasset    Skeletal Mesh
-|           PNS_Avatar_Anim.uasset    Skeletal Mesh animation blueprint 
-|           PNS_Avatar_PhysicsAsset.uasset    PhysicsAsset for skeletal mesh
-|           PNS_Avatar_Skeleton.uasset    Skeleton for skeletal mesh
-|           PNS_Avatar_skeletonRemap.uasset    Remap asset for driving skeletal mesh
-|           PNS_Prop.uasset    Actor for driving props in Axis Studio
+|           M_Body.uasset    骨骼网格体所用材质Mateial used for PNS_Avatar
+|           M_Body_Dark.uasset    骨骼网格体所用材质Mateial used for PNS_Avatar
+|           M_FaceMask.uasset    骨骼网格体所用材质Mateial used for PNS_Avatar
+|           M_Logo.uasset    骨骼网格体所用材质Mateial used for PNS_Avatar
+|           PNS_Actor.uasset     派生自BP_PNSBaseActor的驱动默认骨骼网格体的Actor类Actor drived form BP_PNSBaseActor to drive default skeletal mesh
+|           PNS_Avatar.uasset    骨骼网格体Skeletal Mesh
+|           PNS_Avatar_Anim.uasset    骨骼网格体动画蓝图Skeletal Mesh animation blueprint 
+|           PNS_Avatar_PhysicsAsset.uasset    骨骼网格体物理资产PhysicsAsset for skeletal mesh
+|           PNS_Avatar_Skeleton.uasset    骨骼网格体的骨骼Skeleton for skeletal mesh
+|           PNS_Avatar_skeletonRemap.uasset    骨骼网格体重映射资产Remap asset for driving skeletal mesh
+|           PNS_Prop.uasset    驱动Axis Studio道具的Actor类Actor for driving props in Axis Studio
 |           
 +---Doc
-|       AxisUnrealLiveLinkPlugin Handbook_EN.pdf    This handbook in English language version
-|       AxisUnrealLiveLinkPlugin Handbook_CN.pdf    This handbook in Chinese language version
+|       AxisUnrealLiveLinkPlugin Handbook_EN.pdf    本手册英文版本This handbook in English language version
+|       AxisUnrealLiveLinkPlugin Handbook_CN.pdf    本手册中文版本This handbook in Chinese language version
 |       
-+---Intermediate    Intermediate fies(generated header files, precompiled object files etc.) for the plugin
++---Intermediate    插件的中间文件（生成的头文件和预编译目标文件等）Intermediate fies(generated header files, precompiled object files etc.) for the plugin
 |                           
 +---Resources
-|       Icon128.png    Icon files for plugin
+|       Icon128.png    插件图标Icon files for plugin
 |       
-\---Source    Sources files for Plugin
-    +---MocapApi    exteral MocapApi C++ lib to receive data form axis studio
+\---Source    插件源码文件Sources files for Plugin
+    +---MocapApi    用于从axis studio接收MocapApiC++库exteral MocapApi C++ lib to receive data form axis studio
     |   |   MocapApiLib.Build.cs
     |   |   
     |   +---bin
@@ -753,46 +757,46 @@ You will be presented with a dialog for selecting the target directory. If packa
     |   \---include
     |           MocapApi.h    MocapApi C++ lib header file
     |           
-    +---MocapApiAdapter    MocapApi adapter module to use MocapApi in unreal engine
-    |   |   MocapApiAdapter.Build.cs    Module build file
+    +---MocapApiAdapter    用于虚幻引擎的MocapApi适配器MocapApi adapter module to use MocapApi in unreal engine
+    |   |   MocapApiAdapter.Build.cs    模块构建文件Module build file
     |   |   
     |   \---Public
-    |           MocapApiAdapter.h    Module interface file
-    |           MocapApiLog.h    Log category used in this module
-    |           MocapAppManager.h    Mocap application manager
-    |           MocapStructs.h    Struct used in unreal engine for MocapApi
+    |           MocapApiAdapter.h    模块接口Module interface file
+    |           MocapApiLog.h    模块日志类Log category used in this module
+    |           MocapAppManager.h    模块Mocap应用管理类Mocap application manager
+    |           MocapStructs.h    模块Mocap对虚幻开放的结构Struct used in unreal engine for MocapApi
     |           
-    +---NeuronLiveLink    Live link runtime module for neuron(mocapApi)
-    |   |   NeuronLiveLink.Build.cs    Module build file
+    +---NeuronLiveLink    接收neuron(mocapApi)数据的Live link运行时模块Live link runtime module for neuron(mocapApi)
+    |   |   NeuronLiveLink.Build.cs    模块构建文件Module build file
     |   |   
     |   +---Private
-    |   |       MocapClient.h    MocapClient for receiving axis studio data in live link
-    |   |       NeuronLiveLinkSourceFactory.h    Factory for create NeuronLiveLinkSource
-    |   |       SNeuronLiveLinkSourceFactory.h    Editor UI for create NeuronLiveLinkSource
-    |   |       SubjectNameSetter.h    Subject name setter for animation blueprint
+    |   |       MocapClient.h    在实时连接中接收axis studio数据的Mocap客户端MocapClient for receiving axis studio data in live link
+    |   |       NeuronLiveLinkSourceFactory.h    创建NeuronLiveLinkSource的工厂类Factory for create NeuronLiveLinkSource
+    |   |       SNeuronLiveLinkSourceFactory.h    创建NeuronLiveLinkSource的编辑器UI组件Editor UI for create NeuronLiveLinkSource
+    |   |       SubjectNameSetter.h    用于在动画蓝图中设置对象命名(Subject name)的设置器Subject name setter for animation blueprint
     |   |       
     |   \---Public
-    |           NeuronBoneMappingInfo.h    Bone mapping info for retargeting
-    |           NeuronLiveLink.h    Module interface file
-    |           NeuronLiveLinkBPLibrary.h    Blueprint library
-    |           NeuronLiveLinkLog.h    Log category used in this module
-    |           NeuronLiveLinkRemapAsset.h    Retargrting asset for dirving animation data
-    |           NeuronLiveLinkSource.h    Live link source for neuron
-    |           PNSAnimInstance.h    Blueprint amimation instance(can set subject name) for diving animation data
+    |           NeuronBoneMappingInfo.h    用于重定向的骨骼映射信息Bone mapping info for retargeting
+    |           NeuronLiveLink.h    模块接口Module interface file
+    |           NeuronLiveLinkBPLibrary.h    蓝图函数库Blueprint library
+    |           NeuronLiveLinkLog.h    模块日志类Log category used in this module
+    |           NeuronLiveLinkRemapAsset.h    驱动动画数据法人重定向资产类Retargrting asset for dirving animation data
+    |           NeuronLiveLinkSource.h    neuron的实习链接源Live link source for neuron
+    |           PNSAnimInstance.h    蓝图动画实例类（可设置对象命名）Blueprint amimation instance(can set subject name) for diving animation data
     |           
-    \---NeuronLiveLinkEditor
-        |   NeuronLiveLinkEditor.Build.cs    Module build file
+    \---NeuronLiveLinkEditor    Neuron Live Link编辑器相关模块Neuron Live Link Editor module
+        |   NeuronLiveLinkEditor.Build.cs    模块构建文件Module build file
         |   
         \---Private
-                LiveLinkEditorPrivate.h    Module interface file
-                NeuronBoneMappingWidget.h    Bone mapping editor UI
-                NeuronLiveLinkRemapAssetDetailCustomization.h    Remap editor for Neuron
+                LiveLinkEditorPrivate.h    模块接口Module interface file
+                NeuronBoneMappingWidget.h    骨骼映射用户接口Bone mapping editor UI
+                NeuronLiveLinkRemapAssetDetailCustomization.h    Neuron的骨骼映射编辑器Remap editor for Neuron
 
 ```
 
-# 10 FAQ
+# 10 常见问题
 
-* Got compile error when rebuild my project.
-    Our plugin use precompiled files and there is a rebuild bug in unreal engine which will delete the precompiled files if you rebuild your project. so please download the plugin again and replace the files in Intermediate folder with the new downloaded files and click build to build again. 
+* 当我重新编译(rebuild)我的工程时遇到编译错误
+    我们的插件使用的是预编译的目标文件文件，虚幻引擎在重新编译时会删除这些预编译文件从而导致我发编译成功，这是虚幻引擎编译系统的缺陷，现行解决方案是重新下载插件并将工程中插件的Intermediate目录使用新下载的文件进行替换，然后运行构建(Build)操作进行构建
 * 
 
