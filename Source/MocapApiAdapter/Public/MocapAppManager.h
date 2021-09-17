@@ -23,7 +23,8 @@ public:
     UMocapApp* GetMocapAppByName(FName AppName);
     void EachRunningApp(MocapAppVisitor& Visitor);
 
-    const FMocapRigidBody* GetRigidBody(FName RigidName);
+	const FMocapTracker* GetTracker(FName TrackerName);
+	const FMocapRigidBody* GetRigidBody(FName RigidName);
     const FMocapAvatar* GetAvatarData(FName AvatarName);
     void OnRecieveMocapData(FName DataName, UMocapApp* theApp);
     bool IsNameUsedByApp(FName DataName, UMocapApp* theApp);

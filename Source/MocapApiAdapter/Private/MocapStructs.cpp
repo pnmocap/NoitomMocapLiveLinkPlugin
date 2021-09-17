@@ -90,6 +90,9 @@ bool UMocapApp::Connect()
     mcpError = mcpSettings->SetSettingsBvhTransformation(EnableTrans, mcpSettingsHandle);
     ReturnFalseIFError();
 
+	mcpError = mcpSettings->SetSettingsTrackerData(mcpSettingsHandle);
+	ReturnFalseIFError();
+
     bool isUDP = AppSettings.Protocol == EMCAppProtocol::UDP;
     const char* IPAddress = FTCHARToUTF8(*AppSettings.RemoteIP).Get();
     int Port = AppSettings.Port;
@@ -151,6 +154,21 @@ bool UMocapApp::Connect()
 
     IsConnecting = true;
     FMocapAppManager::GetInstance().AddMocapApp(this);
+
+	// lihongce
+// 	MocapApi::MCPTrackerHandle_t pTrackerHandle;
+// 	uint32_t punTrackerHandle;
+// 	mcpApplication->GetApplicationTrackers(&pTrackerHandle, &punTrackerHandle, appcliation);
+// 	MocapApi::IMCPTracker* TrackerMgr = nullptr;
+// 
+// 	mcpError = MocapApi::MCPGetGenericInterface(MocapApi::IMCPTracker_Version, reinterpret_cast<void**>(&TrackerMgr));
+// 	ReturnFalseIFError();
+// 
+// 	mcpError = TrackerMgr->SetServerIP("192.168.20.99", pTrackerHandle);
+// 	ReturnFalseIFError();
+// 
+// 	mcpError = TrackerMgr->ReqConfigSyn(pTrackerHandle);
+// 	ReturnFalseIFError();
 
     UE_LOG(LogMocapApi, Log, TEXT("App (%s) %s handle %llu Connect ok."),
         *AppName,
@@ -226,6 +244,9 @@ bool UMocapApp::PollEvents()
             else if (e.eventType == MocapApi::MCPEvent_RigidBodyUpdated) {
                 //HandleRigidBodyUpdateEvent(, 0)
             }
+			else if (e.eventType == MocapApi::MCPEvent_ConfigUpdated) {
+				HandleTrackerUpdateEvent(e.eventData.trackerData._trackerHandle);
+			}
             else if (e.eventType == MocapApi::MCPEvent_Error) {
                 LastError = e.eventData.systemError.error;
                 ExtraErrorMsg = FString();
@@ -235,6 +256,39 @@ bool UMocapApp::PollEvents()
         }
     }
     return hasUnhandledEvents;
+}
+
+void UMocapApp::GetAllTrackerNames(TArray<FString>& NameArray)
+{
+	FScopeLock Lock(&CriticalSection);
+	Trackers.GetKeys(NameArray);
+}
+
+bool UMocapApp::GetTracker(const FString& TrackerName, FVector& Position, FRotator& Rotation, int& Status)
+{
+	FQuat q;
+	bool Result = GetTrackerPose(TrackerName, Position, q, Status);
+	Rotation = q.Rotator();
+	return Result;
+}
+
+bool UMocapApp::GetTrackerPose(const FString& TrackerName, FVector& Position, FQuat& Rotation, int& Status)
+{
+	FScopeLock Lock(&CriticalSection);
+	const FMocapTracker* Tracker = GetTracker(TrackerName);
+	if (Tracker != nullptr)
+	{
+		Position = Tracker->Position;
+		Rotation = Tracker->Rotation;
+		Status = Tracker->Status;
+		return true;
+	}
+	return false;
+}
+
+const FMocapTracker* UMocapApp::GetTracker(const FString& TrackerName)
+{
+	return Trackers.Find(TrackerName);
 }
 
 void UMocapApp::GetAllRigidBodyNames(TArray<FString>& NameArray)
@@ -556,6 +610,42 @@ void UMocapApp::CheckAvatarJoint(uint64 Avatarhandle, uint64 JointHandle, const 
 #undef CheckVector
 #undef CheckQuat
 #undef CheckParent
+}
+
+bool UMocapApp::HandleTrackerUpdateEvent(uint64 TrackerHandle, int ReservedData)
+{
+	MocapApi::IMCPTracker* TrackerMgr = nullptr;
+	MocapApi::EMCPError mcpError = MocapApi::MCPGetGenericInterface(MocapApi::IMCPTracker_Version,
+		reinterpret_cast<void**>(&TrackerMgr));
+	ReturnFalseIFError();
+
+	int TrackerID = 0;
+	const char* name = nullptr;
+	TrackerMgr->GetDeviceName(0, &name, TrackerID);
+	FString TrackerName = name;
+	FMocapTracker& tracker = Trackers.FindOrAdd(TrackerName);
+	//rigid.ID = TrackerID;
+	tracker.Name = FName(TrackerName);
+	FVector p;
+	TrackerMgr->GetTrackerPosition(&p.X, &p.Y, &p.Z, (char*)name, TrackerHandle);
+	tracker.Position.X = p.X;
+	tracker.Position.Y = p.Z;
+	tracker.Position.Z = p.Y;
+	FQuat q;
+	TrackerMgr->GetTrackerRotation(&q.X, &q.Y, &q.Z, &q.W, (char*)name, TrackerHandle);
+	tracker.Rotation.X = q.X;
+	tracker.Rotation.Y = q.Z;
+	tracker.Rotation.Z = q.Y;
+	tracker.Rotation.W = -q.W;
+	//TrackerMgr->GetTrackerStatus(&rigid.Status, name, TrackerHandle);
+
+	//rigid.Reserved = ReservedData;
+
+	FMocapAppManager::GetInstance().OnRecieveMocapData(tracker.Name, this);
+
+	delete name;
+
+	return true;
 }
 
 bool UMocapApp::HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle, int ReservedData)

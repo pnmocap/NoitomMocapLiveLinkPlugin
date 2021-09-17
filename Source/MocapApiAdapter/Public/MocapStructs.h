@@ -139,6 +139,27 @@ struct FMocapRigidBody
     //int Reserved; // used to store avatar id
 };
 
+USTRUCT(BlueprintType)
+struct FMocapTracker
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    FName Name;
+
+    //UPROPERTY()
+    //int ID;
+
+    UPROPERTY()
+    FVector Position;
+
+    UPROPERTY()
+    FQuat Rotation;
+
+    UPROPERTY()
+    int Status;
+};
+
 struct FMocapTimeCode
 {
     uint32 Hour;
@@ -213,6 +234,16 @@ public:
 
     bool PollEvents();
 
+	UFUNCTION(BlueprintCallable, Category = MocapApi)
+	void GetAllTrackerNames(TArray<FString>& NameArray);
+
+	UFUNCTION(BlueprintCallable, Category = MocapApi)
+	bool GetTracker(const FString& TrackerName, FVector& Position, FRotator& Rotation, int& Status);
+
+	bool GetTrackerPose(const FString& TrackerName, FVector& Position, FQuat& Rotation, int& Status);
+
+	const FMocapTracker* GetTracker(const FString& TrackerName);
+
     UFUNCTION(BlueprintCallable, Category=MocapApi)
     void GetAllRigidBodyNames(TArray<FString>& NameArray);
 
@@ -257,9 +288,12 @@ private:
     bool HandleAvatarUpdateEvent(uint64 Avatarhandle);
     void CheckAvatarJoint(uint64 Avatarhandle, uint64 JointHandle, const FMocapAvatar& avatar);
 
-    bool HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle, int ReservedData = 0);
+	bool HandleTrackerUpdateEvent(uint64 TrackerHandle, int ReservedData = 0);
 
-    TMap<FString, FMocapRigidBody> RigidBodies;
+	bool HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle, int ReservedData = 0);
+
+	TMap<FString, FMocapTracker> Trackers;
+	TMap<FString, FMocapRigidBody> RigidBodies;
     TMap<FString, FMocapAvatar> Avatars;
     static TArray<FName> AvatarBoneNames;
     static TArray<int> AvatarBoneParents;
