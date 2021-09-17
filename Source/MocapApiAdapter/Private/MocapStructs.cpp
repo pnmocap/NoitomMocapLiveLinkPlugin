@@ -244,7 +244,7 @@ bool UMocapApp::PollEvents()
             else if (e.eventType == MocapApi::MCPEvent_RigidBodyUpdated) {
                 //HandleRigidBodyUpdateEvent(, 0)
             }
-			else if (e.eventType == MocapApi::MCPEvent_ConfigUpdated) {
+			else if (e.eventType == MocapApi::MCPEvent_TrackerUpdated) {
 				HandleTrackerUpdateEvent(e.eventData.trackerData._trackerHandle);
 			}
             else if (e.eventType == MocapApi::MCPEvent_Error) {
@@ -619,32 +619,38 @@ bool UMocapApp::HandleTrackerUpdateEvent(uint64 TrackerHandle, int ReservedData)
 		reinterpret_cast<void**>(&TrackerMgr));
 	ReturnFalseIFError();
 
-	int TrackerID = 0;
-	const char* name = nullptr;
-	TrackerMgr->GetDeviceName(0, &name, TrackerID);
-	FString TrackerName = name;
-	FMocapTracker& tracker = Trackers.FindOrAdd(TrackerName);
-	//rigid.ID = TrackerID;
-	tracker.Name = FName(TrackerName);
-	FVector p;
-	TrackerMgr->GetTrackerPosition(&p.X, &p.Y, &p.Z, (char*)name, TrackerHandle);
-	tracker.Position.X = p.X;
-	tracker.Position.Y = p.Z;
-	tracker.Position.Z = p.Y;
-	FQuat q;
-	TrackerMgr->GetTrackerRotation(&q.X, &q.Y, &q.Z, &q.W, (char*)name, TrackerHandle);
-	tracker.Rotation.X = q.X;
-	tracker.Rotation.Y = q.Z;
-	tracker.Rotation.Z = q.Y;
-	tracker.Rotation.W = -q.W;
-	//TrackerMgr->GetTrackerStatus(&rigid.Status, name, TrackerHandle);
+    int TrackerCount = 0;
+    mcpError = TrackerMgr->GetDeviceCount(&TrackerCount, TrackerHandle);
+    ReturnFalseIFError();
+	
+    for (int Idx = 0; Idx < TrackerCount; ++Idx)
+    {
+        const char* name = nullptr;
+        TrackerMgr->GetDeviceName(Idx, &name, TrackerHandle);
+        FString TrackerName = FUTF8ToTCHAR(name).Get();
 
-	//rigid.Reserved = ReservedData;
+        FMocapTracker& tracker = Trackers.FindOrAdd(TrackerName);
+        //rigid.ID = TrackerID;
+        tracker.Name = FName(TrackerName);
+        FVector p;
+        TrackerMgr->GetTrackerPosition(&p.X, &p.Y, &p.Z, (char*)name, TrackerHandle);
+        tracker.Position.X = p.X;
+        tracker.Position.Y = p.Z;
+        tracker.Position.Z = p.Y;
+        FQuat q;
+        TrackerMgr->GetTrackerRotation(&q.X, &q.Y, &q.Z, &q.W, (char*)name, TrackerHandle);
+        tracker.Rotation.X = q.X;
+        tracker.Rotation.Y = q.Z;
+        tracker.Rotation.Z = q.Y;
+        tracker.Rotation.W = -q.W;
+        //TrackerMgr->GetTrackerStatus(&rigid.Status, name, TrackerHandle);
 
-	FMocapAppManager::GetInstance().OnRecieveMocapData(tracker.Name, this);
+        //rigid.Reserved = ReservedData;
 
-	delete name;
+        FMocapAppManager::GetInstance().OnRecieveMocapData(tracker.Name, this);
 
+        //delete name;
+    }
 	return true;
 }
 

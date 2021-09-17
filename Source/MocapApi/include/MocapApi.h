@@ -143,8 +143,6 @@ namespace MocapApi {
     class IMCPTracker
     {
     public:
-        virtual EMCPError SetServerIP(char* serverIP,
-            MCPTrackerHandle_t ulTrackerHandle) = 0;
 
         virtual EMCPError ReqConfigSyn(MCPTrackerHandle_t ulTrackerHandle) = 0;
 
@@ -164,9 +162,6 @@ namespace MocapApi {
             MCPTrackerHandle_t ulTrackerHandle) = 0;
 
         virtual EMCPError GetDeviceName(int serialNum, const char** name,
-            MCPTrackerHandle_t ulTrackerHandle) = 0;
-
-        virtual EMCPError GetTimeCode(uint32_t* hour, uint32_t* minute, uint32_t* second, uint32_t* frame, uint32_t* rate,
             MCPTrackerHandle_t ulTrackerHandle) = 0;
 
     };
@@ -340,7 +335,6 @@ namespace MocapApi {
         MCPEvent_Error = 0x00000300,
         MCPEvent_SensorModulesUpdated = 0x00000400,
         MCPEvent_TrackerUpdated = 0x00000500,
-        MCPEvent_ConfigUpdated = 0x00000600,
     };
 
     struct MCPEvent_t
