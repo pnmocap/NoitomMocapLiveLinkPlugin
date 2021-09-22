@@ -84,8 +84,14 @@ void FNeuronLiveLinkRemapAssetDetailCustomization::CustomizeDetails(IDetailLayou
                         + SSplitter::Slot()
                         .Value(0.1f)
                         [
-                            SNew(STextBlock)
-                            .Text(FText::FromString(FString::FromInt(i)))
+                             SNew(SHorizontalBox)
+                             + SHorizontalBox::Slot()
+                             .HAlign(HAlign_Left)
+                             .VAlign(VAlign_Center)
+                            [
+                                SNew(STextBlock)
+                                .Text(FText::FromString(FString::FromInt(i)))
+                            ]
                         ]
                         +SSplitter::Slot()
                         .Value(0.9f)
