@@ -137,7 +137,10 @@ void FNeuronLiveLinkRemapAssetDetailCustomization::CustomizeDetails(IDetailLayou
                     ]
                 ];
         }
-
+        if (Enabled)
+        {
+            OnEnableMappingCheckboxStateChanged(ECheckBoxState::Checked);
+        }
 	}
 }
 
@@ -196,6 +199,10 @@ void FNeuronLiveLinkRemapAssetDetailCustomization::OnEnableMappingCheckboxStateC
         for (auto& W : BoneMappingWidgets)
         {
             W->SetEnabled(Enabled);
+            if (Enabled)
+            {
+                W->SetBoneChecked(true);
+            }
         }
         SkeletonPickerComboButton->SetEnabled(Enabled);
     }

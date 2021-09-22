@@ -35,6 +35,7 @@ public:
     FText GetBonePrefix() const;
     void SetBoneValid(bool Valid);
     void SetDstBoneName(FName Name);
+    void SetBoneChecked(bool Checked);
     FName GetBoneNameFromAsset();
     void OnDstBoneNameTxtChanged(const FText& Value);
     void OnCheckboxStateChanged(ECheckBoxState State);

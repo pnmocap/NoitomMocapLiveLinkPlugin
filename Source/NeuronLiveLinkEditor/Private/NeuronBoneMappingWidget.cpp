@@ -265,6 +265,15 @@ void SNeuronBoneMappingWidget::OnCheckboxStateChanged(ECheckBoxState State)
     SetBoneValid(IsChecked);
 }
 
+void SNeuronBoneMappingWidget::SetBoneChecked(bool Checked)
+{
+    if (CheckBox)
+    {
+        CheckBox->SetIsChecked(Checked ? ECheckBoxState::Checked : ECheckBoxState::Unchecked);
+    }
+    SetBoneValid(Checked);
+}
+
 TSharedRef<SWidget> SNeuronBoneMappingWidget::CreateDstBoneSelectWidgetMenu()
 {
     FString* Filter = BoneFilterMap.Find(SrcBoneName);
