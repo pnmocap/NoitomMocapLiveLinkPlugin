@@ -31,7 +31,7 @@ static TArray<FString> __Filters = {
     TEXT("shoulder|clavicle"),
     TEXT("arm"),
     TEXT("forearm|lowerarm"),
-    TEXT("hand[^timrp]"),
+    TEXT("hand([^timrp]|$)"),
     TEXT("thumb"),
     TEXT("thumb"),
     TEXT("thumb"),
@@ -54,7 +54,7 @@ static TArray<FString> __Filters = {
     TEXT("shoulder|clavicle"),
     TEXT("arm"),
     TEXT("forearm|lowerarm"),
-    TEXT("hand[^timrp]"),
+    TEXT("hand([^timrp]|$)"),
     TEXT("thumb"),
     TEXT("thumb"),
     TEXT("thumb"),
@@ -400,16 +400,20 @@ void SNeuronBoneMappingWidget::BuildDstBoneList()
     bool HasFilter = !SearchFilterText.IsEmpty();
     FString TmpStr;
     FString EmptyStr(TEXT(""));
-    for (const FName& N : BuildInBoneNames)
+
+    if (DstBoneNameList == nullptr || DstBoneNameList->Num() == 0)
     {
-        TmpStr = N.ToString();
-        if (HasPrefix)
+        for (const FName& N : BuildInBoneNames)
         {
-            TmpStr.ReplaceInline(*PreFix.ToString(), *EmptyStr);
-        }
-        if (!HasFilter || IsStringMatchPattern(TmpStr, SearchFilterText.ToString()))
-        {
-            DstBoneCandidates.AddUnique(MakeShared<FName>(FName(*TmpStr)));
+            TmpStr = N.ToString();
+            if (HasPrefix)
+            {
+                TmpStr.ReplaceInline(*PreFix.ToString(), *EmptyStr);
+            }
+            if (!HasFilter || IsStringMatchPattern(TmpStr, SearchFilterText.ToString()))
+            {
+                DstBoneCandidates.AddUnique(MakeShared<FName>(FName(*TmpStr)));
+            }
         }
     }
     
