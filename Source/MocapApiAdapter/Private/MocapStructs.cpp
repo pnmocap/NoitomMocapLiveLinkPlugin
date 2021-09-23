@@ -90,8 +90,8 @@ bool UMocapApp::Connect()
     mcpError = mcpSettings->SetSettingsBvhTransformation(EnableTrans, mcpSettingsHandle);
     ReturnFalseIFError();
 
-	mcpError = mcpSettings->SetSettingsTrackerData(mcpSettingsHandle);
-	ReturnFalseIFError();
+// 	mcpError = mcpSettings->SetSettingsTrackerData(mcpSettingsHandle);
+// 	ReturnFalseIFError();
 
     bool isUDP = AppSettings.Protocol == EMCAppProtocol::UDP;
     const char* IPAddress = FTCHARToUTF8(*AppSettings.RemoteIP).Get();
@@ -139,6 +139,7 @@ bool UMocapApp::Connect()
         renderSettings->SetFrontVector(FrontAxis, 1, renderSettingsHandle);
         renderSettings->SetCoordSystem(Hand, renderSettingsHandle);
         renderSettings->SetRotatingDirection(RotDir, renderSettingsHandle);
+		renderSettings->SetUnit(MocapApi::EMCPUnit::Unit_Centimeter, renderSettingsHandle);
 
         mcpError = mcpApplication->SetApplicationRenderSettings(renderSettingsHandle, appcliation);
         ReturnFalseIFError();
@@ -634,9 +635,9 @@ bool UMocapApp::HandleTrackerUpdateEvent(uint64 TrackerHandle, int ReservedData)
         tracker.Name = FName(TrackerName);
         FVector p;
         TrackerMgr->GetTrackerPosition(&p.X, &p.Y, &p.Z, (char*)name, TrackerHandle);
-        tracker.Position.X = p.X;
-        tracker.Position.Y = p.Z;
-        tracker.Position.Z = p.Y;
+        tracker.Position.X = p.X * 100.0f;
+        tracker.Position.Y = p.Z * 100.0f;
+        tracker.Position.Z = p.Y * 100.0f;
         FQuat q;
         TrackerMgr->GetTrackerRotation(&q.X, &q.Y, &q.Z, &q.W, (char*)name, TrackerHandle);
         tracker.Rotation.X = q.X;

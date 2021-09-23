@@ -143,7 +143,6 @@ namespace MocapApi {
     class IMCPTracker
     {
     public:
-
         virtual EMCPError ReqConfigSyn(MCPTrackerHandle_t ulTrackerHandle) = 0;
 
         virtual EMCPError SendMessageData(char* message, int len,
@@ -393,8 +392,6 @@ namespace MocapApi {
             MCPSettingsHandle_t ulSettingsHandle) = 0;
 
         virtual EMCPError SetSettingsCalcData(MCPSettingsHandle_t ulSettingsHandle) = 0;
-
-        virtual EMCPError SetSettingsTrackerData(MCPSettingsHandle_t ulSettingsHandle) = 0;
     };
     static const char * IMCPSettings_Version = "IMCPSettings_001";
 

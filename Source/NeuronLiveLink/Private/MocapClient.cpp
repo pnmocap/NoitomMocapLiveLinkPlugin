@@ -198,6 +198,36 @@ void FMocapAppClient::PollEvents()
                     Source->PushTrackerFrameData(Subject, Frame);
                 }
             }
+
+			TArray<FString> Trackers;
+			App->GetAllTrackerNames(Trackers);
+
+			for (FString Name : Trackers)
+			{
+				const FMocapTracker* TrackerData = App->GetTracker(Name);
+				if (TrackerData)
+				{
+					FName Subject = TrackerData->Name;
+					if (!FMocapAppManager::GetInstance().IsNameUsedByApp(Subject, App))
+					{
+						Subject = FMocapAppManager::CombineNameWithAppName(Name, App);
+					}
+
+					FLiveLinkFrameDataStruct Frame = FLiveLinkFrameDataStruct(FLiveLinkTransformFrameData::StaticStruct());
+
+					FLiveLinkBaseFrameData* BaseData = Frame.GetBaseData();
+					BaseData->WorldTime = WorldTime;
+					BaseData->MetaData.SceneTime = QualifiedTime;
+
+					FLiveLinkTransformFrameData& TransformData = *Frame.Cast<FLiveLinkTransformFrameData>();
+					const FVector& P = TrackerData->Position;
+					const FQuat& Q = TrackerData->Rotation;
+					TransformData.Transform.SetLocation(P);
+					TransformData.Transform.SetRotation(Q);
+
+					Source->PushTrackerFrameData(Subject, Frame);
+				}
+			}
         }
     }
 }
