@@ -344,30 +344,28 @@ You will be presented with a dialog for selecting the target directory. If packa
 |   NeuronLiveLink.uplugin    Plugin description file
 |   BuildInfo    Basic Build info for plugin 
 +---Arts
+|       Mannequin_Tpose.FBX UE4 default Mannequin Tpose animation FBX
+|       SK_Mannequin.FBX    UE4 default Mannequin skeletal mesh
+|       Mixamo_Ch46_nonPBR.fbx Mixamo Ch46 model in FBX format
 |       PN_Avatar.fbx    FBX File for import skeletal animation to unreal engine
+|       PN_Avatar_Stickman01.fbx  Plugin default skeletal mesh
 |       
 +---Binaries
 |   \---Win64    Binaries files of the plugin
 |           
 +---Content
 |   |   BP_PNSBaseActor.uasset    Base actor for driving skeletal mesh animation in Axis Studio
-|   |   
+|   |   PNS_Prop.uasset    Actor for driving props in Axis Studio
+|   |
 |   +---Maps
 |   |       DemoMap.umap    Demo map for use the plugin
 |   |       DemoMap_BuiltData.uasset    Build data for map
-|   |       
-|   \---PNS
-|           M_Body.uasset    Mateial used for PNS_Avatar
-|           M_Body_Dark.uasset    Mateial used for PNS_Avatar
-|           M_FaceMask.uasset    Mateial used for PNS_Avatar
-|           M_Logo.uasset    Mateial used for PNS_Avatar
-|           PNS_Actor.uasset     Actor derived form BP_PNSBaseActor to drive default skeletal mesh
-|           PNS_Avatar.uasset    Skeletal Mesh
-|           PNS_Avatar_Anim.uasset    Skeletal Mesh animation blueprint 
-|           PNS_Avatar_PhysicsAsset.uasset    PhysicsAsset for skeletal mesh
-|           PNS_Avatar_Skeleton.uasset    Skeleton for skeletal mesh
-|           PNS_Avatar_skeletonRemap.uasset    Remap asset for driving skeletal mesh
-|           PNS_Prop.uasset    Actor for driving props in Axis Studio
+|   |
+|   +---Mannequin    Mannequin skeletal mesh, materials, textures, animation blueprint, remap asset and actor object in UE4
+|   |
+|   +---Mixamo_Ch46  Mixamo ch46 skeletal mesh, materials, textures, animation blueprint, remap asset and actor object
+|   |
+|   \---PNSChar  default skeletal mesh, materials, textures, animation blueprint, remap asset and actor object
 |           
 +---Doc
 |       AxisUnrealLiveLinkPlugin Handbook_EN.pdf    This handbook in English language version

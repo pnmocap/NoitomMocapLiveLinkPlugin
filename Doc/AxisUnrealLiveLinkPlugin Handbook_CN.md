@@ -714,30 +714,28 @@ Spine3,
 |   NeuronLiveLink.uplugin    插件描述文件Plugin description file
 |   BuildInfo    插件基本构建信息文件Basic Build info for plugin 
 +---Arts
-|       PN_Avatar.fbx    本文所有导入到虚幻引擎的FBX文件FBX File for import skeletal animation to unreal engine
+|       Mannequin_Tpose.FBX 插件中使用的UE4默认骨骼结构Mannequin的TPose动画 UE4 default Mannequin Tpose animation FBX
+|       SK_Mannequin.FBX    插件中使用的UE4默认骨骼结构Mannequin UE4 default Mannequin skeletal mesh
+|       Mixamo_Ch46_nonPBR.fbx 插件中的Mixamo Ch46动态网格体FBX资产  Mixamo Ch46 model in FBX format
+|       PN_Avatar.fbx    本文所用导入到虚幻引擎的FBX文件FBX File for import skeletal animation to unreal engine
+|       PN_Avatar_Stickman01.fbx  插件中提供的默认骨骼结构FBX文件 Plugin default skeletal mesh
 |       
 +---Binaries
 |   \---Win64    插件的二进制文件Binaries files of the plugin
 |           
 +---Content
 |   |   BP_PNSBaseActor.uasset    驱动Axis Studio骨骼网格体的Actor基类Base actor for driving skeletal mesh animation in Axis Studio
-|   |   
+|   |   PNS_Prop.uasset    驱动Axis Studio道具的Actor类Actor for driving props in Axis Studio
+|   |
 |   +---Maps
 |   |       DemoMap.umap    插件的展示关卡地图Demo map for use the plugin
 |   |       DemoMap_BuiltData.uasset    地图的贴图构建数据注册表Build data for map
-|   |       
-|   \---PNS
-|           M_Body.uasset    骨骼网格体所用材质Mateial used for PNS_Avatar
-|           M_Body_Dark.uasset    骨骼网格体所用材质Mateial used for PNS_Avatar
-|           M_FaceMask.uasset    骨骼网格体所用材质Mateial used for PNS_Avatar
-|           M_Logo.uasset    骨骼网格体所用材质Mateial used for PNS_Avatar
-|           PNS_Actor.uasset     派生自BP_PNSBaseActor的驱动默认骨骼网格体的Actor类Actor drived form BP_PNSBaseActor to drive default skeletal mesh
-|           PNS_Avatar.uasset    骨骼网格体Skeletal Mesh
-|           PNS_Avatar_Anim.uasset    骨骼网格体动画蓝图Skeletal Mesh animation blueprint 
-|           PNS_Avatar_PhysicsAsset.uasset    骨骼网格体物理资产PhysicsAsset for skeletal mesh
-|           PNS_Avatar_Skeleton.uasset    骨骼网格体的骨骼Skeleton for skeletal mesh
-|           PNS_Avatar_skeletonRemap.uasset    骨骼网格体重映射资产Remap asset for driving skeletal mesh
-|           PNS_Prop.uasset    驱动Axis Studio道具的Actor类Actor for driving props in Axis Studio
+|   |
+|   +---Mannequin    插件提供的UE4默认骨骼结构Mannequin的骨骼网格体、材质、贴图、动画蓝图、重映射资产及Actor对象 Mannequin skeletal mesh, materials, textures, animation blueprint, remap asset and actor object in UE4
+|   |
+|   +---Mixamo_Ch46  插件提供Mixamo ch46的骨骼网格体、材质、贴图、动画蓝图、重映射资产及Actor对象 Mixamo ch46 skeletal mesh, materials, textures, animation blueprint, remap asset and actor object
+|   |
+|   \---PNSChar  插件提供默认骨骼网格体、材质、贴图、动画蓝图、重映射资产及Actor对象 default skeletal mesh, materials, textures, animation blueprint, remap asset and actor object
 |           
 +---Doc
 |       AxisUnrealLiveLinkPlugin Handbook_EN.pdf    本手册英文版本This handbook in English language version
@@ -781,7 +779,7 @@ Spine3,
     |           NeuronLiveLinkBPLibrary.h    蓝图函数库Blueprint library
     |           NeuronLiveLinkLog.h    模块日志类Log category used in this module
     |           NeuronLiveLinkRemapAsset.h    驱动动画数据法人重定向资产类Retargrting asset for dirving animation data
-    |           NeuronLiveLinkSource.h    neuron的实习链接源Live link source for neuron
+    |           NeuronLiveLinkSource.h    neuron的实时链接源Live link source for neuron
     |           PNSAnimInstance.h    蓝图动画实例类（可设置对象命名）Blueprint amimation instance(can set subject name) for diving animation data
     |           
     \---NeuronLiveLinkEditor    Neuron Live Link编辑器相关模块Neuron Live Link Editor module
