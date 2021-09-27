@@ -257,9 +257,13 @@ Here is an example for mapping finger bone with "InHand"  in bone names
 
 If you are an advance player, you want to do more about retargeting, you can inherit LiveLinkRetargetAsset in c++  and control the whole retarting process like NeuronLiveLinkRemapAsset.
 
-# 8. Projects Packaging
+# 8. Using LiveLink Controller Component to control props
 
-## 8.1 Implement animation driven In level blueprint
+This is basic use of Live Link，You can refer to Unreal documents Using Live Link Data part from https://docs.unrealengine.com/4.27/en-US/AnimatingObjects/SkeletalMeshAnimation/LiveLinkPlugin/LiveLinkBlueprintComponent/. If the plugin receives Transform role data, you can use it to dirve your props.
+
+# 9. Projects Packaging
+
+## 9.1 Implement animation driven In level blueprint
 
 * On the **Main Toolbar** click the **Blueprints** button then select **Open Level Blueprint**
     ![OpenLevelBP](OpenLevelBP.png)
@@ -310,7 +314,7 @@ If you are an advance player, you want to do more about retargeting, you can inh
 
     
 
-## 8.2 Put an Skeletal Mesh in your map and setup animation blueprint
+## 9.2 Put an Skeletal Mesh in your map and setup animation blueprint
 
 ​    In the **Content Browser**, locate the Skeletal Mesh you want to add to the map as a Skeletal Mesh Actor. Place it into the map and set its animation class like the following graph, then you can click play button and test your animation. If everything is ok, don't forget to **save** your map and other assets.
 
@@ -319,7 +323,7 @@ If you are an advance player, you want to do more about retargeting, you can inh
 
 > NOTE: You can also drag your AnimationBlueprint into the viewport directely or use our **PNS_Actor** blueprint class but use you own skeletal mesh and animation blueprint to set you animation character.
 
-## 8.3 Setup Game Default map
+## 9.3 Setup Game Default map
 
 Before packaging your game, you will first need to set a **Game Default Map**, which will load when your packaged game starts. If you do not set a map and are using a blank project, you will only see a black screen when the packaged game starts. If you have used one of the template maps, like the First-Person template or Third Person template, the starting map will be loaded.
 
@@ -330,7 +334,7 @@ Before packaging your game, you will first need to set a **Game Default Map**, w
 
     > Note:  you may also need to specify your own game mode to use your own player character and player controller.
 
-## 8.4 Package your Project to a runnable binary
+## 9.4 Package your Project to a runnable binary
 
 Click on File > Package Project > [PlatformName] in the Editor's main menu. (in the graph we select Windows 64-bit platform)
 
@@ -338,7 +342,7 @@ Click on File > Package Project > [PlatformName] in the Editor's main menu. (in 
 
 You will be presented with a dialog for selecting the target directory. If packaging completes successfully, this directory will then contain the packaged project.
 
-# 9. Plugin Structure
+# 10. Plugin Structure
 
 ```txt
 |   NeuronLiveLink.uplugin    Plugin description file

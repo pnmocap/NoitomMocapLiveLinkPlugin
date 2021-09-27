@@ -612,9 +612,13 @@ Spine3,
 
 如果你是个高级开发者，你可以从C++类LiveLinkRetargetAsset进行集成并控制重定向的所有过程, 就像插件中的NeuronLiveLinkRemapAsset类一样。
 
-# 8. 工程打包
+# 8.使用LiveLink控制器组件LiveLink Controller Component控制道具
 
-## 8.1 在关卡蓝图中实现实时姿势动画驱动
+这是Livelink组件的基本用法，具体细节可参考Unreal官方文档使用LiveLink数据部分https://docs.unrealengine.com/4.27/zh-CN/AnimatingObjects/SkeletalMeshAnimation/LiveLinkPlugin/LiveLinkBlueprintComponent/，如过插件有收到Transform角色的数据就可以用它驱动道具了
+
+# 9. 工程打包
+
+## 9.1 在关卡蓝图中实现实时姿势动画驱动
 
 * 在**主工具栏** 中单击click the **蓝图（Blueprints）**按钮并选择**打开关卡蓝图(Open Level Blueprint)**
     ![OpenLevelBP](OpenLevelBP.png)
@@ -680,7 +684,7 @@ Spine3,
     
     
 
-## 8.2 在关卡中放置骨骼网格体(Skeletal Mesh)并设置动画蓝图(animation blueprint)
+## 9.2 在关卡中放置骨骼网格体(Skeletal Mesh)并设置动画蓝图(animation blueprint)
 
 ​    在**内容管理器(Content Browser)**中, 定位到你要添加到关卡中的骨骼网格体资产并将其作为Skeletal Mesh Actor添加到关卡中并如下图是指它的动画类（Anim Class）。然后就可以点击运行(Play)按钮并测试你的动画效果。 如果一切运行正常,不要忘了保存你的关卡地图和其他资产
 
@@ -689,7 +693,7 @@ Spine3,
 
 > 注意: 你还可以直接将动画蓝图直接拖拽到关卡的视口或者直接使用我们的**PNS_Actor**蓝图类然后使用你自己的骨骼网格体和动画蓝图来设置你的动画角色
 
-## 8.3 设置游戏默认地图(Game Default map)
+## 9.3 设置游戏默认地图(Game Default map)
 
 在打包游戏之前, 你首先需要设置**游戏默认地图(Game Default Map)**, 这张地图会在打包的游戏启动时加载。如果你适应的是空工程并且没有设置地图，你打包的游戏启动后将只能看到黑屏，如果你是用的是模板地图比如第一人称模板(First-Person template)或者第三人称模板(Third Person template), 模板的初始地图将会加载
 
@@ -700,7 +704,7 @@ Spine3,
 
     > 注意: 你肯同样需要设置你自己的游戏模式(game mode)来使用你自己的玩家角色和玩家控制器
 
-## 8.4 将你的工程打包成可执行的二进制程序
+## 9.4 将你的工程打包成可执行的二进制程序
 
 在编辑器主菜单选择文件->打包项目->\[平台名称\]对工程进行打包 (图中我们选择了Windows 64-bit 平台)
 
@@ -708,7 +712,7 @@ Spine3,
 
 一个选择目标目录的对话框将会弹出，打包成功后这个目录会包含打包后的项目
 
-# 9. 插件结构
+# 10. 插件结构
 
 ```txt
 |   NeuronLiveLink.uplugin    插件描述文件Plugin description file
