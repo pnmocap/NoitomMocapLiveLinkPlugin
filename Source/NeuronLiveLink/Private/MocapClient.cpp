@@ -132,7 +132,9 @@ void FMocapAppClient::PollEvents()
         if (Source)
         {
             FLiveLinkWorldTime WorldTime = FPlatformTime::Seconds();
-            FQualifiedFrameTime QualifiedTime;
+            FQualifiedFrameTime QualifiedTime = FApp::GetCurrentFrameTime().Get(FQualifiedFrameTime());
+            int64 Now = FDateTime::UtcNow().GetTicks();
+            int64 ValidTickDur = ETimespan::TicksPerSecond;
 
             TArray<FString> Avatars;
             App->GetAllAvatarNames(Avatars);
@@ -140,6 +142,10 @@ void FMocapAppClient::PollEvents()
             for (FString& AvatarName : Avatars)
             {
                 const FMocapAvatar* Data = App->GetAvatarData(AvatarName);
+                if (Data->ReceiveTicks + ValidTickDur < Now)
+                {
+                    continue;
+                }
 
                 const TArray<FName> PropertyNames({ FName(TEXT("WithDisplacement")) });;
                 TArray<float> PropertyValues({ (float)(Data->HasLocalPositions[1]? 1.0: 0.0) });
@@ -175,7 +181,7 @@ void FMocapAppClient::PollEvents()
             for (FString Name : Rigids)
             {
                 const FMocapRigidBody* RigidData = App->GetRigidBody(Name);
-                if (RigidData)
+                if (RigidData && (RigidData->ReceiveTicks+ValidTickDur>=Now))
                 {
                     FName Subject = RigidData->Name;
                     if (!FMocapAppManager::GetInstance().IsNameUsedByApp(Subject, App))
@@ -205,7 +211,7 @@ void FMocapAppClient::PollEvents()
 			for (FString Name : Trackers)
 			{
 				const FMocapTracker* TrackerData = App->GetTracker(Name);
-				if (TrackerData)
+				if (TrackerData && (TrackerData->ReceiveTicks + ValidTickDur >= Now))
 				{
 					FName Subject = TrackerData->Name;
 					if (!FMocapAppManager::GetInstance().IsNameUsedByApp(Subject, App))

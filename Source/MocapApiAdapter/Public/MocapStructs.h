@@ -135,6 +135,7 @@ struct FMocapRigidBody
     UPROPERTY()
     int JointTag;
 
+    int64 ReceiveTicks;
     //UPROPERTY()
     //int Reserved; // used to store avatar id
 };
@@ -158,6 +159,8 @@ struct FMocapTracker
 
     UPROPERTY()
     int Status;
+
+    int64 ReceiveTicks;
 };
 
 struct FMocapTimeCode
@@ -187,6 +190,7 @@ struct FMocapAvatar
     int RootJointTag;
 
     FMocapTimeCode ReceiveTime;
+    int64 ReceiveTicks;
 
     UPROPERTY()
     TArray<FName> BoneNames; //[tag] = name

@@ -476,6 +476,8 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
     FMocapTimeCode& TC = avatar.ReceiveTime;
     avatarMgr->GetAvatarPostureTimeCode(&TC.Hour, &TC.Minute, &TC.Second, &TC.Frame, &TC.Rate, Avatarhandle);
 
+    avatar.ReceiveTicks = FDateTime::UtcNow().GetTicks();
+
     uint32 Count = 0;
     mcpError = avatarMgr->GetAvatarJoints(nullptr, &Count, Avatarhandle);
     ReturnFalseIFError();
@@ -647,6 +649,7 @@ bool UMocapApp::HandleTrackerUpdateEvent(uint64 TrackerHandle, int ReservedData)
         //TrackerMgr->GetTrackerStatus(&rigid.Status, name, TrackerHandle);
 
         //rigid.Reserved = ReservedData;
+        tracker.ReceiveTicks = FDateTime::UtcNow().GetTicks();
 
         FMocapAppManager::GetInstance().OnRecieveMocapData(tracker.Name, this);
 
@@ -683,6 +686,8 @@ bool UMocapApp::HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle, int ReservedD
     MocapApi::EMCPJointTag Tag;
     RigidBodyMgr->GetRigidBodyJointTag(&Tag, RigidBodyHandle);
     rigid.JointTag = Tag;
+
+    rigid.ReceiveTicks = FDateTime::UtcNow().GetTicks();
 
     //rigid.Reserved = ReservedData;
 
