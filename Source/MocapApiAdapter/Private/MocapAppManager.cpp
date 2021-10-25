@@ -63,6 +63,16 @@ void FMocapAppManager::EachRunningApp(MocapAppVisitor& Visitor)
     }
 }
 
+const FMocapTracker* FMocapAppManager::GetTracker(FName TrackerName)
+{
+    UMocapApp** App = NameResolver.Find(TrackerName);
+    if (App != nullptr)
+    {
+        return (*App)->GetTracker(TrackerName.ToString());
+    }
+    return nullptr;
+}
+
 const FMocapRigidBody* FMocapAppManager::GetRigidBody(FName RigidName)
 {
     UMocapApp** App = NameResolver.Find(RigidName);
