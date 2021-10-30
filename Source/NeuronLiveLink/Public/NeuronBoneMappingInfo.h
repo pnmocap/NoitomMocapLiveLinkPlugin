@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "NeuronBoneMappingInfo.generated.h"
 
+// bone mapping struct mapping mocapapi bone name to your sleleton bone name
 USTRUCT(BlueprintType)
 struct NEURONLIVELINK_API FNeuronBoneMappingInfo
 {

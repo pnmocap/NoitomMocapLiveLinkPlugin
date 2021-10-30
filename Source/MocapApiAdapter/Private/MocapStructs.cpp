@@ -119,6 +119,8 @@ bool UMocapApp::Connect()
     ReturnFalseIFError();
 
     MocapApi::MCPRenderSettingsHandle_t renderSettingsHandle = 0;
+
+    // TODO: currently use PreDefinedRenderSettings_UnrealEngine for rander setting not use RenderSettings passed in
     const bool usePreDefinedRenderSetting = true;
     if (usePreDefinedRenderSetting)
     {
@@ -154,6 +156,7 @@ bool UMocapApp::Connect()
     ReturnFalseIFError();
 
     IsConnecting = true;
+    // add to manager when connecting
     FMocapAppManager::GetInstance().AddMocapApp(this);
 
 	// lihongce
@@ -224,10 +227,12 @@ bool UMocapApp::PollEvents()
     TArray<MocapApi::MCPEvent_t> events;
     uint32_t unEvent = 0;
 
+    // get event count
     mcpError = mcpApplication->PollApplicationNextEvent(nullptr, &unEvent, appcliation);
     ReturnFalseIFError("PollApplicationNextEvent Get num");
 
     bool hasUnhandledEvents = unEvent > 0;
+    //retrive event data
     if (hasUnhandledEvents) {
         events.AddUninitialized(unEvent);
         for (auto & e : events) {
@@ -240,15 +245,18 @@ bool UMocapApp::PollEvents()
         FScopeLock Lock(&CriticalSection);
         for (const auto & e : events) {
             if (e.eventType == MocapApi::MCPEvent_AvatarUpdated) {
+                // handle received acvatar data
                 HandleAvatarUpdateEvent(e.eventData.motionData.avatarHandle);
             }
             else if (e.eventType == MocapApi::MCPEvent_RigidBodyUpdated) {
                 //HandleRigidBodyUpdateEvent(, 0)
             }
 			else if (e.eventType == MocapApi::MCPEvent_TrackerUpdated) {
+                // handle tracker data
 				HandleTrackerUpdateEvent(e.eventData.trackerData._trackerHandle);
 			}
             else if (e.eventType == MocapApi::MCPEvent_Error) {
+                // handle error, just output the error, so use can se it
                 LastError = e.eventData.systemError.error;
                 ExtraErrorMsg = FString();
                 UE_LOG(LogMocapApi, Warning, TEXT("Got Error Event %d: %s"), LastError, *GetLastErrorMessage());

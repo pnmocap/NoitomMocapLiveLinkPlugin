@@ -6,6 +6,9 @@
 #include "GameFramework/Actor.h"
 #include "MocapAppManager.generated.h"
 
+/**
+* MocapAppVisitor is a visitor class used for FMocapAppManager to visit all UMocapApp object in it, you can do your own work in your subclass in Visit function
+* */
 class MOCAPAPIADAPTER_API MocapAppVisitor
 {
 public:
@@ -13,6 +16,9 @@ public:
     virtual ~MocapAppVisitor() {};
 };
 
+/**
+ * FMocapAppManager is a singleton manager class for handling UMocapApps, you can use more than one UMocapApp objects at one time
+ */
 class MOCAPAPIADAPTER_API FMocapAppManager
 {
 public:
@@ -44,7 +50,9 @@ private:
     FMocapAppManager& operator=(const FMocapAppManager& rh) = delete;
 };
 
-
+/**
+* AMocapAppManager is actor class for manager UMocapApps and it use FMocapAppManager, you should add it in you level when not using livelink
+*/
 UCLASS()
 class MOCAPAPIADAPTER_API AMocapAppManager : public AActor
 {
@@ -57,7 +65,7 @@ public:
     ~AMocapAppManager();
 
     UFUNCTION(BlueprintCallable, Category = MocapApi)
-    AMocapAppManager* GetInstance();
+    static AMocapAppManager* GetInstance();
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MocapApi|Setting" )
     TArray<FMCAppSettings> MocapAppSettings;

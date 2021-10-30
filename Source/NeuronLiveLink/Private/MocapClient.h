@@ -7,7 +7,9 @@
 #include "HAL/RunnableThread.h"
 
 class FNeuronLiveLinkSource;
-
+/*
+* FMocapAppClient is the classed used for FNeuronLiveLinkSource to handle UMocapApp, get data and send data to livelink
+*/
 class FMocapAppClient : public FRunnable
 {
 public:

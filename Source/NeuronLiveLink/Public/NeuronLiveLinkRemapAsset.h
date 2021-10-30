@@ -8,6 +8,9 @@
 #include "NeuronBoneMappingInfo.h"
 #include "NeuronLiveLinkRemapAsset.generated.h"
 
+/*
+* UNeuronLiveLinkRemapAsset  live link remap asset for retargeting
+*/
 UCLASS(Blueprintable)
 class NEURONLIVELINK_API UNeuronLiveLinkRemapAsset : public ULiveLinkRetargetAsset
 {
