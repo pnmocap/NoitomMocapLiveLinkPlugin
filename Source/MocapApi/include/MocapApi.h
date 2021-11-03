@@ -145,16 +145,16 @@ namespace MocapApi {
     public:
         virtual EMCPError ReqConfigSyn(MCPTrackerHandle_t ulTrackerHandle) = 0;
 
-        virtual EMCPError SendMessageData(char* message, int len,
+        virtual EMCPError SendMessageData(const char* message, int len,
             MCPTrackerHandle_t ulTrackerHandle) = 0;
 
-        virtual EMCPError GetTrackerRotation(float* x, float* y, float* z, float* w, char* deviceName,
+        virtual EMCPError GetTrackerRotation(float* x, float* y, float* z, float* w, const char* deviceName,
             MCPTrackerHandle_t ulTrackerHandle) = 0;
 
-        virtual EMCPError GetTrackerPosition(float* x, float* y, float* z, char* deviceName,
+        virtual EMCPError GetTrackerPosition(float* x, float* y, float* z, const char* deviceName,
             MCPTrackerHandle_t ulTrackerHandle) = 0;
 
-        virtual EMCPError GetTrackerEulerAng(float* x, float* y, float* z, char* deviceName,
+        virtual EMCPError GetTrackerEulerAng(float* x, float* y, float* z, const char* deviceName,
             MCPTrackerHandle_t ulTrackerHandle) = 0;
 
         virtual EMCPError GetDeviceCount(int* devCount,

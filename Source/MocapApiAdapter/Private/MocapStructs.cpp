@@ -645,15 +645,17 @@ bool UMocapApp::HandleTrackerUpdateEvent(uint64 TrackerHandle, int ReservedData)
         tracker.Name = FName(TrackerName);
         FVector p;
         TrackerMgr->GetTrackerPosition(&p.X, &p.Y, &p.Z, (char*)name, TrackerHandle);
-        tracker.Position.X = p.X * 100.0f;
-        tracker.Position.Y = p.Z * 100.0f;
-        tracker.Position.Z = p.Y * 100.0f;
+        //tracker.Position.X = p.X * 100.0f;
+        //tracker.Position.Y = p.Z * 100.0f;
+        //tracker.Position.Z = p.Y * 100.0f;
+        tracker.Position = p;
         FQuat q;
         TrackerMgr->GetTrackerRotation(&q.X, &q.Y, &q.Z, &q.W, (char*)name, TrackerHandle);
-        tracker.Rotation.X = q.X;
-        tracker.Rotation.Y = q.Z;
-        tracker.Rotation.Z = q.Y;
-        tracker.Rotation.W = -q.W;
+        //tracker.Rotation.X = q.X;
+        //tracker.Rotation.Y = q.Z;
+        //tracker.Rotation.Z = q.Y;
+        //tracker.Rotation.W = -q.W;
+        tracker.Rotation = q;
         //TrackerMgr->GetTrackerStatus(&rigid.Status, name, TrackerHandle);
 
         //rigid.Reserved = ReservedData;
