@@ -4,6 +4,7 @@
 #include "NeuronLiveLinkSource.h"
 #include "Roles/LiveLinkTransformTypes.h"
 #include "Roles/LiveLinkAnimationTypes.h"
+#include "Misc/App.h"
 
 static TMap<FString, EMCBvhRotationOrder> OrderMap = {
     { TEXT("XYZ"), EMCBvhRotationOrder::XYZ },
