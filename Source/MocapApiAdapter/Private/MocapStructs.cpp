@@ -484,6 +484,10 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
     FMocapTimeCode& TC = avatar.ReceiveTime;
     avatarMgr->GetAvatarPostureTimeCode(&TC.Hour, &TC.Minute, &TC.Second, &TC.Frame, &TC.Rate, Avatarhandle);
 
+	// LIHONGCE:
+	if (TC.Rate == 0)
+		TC.Rate = 24;
+
     avatar.ReceiveTicks = FDateTime::UtcNow().GetTicks();
 
     uint32 Count = 0;
