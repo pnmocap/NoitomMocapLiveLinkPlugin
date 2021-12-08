@@ -463,6 +463,11 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
         return false;
     }
     FString Name = FUTF8ToTCHAR(AvatarName).Get();
+
+	if (Name.IsEmpty())
+	{
+		ReturnFalseIFError("Avatar Name is Empty");
+	}
     
     FMocapAvatar& avatar = Avatars.FindOrAdd(Name);
     avatar.Name = FName(Name);

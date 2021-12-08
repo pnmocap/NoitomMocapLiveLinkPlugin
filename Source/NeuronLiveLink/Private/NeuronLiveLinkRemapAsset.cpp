@@ -69,6 +69,7 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 	if (!InSkeletonData->FindPropertyValue( *InFrameData, Property_WithDisplacement, Out_WithDisplacement ))
 	{
 		AN_LOG( Error, TEXT( "Cannot find [WithDisplacement] property in Axis Studio BVH stream data." ) );
+		return; // lihongce fix bug
 	}
 
 	bool bWithDisplacement = bUseDisplacementData && (Out_WithDisplacement > 0.5f);
