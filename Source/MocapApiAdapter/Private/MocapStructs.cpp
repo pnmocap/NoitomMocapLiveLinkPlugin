@@ -6,13 +6,13 @@
 
 #define ReturnIFError(...) if (mcpError!=MocapApi::Error_None) { \
     LastError = mcpError; \
-    ExtraErrorMsg = FString::Printf(TEXT("(%s@%d)%s"), __FILE__, __LINE__, __VA_ARGS__); \
+    ExtraErrorMsg = FString::Printf(TEXT("(%s@%d) Error %d"), __FILE__, __LINE__, (int)mcpError); \
     return; \
 }
 
 #define ReturnFalseIFError(...) if (mcpError!=MocapApi::Error_None) { \
     LastError = mcpError; \
-    ExtraErrorMsg = FString::Printf(TEXT("(%s@%d)%s"), __FILE__, __LINE__, __VA_ARGS__); \
+    ExtraErrorMsg = FString::Printf(TEXT("(%s@%d) Error %d"), __FILE__, __LINE__, (int)mcpError); \
     return false; \
 }
 
@@ -99,6 +99,7 @@ bool UMocapApp::Connect()
     if (isUDP)
     {
         mcpError = mcpSettings->SetSettingsUDP(Port, mcpSettingsHandle);
+        mcpError = mcpSettings->SetSettingsUDPServer(IPAddress, Port, mcpSettingsHandle);
     }
     else
     {

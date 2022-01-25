@@ -82,7 +82,8 @@ void SNeuronLiveLinkSourceFactory::Construct( const FArguments& Args )
 	OkClicked = Args._OnOkClicked;
 
 	FIPv4Endpoint LocalEndpoint;
-	LocalEndpoint.Address = FIPv4Address::Any;
+	//LocalEndpoint.Address = FIPv4Address::Any;
+    FIPv4Address::Parse(DEFAULT_REMOTEIP, LocalEndpoint.Address);
 	LocalEndpoint.Port = DEFAULT_LOCALPORT;
 
 	bool IsUDP = true;
@@ -114,7 +115,7 @@ void SNeuronLiveLinkSourceFactory::Construct( const FArguments& Args )
 								.FillWidth( 0.5f )
 								[
 									SNew( STextBlock )
-										.Text( LOCTEXT( "NeuronLocalPortNumber", "Local Address" ) )
+										.Text( LOCTEXT( "NeuronLocalPortNumber", "UDP Address" ) )
 								]
 							+ SHorizontalBox::Slot( )
 								.HAlign( HAlign_Right )
@@ -153,7 +154,7 @@ void SNeuronLiveLinkSourceFactory::Construct( const FArguments& Args )
 								.FillWidth(0.5f)
 								[
 									SNew( STextBlock )
-										.Text( LOCTEXT( "NeuronRemotePortNumber", "Remote Address" ) )
+										.Text( LOCTEXT( "NeuronRemotePortNumber", "TCP Address" ) )
 								]
 							+ SHorizontalBox::Slot()
 								.HAlign( HAlign_Right )

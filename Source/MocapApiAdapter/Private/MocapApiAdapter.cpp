@@ -15,7 +15,7 @@ void FMocapApiAdapterModule::StartupModule()
     FString BaseDir = IPluginManager::Get().FindPlugin(ThisPlugin)->GetBaseDir();
     FString LibraryPath;
 #if PLATFORM_WINDOWS
-    LibraryPath = FPaths::Combine(*BaseDir, TEXT("Source/MocapApi/bin/x64/MocapApi.dll"));
+    LibraryPath = FPaths::Combine(*BaseDir, TEXT("Source/ThirdParty/MocapApi/bin/x64/MocapApi.dll"));
 #endif // PLATFORM_WINDOWS
 
     MocapApiLibraryHandle = !LibraryPath.IsEmpty() ? FPlatformProcess::GetDllHandle(*LibraryPath) : nullptr;
