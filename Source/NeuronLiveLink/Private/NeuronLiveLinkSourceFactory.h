@@ -28,5 +28,5 @@ public:
 	static TSharedPtr<ILiveLinkSource> CreateSourceAtRuntime( const FString& ConnectionString );
 
 private:
-	void OnOkClicked(FIPv4Endpoint LocalEndpoint, bool IsUDP, FIPv4Endpoint RemoteEndpoint, const FString& Order, FOnLiveLinkSourceCreated OnLiveLinkSourceCreated) const;
+	void OnOkClicked(FIPv4Endpoint LocalEndpoint, bool IsUDP, FIPv4Endpoint RemoteEndpoint, const FString& Order, int RecvPort, FOnLiveLinkSourceCreated OnLiveLinkSourceCreated) const;
 };

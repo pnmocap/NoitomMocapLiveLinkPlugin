@@ -17,9 +17,9 @@ const FText ConstStatus_Offline  = LOCTEXT( "Offwork", "Offwork" );
 
 FText FNeuronLiveLinkSource::SourceType = FText( LOCTEXT( "Axis Studio", "Axis Studio" ) );
 
-FNeuronLiveLinkSource::FNeuronLiveLinkSource( FIPv4Endpoint InLocalEndpoint, bool InIsUDP, FIPv4Endpoint InRemoteEndpoint, const FString& InOrder  )
+FNeuronLiveLinkSource::FNeuronLiveLinkSource( FIPv4Endpoint InLocalEndpoint, bool InIsUDP, FIPv4Endpoint InRemoteEndpoint, const FString& InOrder, int UDPRecvPort)
 {
-	Init( InLocalEndpoint, InIsUDP, InRemoteEndpoint, InOrder );
+	Init( InLocalEndpoint, InIsUDP, InRemoteEndpoint, InOrder, UDPRecvPort);
     mocapClient = nullptr;
 }
 
@@ -32,10 +32,10 @@ FNeuronLiveLinkSource::~FNeuronLiveLinkSource ()
 
 }
 
-void FNeuronLiveLinkSource::Init( FIPv4Endpoint InLocalEndpoint, bool InIsUDP, FIPv4Endpoint InRemoteEndpoint, const FString& InOrder  )
+void FNeuronLiveLinkSource::Init( FIPv4Endpoint InLocalEndpoint, bool InIsUDP, FIPv4Endpoint InRemoteEndpoint, const FString& InOrder, int InUDPRecvPoint)
 {
 	LocalEndpoint = InLocalEndpoint;
-
+    UDPRecvPort = InUDPRecvPoint;
 	IsUDP = InIsUDP;
 	RemoteEndpoint = InRemoteEndpoint;
 
@@ -56,12 +56,14 @@ void FNeuronLiveLinkSource::ReceiveClient (ILiveLinkClient* InClient, FGuid InSo
 
     FString IP = RemoteEndpoint.Address.ToString();
     int Port = RemoteEndpoint.Port;
+    int RecvPort = 0;
     if (IsUDP)
     {
         IP = LocalEndpoint.Address.ToString();
         Port = LocalEndpoint.Port;
+        RecvPort = UDPRecvPort;
     }
-    mocapClient = new FMocapAppClient(IsUDP, IP, Port, RotationOrder);
+    mocapClient = new FMocapAppClient(IsUDP, IP, Port, RotationOrder, RecvPort);
     if (mocapClient)
     {
         mocapClient->SetSource(AsShared());

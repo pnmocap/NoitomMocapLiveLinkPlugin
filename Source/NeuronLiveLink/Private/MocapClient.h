@@ -13,7 +13,7 @@ class FNeuronLiveLinkSource;
 class FMocapAppClient : public FRunnable
 {
 public:
-    FMocapAppClient(bool IsUDP, const FString& RemoteIP, int Port, const FString& RotationOrder);
+    FMocapAppClient(bool IsUDP, const FString& RemoteIP, int Port, const FString& RotationOrder, int RecvPort);
     ~FMocapAppClient();
     void SetSource(TSharedPtr<FNeuronLiveLinkSource> Source);
 

@@ -30,7 +30,7 @@ typedef TSharedPtr<EulerOrder> FRotationOrderComboItemType;
 class SNeuronLiveLinkSourceFactory : public SCompoundWidget
 {
 public:
-	DECLARE_DELEGATE_FourParams( FOnOkClicked, FIPv4Endpoint, bool, FIPv4Endpoint, const FString& );
+	DECLARE_DELEGATE_FiveParams( FOnOkClicked, FIPv4Endpoint, bool, FIPv4Endpoint, const FString&, int);
 
 	SLATE_BEGIN_ARGS( SNeuronLiveLinkSourceFactory ) {}
 	SLATE_EVENT( FOnOkClicked, OnOkClicked )
@@ -50,6 +50,7 @@ private:
 	FReply OnOkClicked( );
 
 	TWeakPtr<SEditableTextBox> LocalAddressText;
+    TWeakPtr<SEditableTextBox> LocalRecvPortText;
 	TWeakPtr<SCheckBox> Checkbox;
 	TWeakPtr<SEditableTextBox> RemoteAddressText;
 	TWeakPtr<SComboBox<FRotationOrderComboItemType>> RotationOrders;

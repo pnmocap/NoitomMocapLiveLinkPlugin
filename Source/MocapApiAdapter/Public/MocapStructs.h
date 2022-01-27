@@ -64,6 +64,9 @@ struct FMCAppSettings
     int Port = 7003;
 
     UPROPERTY()
+    int RecvPort = 7004;
+
+    UPROPERTY()
     EMCBvhRotationOrder BvhRotation = EMCBvhRotationOrder::YXZ;
 
     UPROPERTY()

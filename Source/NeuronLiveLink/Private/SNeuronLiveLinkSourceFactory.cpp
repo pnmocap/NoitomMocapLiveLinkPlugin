@@ -10,6 +10,7 @@
 #define LOCTEXT_NAMESPACE "FNeuronLiveLinkModule"
 
 const uint16 DEFAULT_LOCALPORT = 7004;
+const uint16 DEFAULT_LOCALRECVPORT = 7004;
 const uint16 DEFAULT_REMOTEPORT = 7003;
 const FString DEFAULT_REMOTEIP = TEXT( "127.0.0.1" );
 
@@ -85,6 +86,7 @@ void SNeuronLiveLinkSourceFactory::Construct( const FArguments& Args )
 	//LocalEndpoint.Address = FIPv4Address::Any;
     FIPv4Address::Parse(DEFAULT_REMOTEIP, LocalEndpoint.Address);
 	LocalEndpoint.Port = DEFAULT_LOCALPORT;
+    FString LocalRecvPort = FString::FromInt(DEFAULT_LOCALRECVPORT);
 
 	bool IsUDP = true;
 
@@ -126,6 +128,25 @@ void SNeuronLiveLinkSourceFactory::Construct( const FArguments& Args )
 										.OnTextCommitted( this, &SNeuronLiveLinkSourceFactory::OnLocalEndpointChanged )
 								]
 						]
+                    + SVerticalBox::Slot()
+                        .AutoHeight()
+                        [
+                            SNew(SHorizontalBox)
+                            + SHorizontalBox::Slot()
+                                .HAlign(HAlign_Left)
+                                .FillWidth(0.5f)
+                                [
+                                    SNew(STextBlock)
+                                    .Text(LOCTEXT("NeuronLocalRecvPortNumber", "UDP Receive Port"))
+                                ]
+                            + SHorizontalBox::Slot()
+                                .HAlign(HAlign_Right)
+                                .FillWidth(0.5f)
+                                [
+                                    SAssignNew(LocalRecvPortText, SEditableTextBox)
+                                    .Text(FText::FromString(LocalRecvPort))
+                                ]
+                        ]
 					+ SVerticalBox::Slot()
 						.AutoHeight( )
 						[
@@ -249,6 +270,7 @@ void SNeuronLiveLinkSourceFactory::OnLocalEndpointChanged( const FText& NewValue
 FReply SNeuronLiveLinkSourceFactory::OnOkClicked( )
 {
 	FIPv4Endpoint LocalEndpoint;
+    int RecvPort = 0;
 	bool IsUDP;
 	FIPv4Endpoint RemoteEndpoint;
 
@@ -258,6 +280,13 @@ FReply SNeuronLiveLinkSourceFactory::OnOkClicked( )
 	{
 		return FReply::Handled( );
 	}
+
+    TSharedPtr<SEditableTextBox> LocalRecvPortTextPin = LocalRecvPortText.Pin();
+    if (!LocalRecvPortTextPin)
+    {
+        return FReply::Handled();
+    }
+    RecvPort = FCString::Atoi(*LocalRecvPortTextPin->GetText().ToString());
 
 	TSharedPtr<SEditableTextBox> RemoteEditableTextPin = RemoteAddressText.Pin( );
 	if (!RemoteEditableTextPin ||
@@ -292,7 +321,7 @@ FReply SNeuronLiveLinkSourceFactory::OnOkClicked( )
         RotationOrder = EulerOrder_ToString(*CurrentRotationOrder);
     }
 
-	OkClicked.ExecuteIfBound( LocalEndpoint, IsUDP, RemoteEndpoint, RotationOrder);
+	OkClicked.ExecuteIfBound( LocalEndpoint, IsUDP, RemoteEndpoint, RotationOrder, RecvPort);
 	return FReply::Handled( );
 }
 

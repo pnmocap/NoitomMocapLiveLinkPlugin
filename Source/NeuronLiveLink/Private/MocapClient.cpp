@@ -32,13 +32,14 @@ FQualifiedFrameTime GetTimecode(const FMocapTimeCode& tc)
     return FQualifiedFrameTime(timecode, rate);
 }
 
-FMocapAppClient::FMocapAppClient(bool IsUDP, const FString& RemoteIP, int Port, const FString& RotationOrder)
+FMocapAppClient::FMocapAppClient(bool IsUDP, const FString& RemoteIP, int Port, const FString& RotationOrder, int RecvPort)
     : Thread(nullptr)
     , bRunning(true)
 {
     Sett.Protocol = IsUDP? EMCAppProtocol::UDP: EMCAppProtocol::TCP;
     Sett.RemoteIP = RemoteIP;
     Sett.Port = Port;
+    Sett.RecvPort = RecvPort;
     Sett.bvhDataFormat = EMCBvhDataFormat::Binary;
     Sett.BvhRotation = EMCBvhRotationOrder::YXZ;
     StartApplication();

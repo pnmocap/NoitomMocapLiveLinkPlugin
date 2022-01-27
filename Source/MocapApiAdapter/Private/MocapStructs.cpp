@@ -96,9 +96,10 @@ bool UMocapApp::Connect()
     bool isUDP = AppSettings.Protocol == EMCAppProtocol::UDP;
     const char* IPAddress = FTCHARToUTF8(*AppSettings.RemoteIP).Get();
     int Port = AppSettings.Port;
+    int RecvPort = AppSettings.RecvPort;
     if (isUDP)
     {
-        mcpError = mcpSettings->SetSettingsUDP(Port, mcpSettingsHandle);
+        mcpError = mcpSettings->SetSettingsUDP(RecvPort, mcpSettingsHandle);
         mcpError = mcpSettings->SetSettingsUDPServer(IPAddress, Port, mcpSettingsHandle);
     }
     else

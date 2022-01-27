@@ -52,9 +52,16 @@ TSharedPtr<ILiveLinkSource> UNeuronLiveLinkSourceFactory::CreateSourceAtRuntime(
 	int Comma3 = InConnectionString.Find( TEXT( "," ), ESearchCase::CaseSensitive, ESearchDir::FromStart, Comma2 + 1 );
 	if (Comma3 == INDEX_NONE)
 	{
+        Comma3 = Comma2; // in order to failed in next comma4 check
 		//return EmptySource;
 		// if RotationOrder field is not exist, set it to default value which is YXZ.
 	}
+
+    int Comma4 = InConnectionString.Find(TEXT(","), ESearchCase::CaseSensitive, ESearchDir::FromStart, Comma3 + 1);
+    if (Comma4 == INDEX_NONE)
+    {
+        return EmptySource;
+    }
 
 	bool IsUDP;
 	FIPv4Endpoint LocalEndpoint, RemoteEndpoint;
@@ -63,10 +70,13 @@ TSharedPtr<ILiveLinkSource> UNeuronLiveLinkSourceFactory::CreateSourceAtRuntime(
 	IsUDP = InConnectionString.Mid( Comma1 + 1, Comma2 - Comma1 - 1 ).TrimStartAndEnd( ).ToBool( );
 	FString RemoteS;
 	FString RotOrderS;
+    int RecvPoint = 7004;
 	if (Comma3 != INDEX_NONE)
 	{
 		RemoteS = InConnectionString.Mid( Comma2 + 1, Comma3 - Comma2 - 1 ).TrimStartAndEnd( );
-		RotOrderS = InConnectionString.Mid( Comma3 + 1 ).TrimStartAndEnd( ).ToUpper( );
+		RotOrderS = InConnectionString.Mid( Comma3 + 1, Comma4 - Comma3 - 1).TrimStartAndEnd( ).ToUpper( );
+        FString Str = InConnectionString.Mid(Comma4 + 1).TrimStartAndEnd();
+        RecvPoint = FCString::Atoi(*Str);
 	}
 	else
 	{
@@ -84,17 +94,18 @@ TSharedPtr<ILiveLinkSource> UNeuronLiveLinkSourceFactory::CreateSourceAtRuntime(
 	return EmptySource;
 }
 
-void UNeuronLiveLinkSourceFactory::OnOkClicked( FIPv4Endpoint InLocalEndpoint, bool InIsUDP, FIPv4Endpoint InRemoteEndpoint, const FString& InOrder, FOnLiveLinkSourceCreated InOnLiveLinkSourceCreated ) const
+void UNeuronLiveLinkSourceFactory::OnOkClicked( FIPv4Endpoint InLocalEndpoint, bool InIsUDP, FIPv4Endpoint InRemoteEndpoint, const FString& InOrder, int InRecvPort, FOnLiveLinkSourceCreated InOnLiveLinkSourceCreated ) const
 {
-	FString ConnectionStr = FString::Format( TEXT( "{0}, {1}, {2}, {3}" ),
+	FString ConnectionStr = FString::Format( TEXT( "{0}, {1}, {2}, {3}, {4}" ),
 		{
 			InLocalEndpoint.ToString( ),
 			InIsUDP,
 			InRemoteEndpoint.ToString( ),
-			InOrder
+			InOrder,
+            InRecvPort
 		}
 	);
-	InOnLiveLinkSourceCreated.ExecuteIfBound( MakeShared<FNeuronLiveLinkSource>( InLocalEndpoint, InIsUDP, InRemoteEndpoint, InOrder ), ConnectionStr );
+	InOnLiveLinkSourceCreated.ExecuteIfBound( MakeShared<FNeuronLiveLinkSource>( InLocalEndpoint, InIsUDP, InRemoteEndpoint, InOrder, InRecvPort), ConnectionStr );
 }
 
 #undef LOCTEXT_NAMESPACE

@@ -10,10 +10,10 @@ class NEURONLIVELINK_API FNeuronLiveLinkSource : public ILiveLinkSource, public 
 {
 public:
 	FNeuronLiveLinkSource( EForceInit );
-	FNeuronLiveLinkSource( FIPv4Endpoint LocalEndpoint, bool IsUDP, FIPv4Endpoint RemoteEndpoint, const FString& Order );
+	FNeuronLiveLinkSource( FIPv4Endpoint LocalEndpoint, bool IsUDP, FIPv4Endpoint RemoteEndpoint, const FString& Order, int UDPRecvPoint);
 	virtual ~FNeuronLiveLinkSource ();
 
-	void Init( FIPv4Endpoint LocalEndpoint, bool IsUDP, FIPv4Endpoint RemoteEndpoint, const FString& Order );
+	void Init( FIPv4Endpoint LocalEndpoint, bool IsUDP, FIPv4Endpoint RemoteEndpoint, const FString& Order, int UDPRecvPoint = 7004);
 
 	//~ Begin ILiveLinkSource interface
 	virtual void ReceiveClient (ILiveLinkClient* InClient, FGuid InSourceGuid) override;
@@ -40,7 +40,7 @@ private:
 
 public:
 	FIPv4Endpoint LocalEndpoint;
-
+    int UDPRecvPort;
 	bool IsUDP = true;
 	FIPv4Endpoint RemoteEndpoint;
 
