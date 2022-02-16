@@ -30,14 +30,6 @@
 			"WhitelistPlatforms": [
 				"Win64"
 			]
-		},
-		{
-			"Name": "MocapApiAdapter",
-			"Type": "Runtime",
-			"LoadingPhase": "Default",
-			"WhitelistPlatforms": [
-				"Win64"
-			]
 		}
 	],
 	"Plugins": [

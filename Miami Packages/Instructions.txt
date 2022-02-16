@@ -1,3 +1,0 @@
-This is the Unreal Marketplace approved structure. The zipped files here are already tested and exported from our Unreal projects. 
-
-It is necessary that all updates to the plugin code be in the structure supplied here from now on. (December 17, 2021)
