@@ -27,60 +27,68 @@ Axis studio act as a server on a network and stream motion capture data live to 
 1. Supported Development Platforms: Win64
 2. Supported UE4 Version: 4.25.0 4.26.0
 
-
-
 # 2. Installation
 
-1.  Create a Plugins folder in your Unreal Engine Project if not exist
+1. Create a Plugins folder in your Unreal Engine Project if not exist
 
-2.  Extract **NeuronLiveLink**  plugin zip file to the Plugins folder you created.
-
-    ![InstallPlugin](InstallPlugin.png)
+2. Extract **NeuronLiveLink**  plugin zip file to the Plugins folder you created.
+   
+   ![InstallPlugin](InstallPlugin.png)
 
 # 3. UE4 Project Setup
 
-1.  Inside your UE4 project, from the Menu Bar under Edit, select Plugins.
-    ![OpenPluginMenu](OpenPluginMenu.png)
+1. Inside your UE4 project, from the Menu Bar under Edit, select Plugins.
+   ![OpenPluginMenu](OpenPluginMenu.png)
 
 2. Under the Animation section, click Enabled for Live Link.
     ![EnableLiveLinkPlugin](EnableLiveLinkPlugin.png)
-
+   
      Under the Installed section, click Enabled for NeuronLiveLink then **restart** the Editor.
-
+   
     ![EnableNeuronLiveLink](EnableNeuronLiveLink.png)
 
 3. In the Content Browser Click View Option and enable Show Plugin Content.
-
+   
     ![ClickViewOptononCB](ClickViewOptononCB.png)
     ![EnableShowPluginContent](EnableShowPluginContent.png)
-
-    > This will enable the Live Link Plugin, which can be used to connect to external Digital Content Creation (DCC) tools. In order for your DCC tool to connect to UE4, you will need to enable the corresponding plugin. In this section, we are establishing a connection with Axis Studio.
+   
+   > This will enable the Live Link Plugin, which can be used to connect to external Digital Content Creation (DCC) tools. In order for your DCC tool to connect to UE4, you will need to enable the corresponding plugin. In this section, we are establishing a connection with Axis Studio.
 
 # 4. Quick Start
 
 ## 4.1 Open Axis Studio and Replay A file
 
 > The operation step is base on Axis Studio2.4.11579.1201,.for operation on other version it is probably the same,Please check the manual of Axis Studio for further  information.
->
+> 
 > ![AxixVersion](AxixVersion.png)
 > You can also send realtime captured data through Axis Studio in this case,  you should edit setting in BVH capture.
 
 * Follow the steps in the following picture to open "Axis Studio"
-
+  
     ![OpenAxisStudio](OpenAxisStudio.png)
 
 * Open a file to replay
     ![AxisOpenProject.png](/AxisOpenProject.png)
     ![AxisSelectFileToPlay](AxisSelectFileToPlay.png)
+
 * Open Settings Menu and modify
     ![AxixOpenSettings](AxixOpenSettings.png)
     ![AxixEditSettings](AxixEditSettings.png)
+
 * Start to Replay
     ![AxixStartPlay](AxixStartPlay.png)
 
+## 4.2 For Axis Hybrid Manager User, Setup Data Output
 
+Foe Axis Hybrid Manager Users, Please follow the steps to setup mocap data output, or you can refer to Axis Hybrid Manager user manual data output management section.
 
-## 4.2 Open Unreal Project and Play an animation
+* open Setting Window
+  ![AHM_Preference](AHM_Preference.png)
+
+* Setup Mpocap data output
+  ![AHM_DataOutput](AHM_DataOutput.png)
+
+## 4.3 Open Unreal Project and Play an animation
 
 * Open your Unreal Project with Neuron Live Link Plugin
 
@@ -93,7 +101,7 @@ Axis studio act as a server on a network and stream motion capture data live to 
     ![LivelinkSourceReady](LivelinkSourceReady.png)
 
 * Go to Content browser, Open DemoMap(World'/NeuronLiveLink/Maps/DemoMap.DemoMap') in Neuron Live Link Plugin
-
+  
     ![OpenDemoMap](OpenDemoMap.png)
 
 * In World Outliner Click "PNS_Actor" and edit Subject name
@@ -111,14 +119,14 @@ You can Import skeletal meshes from FBX file into Unreal engine. In this tutoria
 
 * In Content browser, Click Import Button
     ![ClickImportInCB](ClickImportInCB.png)
+
 * Locate to the FBX file you want to import, and Click Open
     ![SelectFBXFile](SelectFBXFile.png)
 
 * In the **FBX Import Options** dialog box, choose the appropriate settings, making sure that the **Skeletal Mesh** option is enabled.
     ![FBXImportOption](FBXImportOption.png)
-
-    >
-    > Note: If no existing Skeleton is selected, a new one will be created from the Skeletal Mesh being imported. The new Skeleton's name will be that of the Skeletal Mesh with *Skeleton* appended.
+  
+  > Note: If no existing Skeleton is selected, a new one will be created from the Skeletal Mesh being imported. The new Skeleton's name will be that of the Skeletal Mesh with *Skeleton* appended.
 
 * Click **Import All** or **Import** button on the  above picture to  import the FBX file to Unreal Engine, the following Picture shows the assets import from the FBX file. Click **Save All** button on Content browser to save the assets.
     ![FBXImportResult](FBXImportResult.png) 
@@ -133,7 +141,7 @@ You can Import skeletal meshes from FBX file into Unreal engine. In this tutoria
     ![CreateAnimBP_3](CreateAnimBP_3.png)
 
 * Double click the Animation Blueprint **BPA_PN_Avatar** to edit the anim blueprint
-
+  
     ![AddLiveLinkPoseNode](AddLiveLinkPoseNode.png)
 
 * Pick live link subject name and connect to output pose
@@ -223,26 +231,29 @@ Spine3,
 ```
 
 > For Axis Neuron we use Hips~Spine2,Spine3,Neck,Head~LeftHandPinky3 as bone names, Neck1 not included
->
+> 
 > For  Axis Studio we use Hips~LeftHandPinky3  as bone names,  Spine3 not included
 
 ## 7.1 Remapping bone name by editor
 
 * Double click **PN_Avatar_RemapAsset** in Content Browser to open Blueprint Editor, and make sure **Enable BoneMapping** is checked, and follow step 2-3 in the following picture to edit each bone mapping. 
     ![RemapEditor_1](RemapEditor_1.png)
+
 * Import a skeleton for remapping selection
     ![RemapEditor_2](RemapEditor_2.png)
     ![RemapEditor_3](RemapEditor_3.png)
+
 * Edit bone name prefix
     ![RemapEditor_4](RemapEditor_4.png)
+
 * Edit UseDisplacementData
     ![RemapEditor_5](RemapEditor_5.png)
 
 * If the Skeleton default pose is not T-Pose,  You can provide a T-Pose Animation Sequence to Live Link Pose Input Pose
     ![ProvideATPoseAnim](ProvideATPoseAnim.png)
-
-    > There is a Simple way to add a T-pose animation for the skeleton, open the Skeleton you use, end drag the bone to T-pose, then you can save current pose to an animation sequence
-    > ![CreateATposeAnim](CreateATposeAnim.png)
+  
+  > There is a Simple way to add a T-pose animation for the skeleton, open the Skeleton you use, end drag the bone to T-pose, then you can save current pose to an animation sequence
+  > ![CreateATposeAnim](CreateATposeAnim.png)
 
 ## 7.2 Remapping bone names by override function
 
@@ -269,50 +280,48 @@ This is basic use of Live Link，You can refer to Unreal documents Using Live Li
     ![OpenLevelBP](OpenLevelBP.png)
     Note: Event Graph displays and with default nodes **Event BeginPlay** and Event Tick.
     ![LevelBPPreview](LevelBPPreview.png)
-    
-* Add A variable for handle live link
 
-    * Move Mouse over **+** button, click **+Variable** button to add **Variable** in My Blueprint panel and type a new name for the Variable in the Details panel and press Enter.
-      ![LevelBP_AddVar_1](LevelBP_AddVar_1.png)
-      ![LevelBP_AddVar_2](LevelBP_AddVar_2.png)
-    * Set Variable Type as Structure (Live Link Source Handle) in the Details Panel.
-        ![LevelBP_AddVar_3](LevelBP_AddVar_3.png)
+* Add A variable for handle live link
+  
+     * Move Mouse over **+** button, click **+Variable** button to add **Variable** in My Blueprint panel and type a new name for the Variable in the Details panel and press Enter.
+       ![LevelBP_AddVar_1](LevelBP_AddVar_1.png)
+       ![LevelBP_AddVar_2](LevelBP_AddVar_2.png)
+     * Set Variable Type as Structure (Live Link Source Handle) in the Details Panel.
+         ![LevelBP_AddVar_3](LevelBP_AddVar_3.png)
 
 * Create Neuron Live Link Source at runtime and connect it to **Event BeginPlay** in Event Graph.
-
-    * Add **Create Neuron Live Link Source at runtime** Node and link to BeginPlay 
-        ![LevelBP_EvtBeginPlay_1](LevelBP_EvtBeginPlay_1.png)
-        ![LevelBP_EvtBeginPlay_2](LevelBP_EvtBeginPlay_2.png)
-
-    * Create Set node and connect to **Create Neuron Live Link Source at runtime**.
-        ![LevelBP_EvtBeginPlay_3](LevelBP_EvtBeginPlay_3.png)
-        ![LevelBP_EvtBeginPlay_4](LevelBP_EvtBeginPlay_4.png)
-
-    * Fill Connection String  Pin in **Create Neuron Live Link Source at runtime**
-        Go back to Live Link Window
-        ![LevelBP_ConnectionStr_1](LevelBP_ConnectionStr_1.png)
-        Select Axis Studio source and Click **Show Advanced** in Settings panel
-        ![LevelBP_ConnectionStr_2](LevelBP_ConnectionStr_2.png)
-        Connect string and Factory will display in the Settings panel. 
-
-        ![LevelBP_ConnectionStr_3](LevelBP_ConnectionStr_3.png)
-        Copy Connection String in settings panel and paste it into **Create Neuron Live Link Source at runtime** node in Event Graph.
-        ![LevelBP_EvtBeginPlay_5](LevelBP_EvtBeginPlay_5.png)
+  
+     * Add **Create Neuron Live Link Source at runtime** Node and link to BeginPlay 
+         ![LevelBP_EvtBeginPlay_1](LevelBP_EvtBeginPlay_1.png)
+         ![LevelBP_EvtBeginPlay_2](LevelBP_EvtBeginPlay_2.png)
+  
+     * Create Set node and connect to **Create Neuron Live Link Source at runtime**.
+         ![LevelBP_EvtBeginPlay_3](LevelBP_EvtBeginPlay_3.png)
+         ![LevelBP_EvtBeginPlay_4](LevelBP_EvtBeginPlay_4.png)
+  
+     * Fill Connection String  Pin in **Create Neuron Live Link Source at runtime**
+         Go back to Live Link Window
+         ![LevelBP_ConnectionStr_1](LevelBP_ConnectionStr_1.png)
+         Select Axis Studio source and Click **Show Advanced** in Settings panel
+         ![LevelBP_ConnectionStr_2](LevelBP_ConnectionStr_2.png)
+         Connect string and Factory will display in the Settings panel. 
+       
+         ![LevelBP_ConnectionStr_3](LevelBP_ConnectionStr_3.png)
+         Copy Connection String in settings panel and paste it into **Create Neuron Live Link Source at runtime** node in Event Graph.
+         ![LevelBP_EvtBeginPlay_5](LevelBP_EvtBeginPlay_5.png)
 
 * Remove live link source and connect to **Event EndPlay** node
-
-    * Right-Click to create **Event EndPlay**.
-        ![LevelBP_EvtEndPlay_1](LevelBP_EvtEndPlay_1.png)
-    * Create remove Source Node and link
-        ![LevelBP_EvtEndPlay_2](LevelBP_EvtEndPlay_2.png)
-    * Create **Get** node and connect to **Remove Source** node
-        ![LevelBP_EvtEndPlay_3](LevelBP_EvtEndPlay_3.png)
+  
+     * Right-Click to create **Event EndPlay**.
+         ![LevelBP_EvtEndPlay_1](LevelBP_EvtEndPlay_1.png)
+     * Create remove Source Node and link
+         ![LevelBP_EvtEndPlay_2](LevelBP_EvtEndPlay_2.png)
+     * Create **Get** node and connect to **Remove Source** node
+         ![LevelBP_EvtEndPlay_3](LevelBP_EvtEndPlay_3.png)
 
 * The event graph will show like the following image, Click Compile and Save the level blueprint
-
+  
     ![LevelBP_Compile](LevelBP_Compile.png)
-
-    
 
 ## 9.2 Put an Skeletal Mesh in your map and setup animation blueprint
 
@@ -329,10 +338,10 @@ Before packaging your game, you will first need to set a **Game Default Map**, w
 
 * Click on **Edit > Project Settings > Maps & Modes** in the Editor's main menu.
     ![Package_SetMap_1](Package_SetMap_1.png)
-
+  
     ![Package_SetMap_2](Package_SetMap_2.png)
-
-    > Note:  you may also need to specify your own game mode to use your own player character and player controller.
+  
+  > Note:  you may also need to specify your own game mode to use your own player character and player controller.
 
 ## 9.4 Package your Project to a runnable binary
 
@@ -423,10 +432,7 @@ You will be presented with a dialog for selecting the target directory. If packa
                 LiveLinkEditorPrivate.h    Module interface file
                 NeuronBoneMappingWidget.h    Bone mapping editor UI
                 NeuronLiveLinkRemapAssetDetailCustomization.h    Remap editor for Neuron
-
 ```
-
-
 
 # 10 FAQ
 
