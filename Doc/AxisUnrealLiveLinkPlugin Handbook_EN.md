@@ -12,7 +12,7 @@ Axis studio act as a server on a network and stream motion capture data live to 
 
 ## 1.1 Features
 
-* Support UE4 version 4.25 4.26
+* Support UE4 version 4.25 4.26 4.27
 * Support to receive and process the props (PWR-tracker) motion capture data (refer to our VPS project)
 * Support to drive a skeleton that is not using T-pose based model, such as A-pose based model.
 * Support to receive and process the displacement data from Axis Studio
@@ -25,7 +25,7 @@ Axis studio act as a server on a network and stream motion capture data live to 
 ## 1.3 About
 
 1. Supported Development Platforms: Win64
-2. Supported UE4 Version: 4.25.0 4.26.0
+2. Supported UE4 Version: 4.25 4.26 4.27
 
 # 2. Installation
 
@@ -85,7 +85,7 @@ Foe Axis Hybrid Manager Users, Please follow the steps to setup mocap data outpu
 * open Setting Window
   ![AHM_Preference](AHM_Preference.png)
 
-* Setup Mpocap data output
+* Setup Mocap data output
   ![AHM_DataOutput](AHM_DataOutput.png)
 
 ## 4.3 Open Unreal Project and Play an animation
@@ -100,7 +100,7 @@ Foe Axis Hybrid Manager Users, Please follow the steps to setup mocap data outpu
     If the source is ready you will see Live link Subject(s) on the window, in the picture it is **chr00** you will use the name in the following steps.
     ![LivelinkSourceReady](LivelinkSourceReady.png)
 
-* Go to Content browser, Open DemoMap(World'/NeuronLiveLink/Maps/DemoMap.DemoMap') in Neuron Live Link Plugin
+* Go to Content browser, Open DemoMap(World'/NeuronLiveLink/Content/Demo/DemoMap.uMap') in Neuron Live Link Plugin
   
     ![OpenDemoMap](OpenDemoMap.png)
 
@@ -131,7 +131,7 @@ You can Import skeletal meshes from FBX file into Unreal engine. In this tutoria
 * Click **Import All** or **Import** button on the  above picture to  import the FBX file to Unreal Engine, the following Picture shows the assets import from the FBX file. Click **Save All** button on Content browser to save the assets.
     ![FBXImportResult](FBXImportResult.png) 
 
-# 6. Manipulate Animation Blueprint Asset to driven the skeleton
+# 6. Manipulate Animation Blueprint Asset to drive the skeleton
 
 * Right-click on the Skeletal Mesh you want the Animation Blueprint to target and click Create > Amin Assets > Amin Blueprint.
     ![CreateAnimBP_1](CreateAnimBP_1.png)
@@ -266,7 +266,7 @@ Here is an example for mapping finger bone with "InHand"  in bone names
 
 ## 7.3 Inherit From LiveLinkRetargetAsset to do your thing with retargeting
 
-If you are an advance player, you want to do more about retargeting, you can inherit LiveLinkRetargetAsset in c++  and control the whole retarting process like NeuronLiveLinkRemapAsset.
+If you are an advance player, you want to do more about retargeting, you can inherit LiveLinkRetargetAsset in c++  and control the whole retargeting process like NeuronLiveLinkRemapAsset.
 
 # 8. Using LiveLink Controller Component to control props
 
@@ -294,11 +294,11 @@ This is basic use of Live Link，You can refer to Unreal documents Using Live Li
      * Add **Create Neuron Live Link Source at runtime** Node and link to BeginPlay 
          ![LevelBP_EvtBeginPlay_1](LevelBP_EvtBeginPlay_1.png)
          ![LevelBP_EvtBeginPlay_2](LevelBP_EvtBeginPlay_2.png)
-  
+        
      * Create Set node and connect to **Create Neuron Live Link Source at runtime**.
          ![LevelBP_EvtBeginPlay_3](LevelBP_EvtBeginPlay_3.png)
          ![LevelBP_EvtBeginPlay_4](LevelBP_EvtBeginPlay_4.png)
-  
+        
      * Fill Connection String  Pin in **Create Neuron Live Link Source at runtime**
          Go back to Live Link Window
          ![LevelBP_ConnectionStr_1](LevelBP_ConnectionStr_1.png)
@@ -343,7 +343,7 @@ Before packaging your game, you will first need to set a **Game Default Map**, w
   
   > Note:  you may also need to specify your own game mode to use your own player character and player controller.
 
-## 9.4 Package your Project to a runnable binary
+## 9.4 Package your Project to a executable binary
 
 Click on File > Package Project > [PlatformName] in the Editor's main menu. (in the graph we select Windows 64-bit platform)
 
@@ -390,23 +390,6 @@ You will be presented with a dialog for selecting the target directory. If packa
 |       Icon128.png    Icon files for plugin
 |       
 \---Source    Sources files for Plugin
-    +---MocapApi    exteral MocapApi C++ lib to receive data form axis studio
-    |   |   MocapApiLib.Build.cs
-    |   |   
-    |   +---bin
-    |   |   \---x64    MocapApi C++ lib binary files
-    |   \---include
-    |           MocapApi.h    MocapApi C++ lib header file
-    |           
-    +---MocapApiAdapter    MocapApi adapter module to use MocapApi in unreal engine
-    |   |   MocapApiAdapter.Build.cs    Module build file
-    |   |   
-    |   \---Public
-    |           MocapApiAdapter.h    Module interface file
-    |           MocapApiLog.h    Log category used in this module
-    |           MocapAppManager.h    Mocap application manager
-    |           MocapStructs.h    Struct used in unreal engine for MocapApi
-    |           
     +---NeuronLiveLink    Live link runtime module for neuron(mocapApi)
     |   |   NeuronLiveLink.Build.cs    Module build file
     |   |   
@@ -417,25 +400,39 @@ You will be presented with a dialog for selecting the target directory. If packa
     |   |       SubjectNameSetter.h    Subject name setter for animation blueprint
     |   |       
     |   \---Public
-    |           NeuronBoneMappingInfo.h    Bone mapping info for retargeting
+    |			MocapApiLog.h    Log category used in this module
+    |           MocapAppManager.h    Mocap application manager
+    |           MocapStructs.h    Struct used in unreal engine for MocapApi
+	|           NeuronBoneMappingInfo.h    Bone mapping info for retargeting
     |           NeuronLiveLink.h    Module interface file
     |           NeuronLiveLinkBPLibrary.h    Blueprint library
     |           NeuronLiveLinkLog.h    Log category used in this module
     |           NeuronLiveLinkRemapAsset.h    Retargrting asset for dirving animation data
     |           NeuronLiveLinkSource.h    Live link source for neuron
     |           PNSAnimInstance.h    Blueprint amimation instance(can set subject name) for diving animation data
-    |           
-    \---NeuronLiveLinkEditor    Neuron Live Link Editor module
-        |   NeuronLiveLinkEditor.Build.cs    Module build file
-        |   
-        \---Private
-                LiveLinkEditorPrivate.h    Module interface file
-                NeuronBoneMappingWidget.h    Bone mapping editor UI
-                NeuronLiveLinkRemapAssetDetailCustomization.h    Remap editor for Neuron
+    \---ThirdParty
+        +---MocapApi    exteral MocapApi C++ lib to receive data form axis studio
+        |   |   MocapApiLib.Build.cs
+        |   |   
+        |   +---bin
+        |   |   \---x64    MocapApi C++ lib binary files
+        |   \---include
+        |           MocapApi.h    MocapApi C++ lib header file          
+        |           
+        \---NeuronLiveLinkEditor    Neuron Live Link Editor module
+            |   NeuronLiveLinkEditor.Build.cs    Module build file
+            |   
+            \---Private
+                    LiveLinkEditorPrivate.h    Module interface file
+                    NeuronBoneMappingWidget.h    Bone mapping editor UI
+                    NeuronLiveLinkRemapAssetDetailCustomization.h    Remap editor for Neuron
 ```
 
-# 10 FAQ
+# 11 FAQ
+
+
 
 * Got compile error when rebuild my project.
     Our plugin use precompiled files and there is a rebuild bug in unreal engine which will delete the precompiled files if you rebuild your project. so please download the plugin again and replace the files in Intermediate folder with the new downloaded files and click build to build again. 
-* 
+    
+    
