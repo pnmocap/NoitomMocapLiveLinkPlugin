@@ -6,9 +6,9 @@
 
 # 1. 插件简介
 
-Axis Studio不仅可以导出动补数据还可以输出实时动补数据到第三方应用来驱动动画角色
+Axis Studio不仅可以导出动捕数据还可以输出实时动捕数据到第三方应用来驱动动画角色
 
-Axis studio作为网络中的服务端向客户端电脑上的应用发送动补数据，本文主要是关于如何在虚幻引擎4中使用 NeuronLiveLink 插件进行驱动动补数据
+Axis studio作为网络中的服务端向客户端电脑上的应用发送动捕数据，本文主要是关于如何在虚幻引擎4中使用 NeuronLiveLink 插件进行驱动动捕数据
 
 ## 1.1 插件特点
 
@@ -25,12 +25,12 @@ Axis studio作为网络中的服务端向客户端电脑上的应用发送动补
 ## 1.3 关于
 
 1. 支持开发平台: Win64
-2. 支持虚幻引擎版本: 4.25 4.26
-3. 文中的图片是基于英文版本的截图，中文版本不再使用新的截图而是在拥吻截图基础上进行简单说明
+2. 支持虚幻引擎版本: 4.25 4.26 4.27
+3. 文中的图片是基于英文版本的截图，中文版本不再使用新的截图而是在英文截图基础上进行简单说明
 
 # 2. 安装
 
-1. 在虚幻引擎工程目录创建Plugins文件夹(如果文件夹不存在的化)
+1.  在虚幻引擎工程目录创建Plugins文件夹(如果文件夹不存在的)
 
 2. 解压**NeuronLiveLink** 插件压缩包到Plugins目录
    
@@ -100,53 +100,57 @@ Axis studio作为网络中的服务端向客户端电脑上的应用发送动补
 * 按下图步骤打开 "Axis Studio"
   
     ![OpenAxisStudio](OpenAxisStudio.png)
-  
-  ```txt
-  图片中英文翻译：
-  1. Type "Axis" for search -> 1.在搜索栏输入Axis进行搜索
-  2. Click Axis Studio to open the app -> 2.单击Axis Studio图标打开应用程序
-  3. or You can double click the shortcut to open the app -> 3.或者你可以通过手机Axis Studio的快捷方式图标打开应用程序
-  ```
+
+    ```txt
+    图片中英文翻译：
+    1. Type "Axis" for search -> 1.在搜索栏输入Axis进行搜索
+    2. Click Axis Studio to open the app -> 2.单击Axis Studio图标打开应用程序
+    3. or You can double click the shortcut to open the app -> 3.或者你可以通过双击Axis Studio的快捷方式图标打开应用程序
+    ```
 
 * 打开并回放一个文件
     ![AxisOpenProject](AxisOpenProject.png)
     ![AxisSelectFileToPlay](AxisSelectFileToPlay.png)
-  
-  ```txt
-  图片中英文翻译：
-  1. Click "Simple Project" -> 单击"Simple Project"
-  1. Double Click a file to replay, for example double click "2.0-Run and Jump" -> 双击一个文件进行回放，比如双击"2.0-Run and Jump"
-  ```
-
+    
+    ```txt
+    图片中英文翻译：
+    1. Click "Sample Project" -> 单击"Sample Project"
+    1. Double Click a file to replay, for example double click "2.0-Run and Jump" -> 双击一个文件进行回放，比如双击"2.0-Run and Jump"
+    ```
+    
+    
+    
 * 打开设置菜单并进行修改
     ![AxixOpenSettings](AxixOpenSettings.png)
     ![AxixEditSettings](AxixEditSettings.png)
-  
-  ```txt
-  图片中英文翻译：
-  Settings -> 设置
-  1. Open Settings Menu -> 1.打开设置菜单
-  1. Click BVH Broadcasting -> 1.单击BVH数据转发
-  BVH Broadcasting -> BVH数据转发
-  BVH-Edit -> BVH-编辑
-  2. Scroll to "BVH-Edit" to make it enabled -> 2.滚动有侧滑块到"BVH-编辑"并启用（点击右侧按钮到启用状态）
-  3. Check to Use Rotation "YXZ" and Type is "Binary" -> 3.检查并确保旋转使用"YXZ"类型使"用二进制"
-  Rotation -> 旋转
-  Type -> 类型
-  Binary -> 二进制
-  Displacement -> 位移
-  Use old header format -> 使用旧帧头
-  OPT -> 光学
-  4. Use UDP anf set address and Port -> 使用UDP协议并设置地址和端口号
-  Protocol -> 协议
-  Local Address -> 本地地址
-  Distination Address -> 目标地址
-  Port -> 端口
-  5. Click Ok to save settings -> 单击确定按钮保存设置
-  OK -> 确定
-  Cancle -> 取消
-  ```
-
+    
+    ```txt
+    图片中英文翻译：
+    Settings -> 设置
+    1. Open Settings Menu -> 1.打开设置菜单
+    1. Click BVH Broadcasting -> 1.单击BVH数据转发
+    BVH Broadcasting -> BVH数据转发
+    BVH-Edit -> BVH-编辑
+    2. Scroll to "BVH-Edit" to make it enabled -> 2.滚动右侧滚动条到"BVH-编辑"并启用（点击右侧按钮到启用状态）
+    3. Check to Use Rotation "YXZ" and Type is "Binary" -> 3.检查并确保旋转使用"YXZ"类型使"用二进制"
+    Rotation -> 旋转
+    Type -> 类型
+    Binary -> 二进制
+    Displacement -> 位移
+    Use old header format -> 使用旧帧头
+    OPT -> 光学
+    4. Use UDP anf set address and Port -> 使用UDP协议并设置地址和端口号
+    Protocol -> 协议
+    Local Address -> 本地地址
+    Destination Address -> 目标地址
+    Port -> 端口
+    5. Click Ok to save settings -> 单击确定按钮保存设置
+    OK -> 确定
+    Cancel -> 取消
+    ```
+    
+    
+    
 * 开始回放
     ![AxixStartPlay](AxixStartPlay.png)
   
@@ -158,7 +162,7 @@ Axis studio作为网络中的服务端向客户端电脑上的应用发送动补
 
 ## 4.2 如果使用Axis Hybrid Manager使用如下步骤修改数据输出
 
-使用Axis Hybrid Manager的用户请参考下面的步骤打开mpcap 数据输出或者参考软件的文档数据输出管理部分进行操作
+使用Axis Hybrid Manager的用户请参考下面的步骤打开mocap 数据输出或者参考软件的文档数据输出管理部分进行操作
 
 * 打开设置窗口
   ![](AHM_Preference.png)
@@ -166,7 +170,7 @@ Axis studio作为网络中的服务端向客户端电脑上的应用发送动补
   ```txt
   图片中英文翻译：
   1. Click button to Open menu -> 点击按钮打开菜单
-  2. Click Preference to open dialog -> 点击Prerence打开对话框
+  2. Click Preference to open dialog -> 点击Preference打开对话框
   ```
 
 * 开启mpcap输出
@@ -174,7 +178,7 @@ Axis studio作为网络中的服务端向客户端电脑上的应用发送动补
   
   ```txt
   1. Select Data Output Tab -> 选择Data Output
-  2. Enable Mpcap data output -> 开启Mpcap数据输出
+  2. Enable Mocap data output -> 开启Mocap数据输出
   3. Select Protocol and Edit IP and port -> 选择协议并编辑IP地址和端口
   4. Click OK -> 点击OK按钮
   ```
@@ -207,13 +211,15 @@ Axis studio作为网络中的服务端向客户端电脑上的应用发送动补
     如果源已就绪你就会在窗口中看到可用的对象命名，在图中就是 **chr00** 你要在后续的步骤中使用这个名称
     ![LivelinkSourceReady](LivelinkSourceReady.png)
   
-  ```txt
-  图片中英文翻译：
-  Subject Name -> 对象命名
-  ```
-
-* 在内容浏览器中打开DemoMap(World'/NeuronLiveLink/Maps/DemoMap.DemoMap')资产位于Neuron Live Link插件中
+    ```txt
+    图片中英文翻译：
+    Subject Name -> 对象命名
+    ```
   
+    
+  
+* 在内容浏览器中打开DemoMap(World'/NeuronLiveLink/Content/Demo/DemoMap.uMap')资产位于Neuron Live Link插件中
+
     ![OpenDemoMap](OpenDemoMap.png)
   
   ```txt
@@ -226,27 +232,29 @@ Axis studio作为网络中的服务端向客户端电脑上的应用发送动补
 
 * 在世界大纲视图点击"PNS_Actor"并编辑Subject name（对象命名）
     ![ModifySubjectName](ModifySubjectName.png)
-  
-  ```txt
-  图片中英文翻译：
-  World Outliner -> 世界大纲视图
-  Details -> 细节
-  Default -> 默认
-  1. Click PNS_Actor -> 点击PNS_Actor节点
-  2. Pick a valid Subject Name -> 选取有效的Subject Name(图中是chr00)
-  ```
 
-* 确保你的编辑器视口(Viewport)开启了实时渲染
+    ```txt
+    图片中英文翻译：
+    World Outliner -> 世界大纲视图
+    Details -> 细节
+    Default -> 默认
+    1. Click PNS_Actor -> 点击PNS_Actor节点
+    2. Pick a valid Subject Name -> 选取有效的Subject Name(图中是chr00)
+    ```
+   
+* 确保你的编辑器视窗(Viewport)开启了实时渲染
     ![EnsureRealtime](EnsureRealtime.png)
-  
-  ```txt
-  图片中英文翻译：
-  Viewport Options -> 视口选项
-  Realtime -> 实时
-  Toogles real time rendering in this viewport -> 在此视口中切换实时渲染
-  ```
 
-* 你将会看到机器人角色在视口中移动
+    ```txt
+    图片中英文翻译：
+    Viewport Options -> 视窗选项
+    Realtime -> 实时
+    Toogles real time rendering in this viewport -> 在此视窗中切换实时渲染
+    ```
+    
+    
+    
+* 你将会看到机器人角色在视窗中移动
     ![AvatarMovementPreview](AvatarMovementPreview.gif)
 
 # 5. 导入一个新的骨骼网格体
@@ -275,44 +283,45 @@ Axis studio作为网络中的服务端向客户端电脑上的应用发送动补
 
 * 在 **FBX导入选项** 对话框中进行适当地设置, 注意确保勾选了**骨骼网格体**选项
     ![FBXImportOption](FBXImportOption.png)
-  
-  ```txt
-  图片中英文翻译：
-  FBX Import Options -> FBX导入选项
-  Import Skeletal Mesh -> 导入骨骼网格体
-  Reset to Default -> 重置为默认
-  Current Asset -> 当前资产
-  Mesh -> 网格体
-  Skeletal Mesh -> 骨骼网格体
-  Import Mesh -> 导入网格体
-  Import Content Type -> 导入内容类型
-  Skeleton -> 骨骼
-  Geometry and Skinning Weights -> 几何体和蒙皮权重
-  Animation -> 动画
-  Import Animations -> 导入动画
-  Transform -> 变换
-  Import Translation -> 导入平移
-  Import Rotation -> 导入旋转
-  Import Uniform Scale -> 导入统一缩放
-  Miscellaneous -> 杂项
-  Convert Scene -> 转换场景
-  Force Front XAxis -> 强制前X轴
-  Convert Scent Unit -> 转换场景单元
-  File Version -> 文件版本
-  File Creator -> 文件创建器
-  File Creator Application -> 文件创建器应用程序
-  File Units -> 文件单元
-  File Axis Direction -> 文件轴方向
-  File Frame Rate -> 文件帧率
-  Animation Start Frame -> 动画起始帧
-  Animation End Frame -> 动画结束帧
-  Import All -> 导入所有
-  Import -> 导入
-  Cancle -> 取消
-  ```
-  
-  > 注意: 如果没有选择引擎现有骨骼，引擎会从导入的骨骼网格体创件一个新的骨骼。新骨骼的名称为骨骼网格体名称后人添加Skeleton后缀。
 
+    ```txt
+    图片中英文翻译：
+    FBX Import Options -> FBX导入选项
+    Import Skeletal Mesh -> 导入骨骼网格体
+    Reset to Default -> 重置为默认
+    Current Asset -> 当前资产
+    Mesh -> 网格体
+    Skeletal Mesh -> 骨骼网格体
+    Import Mesh -> 导入网格体
+    Import Content Type -> 导入内容类型
+    Skeleton -> 骨骼
+    Geometry and Skinning Weights -> 几何体和蒙皮权重
+    Animation -> 动画
+    Import Animations -> 导入动画
+    Transform -> 变换
+    Import Translation -> 导入平移
+    Import Rotation -> 导入旋转
+    Import Uniform Scale -> 导入统一缩放
+    Miscellaneous -> 杂项
+    Convert Scene -> 转换场景
+    Force Front XAxis -> 强制前X轴
+    Convert Scene Unit -> 转换场景单元
+    File Version -> 文件版本
+    File Creator -> 文件创建器
+    File Creator Application -> 文件创建器应用程序
+    File Units -> 文件单元
+    File Axis Direction -> 文件轴方向
+    File Frame Rate -> 文件帧率
+    Animation Start Frame -> 动画起始帧
+    Animation End Frame -> 动画结束帧
+    Import All -> 导入所有
+    Import -> 导入
+    Cancel -> 取消
+    ```
+    
+    >
+    > 注意: 如果没有选择引擎现有骨骼，引擎会从导入的骨骼网格体创件一个新的骨骼。新骨骼的名称为骨骼网格体名称后添加Skeleton后缀。
+    
 * 点击上图**导入所有**或者**导入**按钮将FBX文件导入虚幻引擎，下图展示了从FBX文件导入的资产，点击内容浏览器上的**保存所有（Save All）**按钮保存导入的资产
     ![FBXImportResult](FBXImportResult.png) 
 
@@ -321,17 +330,17 @@ Axis studio作为网络中的服务端向客户端电脑上的应用发送动补
 * 在资源浏览器中右键点击你要操作的骨骼网格体资产并点击创建->动画资产->动画蓝图
     ![CreateAnimBP_1](CreateAnimBP_1.png)
     ![CreateAnimBP_2](CreateAnimBP_2.png)
-  
-  ```txt
-  图片中英文翻译：
-  1. Right Click the Skeletal Mesh -> 1.右键单击骨骼网格体
-  1. Select Create the Anim Blueprint -> 1.选择创建然后动画蓝图
-  Create -> 创建
-  Anim Blueprint -> 动画蓝图
-  Anim Assets -> 动画资产
-  ```
 
-* 动画蓝图会和目标骨骼网格体资产常见在相同目录, 你可以编辑它的名称或者使用默认的名称，本文中我们将它命名为**BPA_PN_Avatar**
+    ```txt
+    图片中英文翻译：
+    1. Right Click the Skeletal Mesh -> 1.右键单击骨骼网格体
+    1. Select Create the Anim Blueprint -> 1.选择创建然后动画蓝图
+    Create -> 创建
+    Anim Blueprint -> 动画蓝图
+    Anim Assets -> 动画资产
+    ```
+  
+* 动画蓝图会和目标骨骼网格体资产创建在相同目录, 你可以编辑它的名称或者使用默认的名称，本文中我们将它命名为**BPA_PN_Avatar**
     ![CreateAnimBP_3](CreateAnimBP_3.png)
   
   ```txt
@@ -360,14 +369,14 @@ Axis studio作为网络中的服务端向客户端电脑上的应用发送动补
   Live Link Pose -> 实时链接姿势
   ```
 
-* 选择实时链接对象命名(Live Link Subject Name)并连接到输出姿势
+* 选择实时链接对象命名(Live Link Subject Name)并连接到输出姿态
     ![LiveLinkPoseLink](LiveLinkPoseLink.png)
   
   ```txt
   图片中英文翻译：
   1. Click Live Link Subject Name Combo box to pick a subject name -> 1.点击Live Link Subject Name组合框选择一个对象命名
-  2. Connect Live Link Post Output to Output Pose Result Pin -> 2.连接实时链接姿势的输出引脚到输出姿势的Result引脚
-  Output Pose -> 输出姿势
+  2. Connect Live Link Post Output to Output Pose Result Pin -> 2.连接实时链接姿态的输出引脚到输出姿态的Result引脚
+  Output Pose -> 输出姿态
   <No Preset Selected> -> <未选择预设项>
   Subject -> 对象
   Role -> 角色
@@ -390,7 +399,7 @@ Axis studio作为网络中的服务端向客户端电脑上的应用发送动补
   Structure -> 结构
   ```
 
-* 在选取父类对话框中选择"NeuronLiveLinkRemapAsset"作为父类
+* 在选取父类对话框中，选择"NeuronLiveLinkRemapAsset"作为父类
     ![PickRemapAssetParent](PickRemapAssetParent.png)
   
   ```txt
@@ -411,12 +420,12 @@ Axis studio作为网络中的服务端向客户端电脑上的应用发送动补
 * 蓝图会在内容浏览器中创建，你可以将其命名为**PN_Avatar_RemapAsset** 或其他名称
     ![RenameRemapAsset](RenameRemapAsset.png)
 
-* 返回动画蓝图编辑器,修改实时链接姿势(Live Link Pose)节点的retarget asset
+* 返回动画蓝图编辑器,修改实时链接姿态(Live Link Pose)节点的retarget asset
     ![LiveLinkPoseSelectRemapAsset](LiveLinkPoseSelectRemapAsset.png)
   
   ```txt
   图片中英文翻译：
-  1. In AnimGraph Click Live Link Pose Node -> 1.点击AnimGraph中的实时链接姿势节点
+  1. In AnimGraph Click Live Link Pose Node -> 1.点击AnimGraph中的实时链接姿态节点
   2. In Details Panel, Select the new blueprint asset(PN_Avatar_remapAsset) as Retarget Asset -> 在细节面板选择新创建的蓝图资产(上边创建的PN_Avatar_remapAsset资产)作为Retarget Asset
   Details -> 细节
   Preview Scene Sett -> 预览场景设置
@@ -428,7 +437,7 @@ Axis studio作为网络中的服务端向客户端电脑上的应用发送动补
 
 # 7. 重映射骨骼名称
 
-你的骨骼网格体可以使用与Axis完全不同的骨骼名称。此时你将不能直接使用NeuronLiveLinkRemapAsset 作为你的实时链接姿势的 Retarget Asset，你需要为你的骨骼创建自己的Retarget Asset，本节将继续 Retarget Asset的定制过程。 在 上一部分[操作动画蓝图（Animation Blueprint）资产驱动骨骼](6. 操作动画蓝图（Animation Blueprint）资产驱动骨骼) 中我们已经创建了蓝图**PN_Avatar_RemapAsset** 结接下来我们将开始编辑它
+你的骨骼网格体可以使用与Axis完全不同的骨骼名称。此时你将不能直接使用NeuronLiveLinkRemapAsset 作为你的实时链接姿态的 Retarget Asset，你需要为你的骨骼创建自己的Retarget Asset，本节将继续 Retarget Asset的定制过程。 在 上一部分[操作动画蓝图（Animation Blueprint）资产驱动骨骼](6. 操作动画蓝图（Animation Blueprint）资产驱动骨骼) 中我们已经创建了蓝图**PN_Avatar_RemapAsset** 结接下来我们将开始编辑它
 
 我们使用的骨骼名称
 
@@ -514,7 +523,7 @@ Spine3,
   Save -> 保存
   Browse -> 浏览
   Class Defaults -> 类默认值
-  NOTE: This is a data only blueprint, so only the default values are shown, It does not have any script ot variables, If you want to add some OPen Full Blueprint Editor -> 注意： 这是一个纯数据蓝图，所有只显示默认值。 它不包含任何脚本或变量，如果需要添加，打开完整蓝图编辑器
+  NOTE: This is a data only blueprint, so only the default values are shown, It does not have any script or variables, If you want to add some Open Full Blueprint Editor -> 注意： 这是一个纯数据蓝图，所有只显示默认值。 它不包含任何脚本或变量，如果需要添加，打开完整蓝图编辑器
   Search Details -> 搜索详情
   ```
 
@@ -525,11 +534,11 @@ Spine3,
   ```txt
   图片中英文翻译：
   1. Scroll to the end and click "Pick a skeleton" -> 1.滚动到页面下方并点击"Pick a skeleton"
-  2. Select the skeleton you want to map tp then click it -> 2. 选择要讲Axis骨骼映射到的骨骼并点击它
-  1. Pick a skeleton will add bones in the skeleton to the list -> 1. "Pick a skeleton"会将骨骼的所有骨头架到列表中
+  2. Select the skeleton you want to map to, then click it -> 2. 选择要映射的骨骼并点击它
+  1. Pick a skeleton will add bones in the skeleton to the list -> 1. "Pick a skeleton"会将骨骼的所有骨头加到列表中
   2. Click Select -> 2.单击Select
   3. You can type a name to search form the list -> 3. 通过输入名称可以在列表中进行搜索
-  4. Click the skeleton will modify the mapped name with the skeleton you select -> 4. 单击读个骨骼名称将会将映射的骨骼名称改为你选中的骨骼
+  4. Click the skeleton will modify the mapped name with the skeleton you select -> 4. 单击骨骼名称将会将映射的骨骼名称改为你选中的骨骼
   ```
 
 * 编辑骨头名称前缀
@@ -538,7 +547,7 @@ Spine3,
   
   ```2.
   图片中英文翻译：
-  1. Bone name Prefix Can add a prefix to each mapped bone, you can type less words -> 1. 骨头名称前缀（Bone name Prefix）可以为映射的所有骨头添加一个共同的前缀来减少应适时输入的字符数量
+  1. Bone name Prefix Can add a prefix to each mapped bone, you can type less words -> 1. 骨头名称前缀（Bone name Prefix）可以为映射的所有骨头添加一个共同的前缀来减少输入的字符数量
   2. After you type enter, the prefix will be updated -> 2.输入回车后，前缀名称会进行更新
   ```
 
@@ -547,10 +556,10 @@ Spine3,
   
   ```txt
   图片中英文翻译：
-  1. Use Displacement Data indicate whether you use the replacement data or not in remapping -> 1.Use Displacement Data表示你在重映射是是否使用位移数据（如果有的话）
+  1. Use Displacement Data indicate whether you use the replacement data or not in remapping -> 1.Use Displacement Data表示你在重映射时，是否使用位移数据（如果有的话）
   ```
 
-* 如果骨骼的默认姿态不是T-Pose, 你可以提供有个T-Pose的动画序列到实时链接姿势的Input Pose引脚
+* 如果骨骼的默认姿态不是T-Pose, 你可以提供T-Pose的动画序列到实时链接姿势的Input Pose引脚
     ![ProvideATPoseAnim](ProvideATPoseAnim.png)
   
   ```txt
@@ -567,9 +576,9 @@ Spine3,
   > Reference Pose -> 参考姿势
   > Current Pose -> 当前姿势
 
-## 7.2 通过常在函数进行骨骼重映射
+## 7.2 通过重载函数进行骨骼重映射
 
-我们推荐你是用上面的方法进行骨骼重映射，如果你想对骨骼映射做一些更取巧的事情，你可以重载NeuronLiveLinkRemapAsset 蓝图中的 GetRemappedBoneName 函数实现你的相反，在重载函数之前请先确保你没有勾选"Enable BoneMapping "
+我们推荐你使用上面的方法进行骨骼重映射，如果你想对骨骼映射做一些更取巧的事情，你可以重载NeuronLiveLinkRemapAsset 蓝图中的 GetRemappedBoneName 函数实现你的想法，在重载函数之前请先确保你没有勾选"Enable BoneMapping "
 
 ![PrepareOverrideFunction](PrepareOverrideFunction.png)
 下面是使用重载函数的方映射手指名称中"InHand"字段的方法
@@ -598,7 +607,7 @@ Spine3,
      * 将鼠标指针移动到**+** 按钮, 点击 **+变量(+Variable)**按钮在蓝图面板中添加显变量，在细节面板之后为他命名为LiveLinkHandle并按下回车键
        ![LevelBP_AddVar_1](LevelBP_AddVar_1.png)
        ![LevelBP_AddVar_2](LevelBP_AddVar_2.png)
-  
+      
      * 在细节面板之后设置变量类型(Variable Type)为结构（Structure）LiveLink源处理 (Live Link Source Handle)
          ![LevelBP_AddVar_3](LevelBP_AddVar_3.png)
        
@@ -614,14 +623,14 @@ Spine3,
 
 * 在事件图表(Event Graph)中创建Neuron Live Link Source at runtime节点并与**事件开始运行(Event BeginPlay)**连接
   
-     * 添加**Create Neuron Live Link Source at runtime**节点并与**事件开始运行(Event BeginPlay)**y连接
+     * 添加**Create Neuron Live Link Source at runtime**节点并与**事件开始运行(Event BeginPlay)**连接
          ![LevelBP_EvtBeginPlay_1](LevelBP_EvtBeginPlay_1.png)
          ![LevelBP_EvtBeginPlay_2](LevelBP_EvtBeginPlay_2.png)
-  
+        
      * 创建**LiveLinkHandle**的设置节点并与**Create Neuron Live Link Source at runtime**连接
          ![LevelBP_EvtBeginPlay_3](LevelBP_EvtBeginPlay_3.png)
          ![LevelBP_EvtBeginPlay_4](LevelBP_EvtBeginPlay_4.png)
-  
+        
      * 填充**Create Neuron Live Link Source at runtime**的Connection String引脚
          打开实时链接(Live Link)窗口
          ![LevelBP_ConnectionStr_1](LevelBP_ConnectionStr_1.png)
@@ -713,27 +722,10 @@ Spine3,
 |                           
 +---Resources
 |       Icon128.png    插件图标Icon files for plugin
-|       
+|
 \---Source    插件源码文件Sources files for Plugin
-    +---MocapApi    用于从axis studio接收MocapApiC++库exteral MocapApi C++ lib to receive data form axis studio
-    |   |   MocapApiLib.Build.cs
-    |   |   
-    |   +---bin
-    |   |   \---x64    MocapApi C++ lib binary files
-    |   \---include
-    |           MocapApi.h    MocapApi C++ lib header file
-    |           
-    +---MocapApiAdapter    用于虚幻引擎的MocapApi适配器MocapApi adapter module to use MocapApi in unreal engine
-    |   |   MocapApiAdapter.Build.cs    模块构建文件Module build file
-    |   |   
-    |   \---Public
-    |           MocapApiAdapter.h    模块接口Module interface file
-    |           MocapApiLog.h    模块日志类Log category used in this module
-    |           MocapAppManager.h    模块Mocap应用管理类Mocap application manager
-    |           MocapStructs.h    模块Mocap对虚幻开放的结构Struct used in unreal engine for MocapApi
-    |           
     +---NeuronLiveLink    接收neuron(mocapApi)数据的Live link运行时模块Live link runtime module for neuron(mocapApi)
-    |   |   NeuronLiveLink.Build.cs    模块构建文件Module build file
+    |   |   NeuronLiveLink.Build.cs    Module build file
     |   |   
     |   +---Private
     |   |       MocapClient.h    在实时连接中接收axis studio数据的Mocap客户端MocapClient for receiving axis studio data in live link
@@ -742,15 +734,26 @@ Spine3,
     |   |       SubjectNameSetter.h    用于在动画蓝图中设置对象命名(Subject name)的设置器Subject name setter for animation blueprint
     |   |       
     |   \---Public
-    |           NeuronBoneMappingInfo.h    用于重定向的骨骼映射信息Bone mapping info for retargeting
+    |			MocapApiLog.h    模块日志类Log category used in this module
+    |           MocapAppManager.h    模块Mocap应用管理类Mocap application manager
+    |           MocapStructs.h    模块Mocap对虚幻开放的结构Struct used in unreal engine for MocapApi
+	|           NeuronBoneMappingInfo.h    用于重定向的骨骼映射信息Bone mapping info for retargeting
     |           NeuronLiveLink.h    模块接口Module interface file
     |           NeuronLiveLinkBPLibrary.h    蓝图函数库Blueprint library
     |           NeuronLiveLinkLog.h    模块日志类Log category used in this module
     |           NeuronLiveLinkRemapAsset.h    驱动动画数据法人重定向资产类Retargrting asset for dirving animation data
     |           NeuronLiveLinkSource.h    neuron的实时链接源Live link source for neuron
     |           PNSAnimInstance.h    蓝图动画实例类（可设置对象命名）Blueprint amimation instance(can set subject name) for diving animation data
-    |           
-    \---NeuronLiveLinkEditor    Neuron Live Link编辑器相关模块Neuron Live Link Editor module
+    \---ThirdParty
+        +---MocapApi    用于从axis studio接收MocapApi C++库exteral MocapApi C++ lib to receive data form axis studio
+        |   |   MocapApiLib.Build.cs
+        |   |   
+        |   +---bin
+        |   |   \---x64    MocapApi C++ lib binary files
+        |   \---include
+        |           MocapApi.h    MocapApi C++ lib header file          
+        |           
+        \---NeuronLiveLinkEditor    Neuron Live Link编辑器相关模块Neuron Live Link Editor module
         |   NeuronLiveLinkEditor.Build.cs    模块构建文件Module build file
         |   
         \---Private
@@ -759,8 +762,9 @@ Spine3,
                 NeuronLiveLinkRemapAssetDetailCustomization.h    Neuron的骨骼映射编辑器Remap editor for Neuron
 ```
 
-# 10 常见问题
+# 11 常见问题
 
 * 当我重新编译(rebuild)我的工程时遇到编译错误
-    我们的插件使用的是预编译的目标文件文件，虚幻引擎在重新编译时会删除这些预编译文件从而导致我发编译成功，这是虚幻引擎编译系统的缺陷，现行解决方案是重新下载插件并将工程中插件的Intermediate目录使用新下载的文件进行替换，然后运行构建(Build)操作进行构建
-* 
+    我们的插件使用的是预编译的目标文件文件，虚幻引擎在重新编译时会删除这些预编译文件从而导致我无法编译成功，这是虚幻引擎编译系统的缺陷，现行解决方案是重新下载插件并将工程中插件的Intermediate目录使用新下载的文件进行替换，然后运行构建(Build)操作进行构建
+    
+    
