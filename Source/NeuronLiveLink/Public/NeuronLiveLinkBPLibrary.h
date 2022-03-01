@@ -49,6 +49,12 @@ class NEURONLIVELINK_API UNeuronLiveLinkBPLibrary : public UBlueprintFunctionLib
 	UFUNCTION( BlueprintCallable, Category = "NeuronLiveLink" )
 		static void GetAvatarNames( TArray<FName>& AvatarNames );
 
+	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
+		static void GetTrackerNames(TArray<FName>& TrackerNames);
+
+	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
+		static void GetRigidBodyNames(TArray<FName>& RigidBodyNames);
+
 	UFUNCTION( BlueprintCallable, Category = "NeuronLiveLink" )
 		static void NeuronBoneIndex ( const FName& BoneName, int32& BoneIndex );
 

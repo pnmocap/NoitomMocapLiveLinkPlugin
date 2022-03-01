@@ -4,7 +4,8 @@
 #include "NeuronLiveLinkSourceFactory.h"
 #include "ILiveLinkClient.h"
 #include "LiveLinkClientReference.h"
-
+#include "MocapAppManager.h"
+#include "MocapStructs.h"
 
 
 UNeuronLiveLinkBPLibrary::UNeuronLiveLinkBPLibrary(const FObjectInitializer& ObjectInitializer)
@@ -44,11 +45,66 @@ void UNeuronLiveLinkBPLibrary::GetNeuronFrameInUE4( const FName& AvatarName,
 	//	Locations = MoveTemp( Data.BonePositions );
 	//	Rotations = MoveTemp( Data.BoneRotations );
 	//}
+	const FMocapAvatar* Data = FMocapAppManager::GetInstance().GetAvatarData(AvatarName);
+	if (Data)
+	{
+		int Num = Data->BoneNames.Num();
+		Locations.SetNum(Num);
+		Rotations.SetNum(Num);
+		for (int i = 0; i < Num; ++i)
+		{
+			Locations[i] = Data->HasLocalPositions[i] ? Data->LocalPositions[i] : Data->DefaultLocalPositions[i];
+			Rotations[i] = Data->LocalRotation[i];
+		}
+		WithDisplacement = Data->HasLocalPositions[1];
+	}
 }
+
+class MocapAppDataVisitor : public MocapAppVisitor
+{
+public:
+	virtual void Visit(UMocapApp* App) override
+	{
+		Apps.AddUnique(App);
+	}
+	TArray<UMocapApp*> Apps;
+};
 
 void UNeuronLiveLinkBPLibrary::GetAvatarNames(TArray<FName>& AvatarNames)
 {
 	//FAnimationDataManager::GetInstance( )->GetAvatarNames( AvatarNames );
+	MocapAppDataVisitor Visitor;
+	FMocapAppManager::GetInstance().EachRunningApp(Visitor);
+	for (UMocapApp* App : Visitor.Apps)
+	{
+		TArray<FString> Arr;
+		App->GetAllAvatarNames(Arr);
+		AvatarNames.Append(Arr);
+	}
+}
+
+void UNeuronLiveLinkBPLibrary::GetTrackerNames(TArray<FName>& TrackerNames)
+{
+	MocapAppDataVisitor Visitor;
+	FMocapAppManager::GetInstance().EachRunningApp(Visitor);
+	for (UMocapApp* App : Visitor.Apps)
+	{
+		TArray<FString> Arr;
+		App->GetAllTrackerNames(Arr);
+		TrackerNames.Append(Arr);
+	}
+}
+
+void UNeuronLiveLinkBPLibrary::GetRigidBodyNames(TArray<FName>& RigidBodyNames)
+{
+	MocapAppDataVisitor Visitor;
+	FMocapAppManager::GetInstance().EachRunningApp(Visitor);
+	for (UMocapApp* App : Visitor.Apps)
+	{
+		TArray<FString> Arr;
+		App->GetAllRigidBodyNames(Arr);
+		RigidBodyNames.Append(Arr);
+	}
 }
 
 void UNeuronLiveLinkBPLibrary::NeuronBoneIndex( const FName& BoneName, int32& BoneIndex )
@@ -61,4 +117,6 @@ void UNeuronLiveLinkBPLibrary::NeuronBoneIndex( const FName& BoneName, int32& Bo
 	//}
 
 	//BoneIndex = enumPtr->GetIndexByName( BoneName );
+	const TArray<FName>& BoneNames = UMocapApp::GetAvatarBuildinBoneNames();
+	BoneNames.Find(BoneName, BoneIndex);
 }
