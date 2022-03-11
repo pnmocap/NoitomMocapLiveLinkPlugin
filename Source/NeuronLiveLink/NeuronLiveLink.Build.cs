@@ -5,7 +5,8 @@ using UnrealBuildTool;
 
 public class NeuronLiveLink : ModuleRules
 {
-	public NeuronLiveLink(ReadOnlyTargetRules Target) : base(Target)
+
+    public NeuronLiveLink(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
@@ -32,21 +33,25 @@ public class NeuronLiveLink : ModuleRules
                 Path.Combine(ModuleDirectory, "../ThirdParty/MocapApi", "include"),
             }
             );
-			
-		
-		PublicDependencyModuleNames.AddRange(
-			new string[]
-			{
-				"Core",
+
+
+        PublicDependencyModuleNames.AddRange(
+            new string[]
+            {
+                "Core",
                 "LiveLinkInterface",
                 "LiveLink",
                 "Networking",
-				// ... add other public dependencies that you statically link with here ...
-			}
-			);
-			
-		
-		PrivateDependencyModuleNames.AddRange(
+                // ... add other public dependencies that you statically link with here ...
+            }
+            );
+
+        if (Target.Version.MajorVersion > 4)
+        {
+            PublicDependencyModuleNames.Add("LiveLinkAnimationCore");
+        }
+
+        PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
 				"CoreUObject",

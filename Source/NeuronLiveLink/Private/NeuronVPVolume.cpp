@@ -17,7 +17,7 @@ ANeuronVPVolume::ANeuronVPVolume()
 	NeuronRoot->SetupAttachment(RootComponent);
 
 	NeuronVPVolume = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("NeuronVPVolume"));
-	NeuronVPVolume->AttachTo(NeuronRoot);
+	NeuronVPVolume->SetupAttachment(NeuronRoot);
 
 	//Finds the current UE project Plugins folder
 	FString NeuronPluginDir = FPaths::ProjectPluginsDir();

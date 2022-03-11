@@ -507,6 +507,9 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
         mcpError = avatarMgr->GetAvatarJoints(JointsHandle.GetData(), &Count, Avatarhandle);
         ReturnFalseIFError();
 
+		float PosX, PosY, PosZ;
+		float RotX, RotY, RotZ, RotW;
+
         MocapApi::EMCPJointTag jointTag;
         MocapApi::EMCPJointTag parentJointTag;
         const char* cJointName = nullptr;
@@ -523,15 +526,18 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
             avatar.BoneParents[jointTag] = parentJointTag;
 
             FVector& d = avatar.DefaultLocalPositions[jointTag];
-            mcpJoint->GetJointDefaultLocalPosition(&d.X, &d.Y, &d.Z, handle);
+            mcpJoint->GetJointDefaultLocalPosition(&PosX, &PosY, &PosZ, handle);
+            d = FVector(PosX, PosY, PosZ);
 
             FVector& p = avatar.LocalPositions[jointTag];
-            mcpError = mcpJoint->GetJointLocalPosition(&p.X, &p.Y, &p.Z, handle);
+            mcpError = mcpJoint->GetJointLocalPosition(&PosX, &PosY, &PosZ, handle);
+            p = FVector(PosX, PosY, PosZ);
 
             avatar.HasLocalPositions[jointTag] = (mcpError == MocapApi::EMCPError::Error_None);
 
             FQuat& q = avatar.LocalRotation[jointTag];
-            mcpJoint->GetJointLocalRotation(&q.X, &q.Y, &q.Z, &q.W, handle);
+            mcpJoint->GetJointLocalRotation(&RotX, &RotY, &RotZ, &RotW, handle);
+            q = FQuat(RotX, RotY, RotZ, RotW);
         }
     }
     
@@ -644,6 +650,9 @@ bool UMocapApp::HandleTrackerUpdateEvent(uint64 TrackerHandle, int ReservedData)
     int TrackerCount = 0;
     mcpError = TrackerMgr->GetDeviceCount(&TrackerCount, TrackerHandle);
     ReturnFalseIFError();
+
+	float PosX, PosY, PosZ;
+	float RotX, RotY, RotZ, RotW;
 	
     for (int Idx = 0; Idx < TrackerCount; ++Idx)
     {
@@ -654,19 +663,19 @@ bool UMocapApp::HandleTrackerUpdateEvent(uint64 TrackerHandle, int ReservedData)
         FMocapTracker& tracker = Trackers.FindOrAdd(TrackerName);
         //rigid.ID = TrackerID;
         tracker.Name = FName(TrackerName);
-        FVector p;
-        TrackerMgr->GetTrackerPosition(&p.X, &p.Y, &p.Z, (char*)name, TrackerHandle);
+
+        TrackerMgr->GetTrackerPosition(&PosX, &PosY, &PosZ, (char*)name, TrackerHandle);
         //tracker.Position.X = p.X * 100.0f;
         //tracker.Position.Y = p.Z * 100.0f;
         //tracker.Position.Z = p.Y * 100.0f;
-        tracker.Position = p;
-        FQuat q;
-        TrackerMgr->GetTrackerRotation(&q.X, &q.Y, &q.Z, &q.W, (char*)name, TrackerHandle);
+        tracker.Position = FVector(PosX, PosY, PosZ);
+
+        TrackerMgr->GetTrackerRotation(&RotX, &RotY, &RotZ, &RotW, (char*)name, TrackerHandle);
         //tracker.Rotation.X = q.X;
         //tracker.Rotation.Y = q.Z;
         //tracker.Rotation.Z = q.Y;
         //tracker.Rotation.W = -q.W;
-        tracker.Rotation = q;
+        tracker.Rotation = FQuat(RotX, RotY, RotZ, RotW);
         //TrackerMgr->GetTrackerStatus(&rigid.Status, name, TrackerHandle);
 
         //rigid.Reserved = ReservedData;
@@ -686,23 +695,26 @@ bool UMocapApp::HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle, int ReservedD
         reinterpret_cast<void**>(&RigidBodyMgr));
     ReturnFalseIFError();
 
+	float PosX, PosY, PosZ;
+	float RotX, RotY, RotZ, RotW;
+
     int RigidID = 0;
     RigidBodyMgr->GetRigidBodyId(&RigidID, RigidBodyHandle);
     FString RigidName = FString::Printf(TEXT("Prop_%d"), RigidID);
     FMocapRigidBody& rigid = RigidBodies.FindOrAdd(RigidName);
     //rigid.ID = RigidID;
     rigid.Name = FName(RigidName);
-    FVector p;
-    RigidBodyMgr->GetRigidBodyPosition(&p.X, &p.Y, &p.Z, RigidBodyHandle);
-    rigid.Position.X = p.X;
-    rigid.Position.Y = p.Z;
-    rigid.Position.Z = p.Y;
-    FQuat q;
-    RigidBodyMgr->GetRigidBodyRotation(&q.X, &q.Y, &q.Z, &q.W, RigidBodyHandle);
-    rigid.Rotation.X = q.X;
-    rigid.Rotation.Y = q.Z;
-    rigid.Rotation.Z = q.Y;
-    rigid.Rotation.W = -q.W;
+
+    RigidBodyMgr->GetRigidBodyPosition(&PosX, &PosY, &PosZ, RigidBodyHandle);
+    rigid.Position.X = PosX;
+    rigid.Position.Y = PosY;
+    rigid.Position.Z = PosZ;
+
+    RigidBodyMgr->GetRigidBodyRotation(&RotX, &RotY, &RotZ, &RotW, RigidBodyHandle);
+    rigid.Rotation.X = RotX;
+    rigid.Rotation.Y = RotY;
+    rigid.Rotation.Z = RotZ;
+    rigid.Rotation.W = -RotW;
     RigidBodyMgr->GetRigidBodyStatus(&rigid.Status, RigidBodyHandle);
     MocapApi::EMCPJointTag Tag;
     RigidBodyMgr->GetRigidBodyJointTag(&Tag, RigidBodyHandle);

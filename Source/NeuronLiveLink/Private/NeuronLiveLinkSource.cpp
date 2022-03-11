@@ -141,7 +141,7 @@ void FNeuronLiveLinkSource::PushAvatarSubject( FName Subject, const TArray<FName
 	}
 
 	if (m_pLiveLinkClient) {
-        FString AvatarName = FMocapAppManager::ReduceAppName(Subject);
+        FString AvatarName = FMocapAppManager::ReduceAppName(Subject);  
         if (mocapClient)
         {
             int RootJointTag;

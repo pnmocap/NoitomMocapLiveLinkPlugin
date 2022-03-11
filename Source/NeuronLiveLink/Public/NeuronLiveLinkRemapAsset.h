@@ -2,10 +2,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "LiveLinkRetargetAsset.h"
 #include "Roles/LiveLinkAnimationTypes.h"
 #include "Animation/AnimTypes.h"
 #include "NeuronBoneMappingInfo.h"
+#include "Runtime/Launch/Resources/Version.h"
+#if ENGINE_MAJOR_VERSION > 4
+#include "LiveLinkAnimationCore/Public/LiveLinkRetargetAsset.h"
+#else
+#include "LiveLinkRetargetAsset.h"
+#endif
 #include "NeuronLiveLinkRemapAsset.generated.h"
 
 /*
