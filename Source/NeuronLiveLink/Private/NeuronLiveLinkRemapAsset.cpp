@@ -9,31 +9,24 @@
 UNeuronLiveLinkRemapAsset::UNeuronLiveLinkRemapAsset (const FObjectInitializer& ObjectInitializer)
 	: Super (ObjectInitializer)
 {
+#if WITH_EDITOR
 	UBlueprint* Blueprint = Cast<UBlueprint> (GetClass ()->ClassGeneratedBy);
 	if (Blueprint)
 	{
-#if (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION <= 23)
-		OnBlueprintCompiledDelegate = Blueprint->OnCompiled ().AddUObject (this, &UNeuronLiveLinkRemapAsset::OnBlueprintClassCompiled);
-#elif (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 24) || (ENGINE_MAJOR_VERSION > 4)
-#if WITH_EDITOR
 		OnBlueprintCompiledDelegate = Blueprint->OnCompiled( ).AddUObject( this, &UNeuronLiveLinkRemapAsset::OnBlueprintClassCompiled );
-#endif
-#endif
 	}
+#endif
 }
 
 void UNeuronLiveLinkRemapAsset::BeginDestroy ()
 {
+
 	if (OnBlueprintCompiledDelegate.IsValid ())
 	{
+#if WITH_EDITOR
 		UBlueprint* Blueprint = Cast<UBlueprint> (GetClass ()->ClassGeneratedBy);
 		check (Blueprint);
-#if ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION <= 23
 		Blueprint->OnCompiled ().Remove (OnBlueprintCompiledDelegate);
-#elif (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 24) || (ENGINE_MAJOR_VERSION > 4)
-#if WITH_EDITOR
-		Blueprint->OnCompiled ().Remove (OnBlueprintCompiledDelegate);
-#endif
 #endif
 		OnBlueprintCompiledDelegate.Reset ();
 	}
