@@ -120,3 +120,44 @@ void UNeuronLiveLinkBPLibrary::NeuronBoneIndex( const FName& BoneName, int32& Bo
 	const TArray<FName>& BoneNames = UMocapApp::GetAvatarBuildinBoneNames();
 	BoneNames.Find(BoneName, BoneIndex);
 }
+
+FMocapServerCommand UNeuronLiveLinkBPLibrary::MakeMocapCommand(EMCCommandType Cmd)
+{
+	FMocapServerCommand C;
+	C.Cmd = Cmd;
+	return C;
+}
+
+void UNeuronLiveLinkBPLibrary::BuildMocapCmdParamInt(FMocapServerCommand& Cmd, EMCCommandParamName Name, int Val)
+{
+	Cmd.Params.Add(Name, FString::FromInt(Val));
+}
+
+void UNeuronLiveLinkBPLibrary::BuildMocapCmdParam(FMocapServerCommand& Cmd, EMCCommandParamName Name, const FString& Val)
+{
+	Cmd.Params.Add(Name, Val);
+}
+
+void UNeuronLiveLinkBPLibrary::BuildMocapCmdParamStopCatpureExtraFlag(FMocapServerCommand& Cmd, EMCCommandExtraFlag flag)
+{
+	FString StrFlag = FString::FromInt((int)flag);
+	Cmd.Params.Add(EMCCommandParamName::ParamStopCatpureExtraFlag, StrFlag);
+}
+
+void UNeuronLiveLinkBPLibrary::SetMocapCmdPProgressHandler(UPARAM(ref) FMocapServerCommand& Cmd, UObject* Obj, FName Function)
+{
+
+}
+
+void UNeuronLiveLinkBPLibrary::SendNeuronCommand(const UObject* WorldContextObject, FName AppName, const FMocapServerCommand& Cmd, FLatentActionInfo LatentInfo, int& Result, FString& ResultStr)
+{
+	UMocapApp* App = FMocapAppManager::GetInstance().GetMocapAppByName(AppName);
+	if (App)
+	{
+		App->QueueMocapCommand(Cmd);
+	}
+	else
+	{
+		UE_LOG(LogMocapApi, Log, TEXT("Failed to find Mocap App Name: %s"), *(AppName.ToString()));
+	}
+}

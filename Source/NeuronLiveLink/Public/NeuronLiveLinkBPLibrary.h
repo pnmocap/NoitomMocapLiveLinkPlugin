@@ -3,6 +3,7 @@
 
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "ILiveLinkSource.h"
+#include "MocapStructs.h"
 #include "NeuronLiveLinkBPLibrary.generated.h"
 
 /* 
@@ -68,4 +69,22 @@ class NEURONLIVELINK_API UNeuronLiveLinkBPLibrary : public UBlueprintFunctionLib
 	 */
 	UFUNCTION( BlueprintCallable, Category = "NeuronLiveLink" )
 		static void GetNeuronFrameInUE4( const FName& AvatarName, bool& WithDisplacement, TArray<FVector>& Locations, TArray<FQuat>& Rotations );
+
+	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
+		static FMocapServerCommand MakeMocapCommand(EMCCommandType Cmd);
+
+	UFUNCTION(BlueprintCallable, meta = (Name = "ParamDeviceRadio", Val = 2471), Category = "NeuronLiveLink")
+	static void BuildMocapCmdParamInt(UPARAM(ref) FMocapServerCommand& Cmd, EMCCommandParamName Name, int Val);
+
+	UFUNCTION(BlueprintCallable, meta = (Name = "ParamAvatarName", Val = "chr00"), Category = "NeuronLiveLink")
+	static void BuildMocapCmdParam(UPARAM(ref) FMocapServerCommand& Cmd, EMCCommandParamName Name, const FString& Val);
+
+	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
+	static void BuildMocapCmdParamStopCatpureExtraFlag(UPARAM(ref) FMocapServerCommand& Cmd, EMCCommandExtraFlag flag);
+
+	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
+	static void SetMocapCmdPProgressHandler(UPARAM(ref) FMocapServerCommand& Cmd, UObject* Obj, FName Function);
+	
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContextObject", Latent = "", LatentInfo = "LatentInfo"), Category = "NeuronLiveLink")
+		static void SendNeuronCommand(const UObject* WorldContextObject, FName AppName, const FMocapServerCommand& Cmd, FLatentActionInfo LatentInfo, int& Result, FString& ResultStr);
 };

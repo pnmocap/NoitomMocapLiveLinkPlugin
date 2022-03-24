@@ -3,6 +3,7 @@
 #include "MocapApiLog.h"
 #include "Misc/ScopeLock.h"
 #include "MocapAppManager.h"
+#include <unordered_map>
 
 #define ReturnIFError(...) if (mcpError!=MocapApi::Error_None) { \
     LastError = mcpError; \
@@ -18,6 +19,8 @@
 
 TArray<FName> UMocapApp::AvatarBoneNames;
 TArray<int> UMocapApp::AvatarBoneParents;
+
+static std::unordered_map<EMCCommandParamName, std::function<MocapApi::EMCPError(MocapApi::IMCPCommand*, MocapApi::MCPCommandHandle_t, const FString&)>> CommandParamBuildMap;
 
 FMocapAvatar::FMocapAvatar()
     : Index(-1)
@@ -36,6 +39,22 @@ FMocapAvatar::FMocapAvatar()
     {
         HasLocalPositions[i] = false;
         BoneParents[i] = -1;
+    }
+
+    if (CommandParamBuildMap.empty())
+    {
+        CommandParamBuildMap[EMCCommandParamName::ParamStopCatpureExtraFlag] = [](MocapApi::IMCPCommand* CommandInterface, MocapApi::MCPCommandHandle_t handle, const FString& Value) -> MocapApi::EMCPError {
+            MocapApi::EMCPCommandStopCatpureExtraFlag Flag = (MocapApi::EMCPCommandStopCatpureExtraFlag)FCString::Atoi(*Value);
+            return CommandInterface->SetCommandExtraFlags(Flag, handle);
+        };
+        CommandParamBuildMap[EMCCommandParamName::ParamDeviceRadio] = [](MocapApi::IMCPCommand* CommandInterface, MocapApi::MCPCommandHandle_t handle, const FString& Value) -> MocapApi::EMCPError {
+            int32 V = FCString::Atoi(*Value);
+            return CommandInterface->SetCommandExtraLong(MocapApi::CommandExtraLong_DeviceRadio, V, handle);
+        };
+        CommandParamBuildMap[EMCCommandParamName::ParamAvatarName] = [](MocapApi::IMCPCommand* CommandInterface, MocapApi::MCPCommandHandle_t handle, const FString& Value) -> MocapApi::EMCPError {
+            const char* V = TCHAR_TO_UTF8(*Value);
+            return CommandInterface->SetCommandExtraLong(MocapApi::CommandExtraLong_AvatarName, reinterpret_cast<intptr_t>(V), handle);
+        };
     }
 }
 
@@ -226,6 +245,8 @@ bool UMocapApp::PollEvents()
         reinterpret_cast<void**>(&mcpApplication));
     ReturnFalseIFError("Get mcpApplication Class");
 
+    PrepareAndMocapCommand(mcpApplication);
+
     TArray<MocapApi::MCPEvent_t> events;
     uint32_t unEvent = 0;
 
@@ -257,6 +278,10 @@ bool UMocapApp::PollEvents()
                 // handle tracker data
 				HandleTrackerUpdateEvent(e.eventData.trackerData._trackerHandle);
 			}
+            else if (e.eventType == MocapApi::MCPEvent_CommandReply) {
+                // handle event reply
+                HandleCommandReplyEvent(e.eventData.commandRespond._commandHandle, e.eventData.commandRespond._replay);
+            }
             else if (e.eventType == MocapApi::MCPEvent_Error) {
                 // handle error, just output the error, so use can se it
                 LastError = e.eventData.systemError.error;
@@ -443,6 +468,11 @@ const FString UMocapApp::GetLastErrorMessage()
         break;
     }
     return FString::Printf(TEXT("%s: %s"), *LastErrorStr, *ExtraErrorMsg);
+}
+
+void UMocapApp::QueueMocapCommand(const FMocapServerCommand& Cmd)
+{
+    QueuedCommands.Add(Cmd);
 }
 
 bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
@@ -727,6 +757,38 @@ bool UMocapApp::HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle, int ReservedD
     FMocapAppManager::GetInstance().OnRecieveMocapData(rigid.Name, this);
 
     return true;
+}
+
+bool UMocapApp::HandleCommandReplyEvent(uint64 CommandHandle, int replay)
+{
+    return true;
+}
+
+void UMocapApp::PrepareAndMocapCommand(MocapApi::IMCPApplication* mcpApplication)
+{
+    if (QueuedCommands.Num() > 0)
+    {
+        FMocapServerCommand& Cmd = QueuedCommands[0];
+        if (Cmd.CommandHandle == 0)
+        {
+            MocapApi::IMCPCommand* CommandInterface = nullptr;
+            MocapApi::EMCPError mcpError = MocapApi::MCPGetGenericInterface(MocapApi::IMCPCommand_Version,
+                reinterpret_cast<void**>(&CommandInterface));
+            ReturnIFError();
+
+            MocapApi::MCPCommandHandle_t command;
+            CommandInterface->CreateCommand((int)Cmd.Cmd, &command);
+            for (auto It : Cmd.Params)
+            {
+                mcpError = CommandParamBuildMap[It.Key](CommandInterface, command, It.Value);
+                ReturnIFError();
+            }
+            MocapApi::MCPApplicationHandle_t appcliation = AppHandle;
+            mcpApplication->QueuedServerCommand(command, appcliation);
+            ReturnIFError();
+            Cmd.CommandHandle = command;
+        }
+    }
 }
 
 void UMocapApp::DumpData()

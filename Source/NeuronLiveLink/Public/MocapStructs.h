@@ -256,6 +256,73 @@ struct FMocapAvatar
 };
 
 /**
+ * EMCCommandType is the unreal type for MocapApi EMCPCommand
+ */
+UENUM(BlueprintType)
+enum class EMCCommandType : uint8
+{
+    StartCapture,
+    StopCapture,
+    ZeroPosition,
+    CalibrateMotion,
+    StartRecored,
+    StopRecored,
+    ResumeOriginalPosture,
+};
+
+/**
+ * EMCCommandExtraFlag is the unreal type for MocapApi EMCPCommandStopCatpureExtraFlag etc.
+ */
+UENUM(BlueprintType)
+enum class EMCCommandExtraFlag : uint8
+{
+    StopCatpureExtraFlag_SensorsModulesPowerOff,
+    StopCatpureExtraFlag_SensorsModulesHibernate,
+};
+
+UENUM(BlueprintType)
+enum class EMCCommandParamName : uint8
+{
+    ParamStopCatpureExtraFlag,
+    ParamDeviceRadio,
+    ParamAvatarName,
+};
+
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnMocapServerCommandResult, int, FString)
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnMocapServerCommandProgress, FString)
+
+USTRUCT(BlueprintType)
+struct FMocapServerCommand
+{
+    GENERATED_BODY()
+
+    FMocapServerCommand()
+    {
+        CommandHandle = 0;
+    }
+
+    UPROPERTY()
+    EMCCommandType Cmd;
+
+    UPROPERTY()
+    TMap<EMCCommandParamName, FString> Params;
+
+    UPROPERTY()
+    FString Result;
+
+    FOnMocapServerCommandResult OnResult;
+
+    FOnMocapServerCommandProgress OnProgress;
+
+    uint64 CommandHandle;
+};
+
+namespace MocapApi
+{
+    class IMCPApplication;
+}
+
+/**
  * UMocapApp is the unreal type for MocapApi IMCPApplication
  */
 UCLASS()
@@ -339,6 +406,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = MocapApi)
     const FString GetLastErrorMessage();
 
+    UFUNCTION(BlueprintCallable, Category = MocapApi)
+    void QueueMocapCommand(const FMocapServerCommand& Cmd);
+
     // software buildin bonenames
     static TArray<FName> GetAvatarBuildinBoneNames();
     // software buildin bone parents, value in array is the index in GetAvatarBuildinBoneNames
@@ -363,9 +433,15 @@ private:
 
 	bool HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle, int ReservedData = 0);
 
+    bool HandleCommandReplyEvent(uint64 CommandHandle, int replay);
+
+    void PrepareAndMocapCommand(MocapApi::IMCPApplication* mcpApplication);
+
 	TMap<FString, FMocapTracker> Trackers;
 	TMap<FString, FMocapRigidBody> RigidBodies;
     TMap<FString, FMocapAvatar> Avatars;
+    TArray<FMocapServerCommand> QueuedCommands;
+    TArray<FMocapServerCommand> CommandsHistory;
     static TArray<FName> AvatarBoneNames;
     static TArray<int> AvatarBoneParents;
     static void InitAvatarBuildinInfo();
