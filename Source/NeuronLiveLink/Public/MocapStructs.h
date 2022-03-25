@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Containers/MRUArray.h"
 #include "MocapStructs.generated.h"
 
 /**
@@ -288,8 +289,8 @@ enum class EMCCommandParamName : uint8
     ParamAvatarName,
 };
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnMocapServerCommandResult, int, FString)
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnMocapServerCommandProgress, FString)
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnMocapServerCommandResult, int/*Code*/, const FString&/*Result*/)
+DECLARE_MULTICAST_DELEGATE_SixParams(FOnMocapServerCommandProgress, const FString&/*SupportPoses*/, const FString&/*ProgressDesc*/, const FString&/*CurrentPose*/, int/*StepOfPose*/, int/*SubStepOfPose*/, int/*SubSubStepOfPose*/)
 
 USTRUCT(BlueprintType)
 struct FMocapServerCommand
@@ -299,6 +300,7 @@ struct FMocapServerCommand
     FMocapServerCommand()
     {
         CommandHandle = 0;
+        SendTime = 0;
     }
 
     UPROPERTY()
@@ -310,11 +312,17 @@ struct FMocapServerCommand
     UPROPERTY()
     FString Result;
 
+    FString ProgressChain;
+
     FOnMocapServerCommandResult OnResult;
 
     FOnMocapServerCommandProgress OnProgress;
 
     uint64 CommandHandle;
+
+    uint64 ProgressHandle;
+
+    int64 SendTime;
 };
 
 namespace MocapApi
@@ -331,6 +339,7 @@ class NEURONLIVELINK_API UMocapApp : public UObject
     GENERATED_BODY()
 
 public:
+    UMocapApp();
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MocapApi")
         FString AppName;
@@ -435,13 +444,15 @@ private:
 
     bool HandleCommandReplyEvent(uint64 CommandHandle, int replay);
 
-    void PrepareAndMocapCommand(MocapApi::IMCPApplication* mcpApplication);
+    void PrepareAndSendMocapCommand(MocapApi::IMCPApplication* mcpApplication);
+
+    void PushCommandToHistory(const FMocapServerCommand& Cmd);
 
 	TMap<FString, FMocapTracker> Trackers;
 	TMap<FString, FMocapRigidBody> RigidBodies;
     TMap<FString, FMocapAvatar> Avatars;
     TArray<FMocapServerCommand> QueuedCommands;
-    TArray<FMocapServerCommand> CommandsHistory;
+    TMRUArray<FMocapServerCommand> CommandsHistory;
     static TArray<FName> AvatarBoneNames;
     static TArray<int> AvatarBoneParents;
     static void InitAvatarBuildinInfo();

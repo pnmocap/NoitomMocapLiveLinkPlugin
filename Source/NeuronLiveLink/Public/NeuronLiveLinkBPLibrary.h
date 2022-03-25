@@ -86,5 +86,5 @@ class NEURONLIVELINK_API UNeuronLiveLinkBPLibrary : public UBlueprintFunctionLib
 	static void SetMocapCmdPProgressHandler(UPARAM(ref) FMocapServerCommand& Cmd, UObject* Obj, FName Function);
 	
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContextObject", Latent = "", LatentInfo = "LatentInfo"), Category = "NeuronLiveLink")
-		static void SendNeuronCommand(const UObject* WorldContextObject, FName AppName, const FMocapServerCommand& Cmd, FLatentActionInfo LatentInfo, int& Result, FString& ResultStr);
+	static void SendNeuronCommand(const UObject* WorldContextObject, FName AppName, const FMocapServerCommand& Cmd, FLatentActionInfo LatentInfo, int& Result, FString& ResultStr);
 };

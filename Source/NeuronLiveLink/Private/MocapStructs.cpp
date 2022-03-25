@@ -20,8 +20,6 @@
 TArray<FName> UMocapApp::AvatarBoneNames;
 TArray<int> UMocapApp::AvatarBoneParents;
 
-static std::unordered_map<EMCCommandParamName, std::function<MocapApi::EMCPError(MocapApi::IMCPCommand*, MocapApi::MCPCommandHandle_t, const FString&)>> CommandParamBuildMap;
-
 FMocapAvatar::FMocapAvatar()
     : Index(-1)
     , Name()
@@ -40,6 +38,13 @@ FMocapAvatar::FMocapAvatar()
         HasLocalPositions[i] = false;
         BoneParents[i] = -1;
     }
+}
+
+static std::unordered_map<EMCCommandParamName, std::function<MocapApi::EMCPError(MocapApi::IMCPCommand*, MocapApi::MCPCommandHandle_t, const FString&)>> CommandParamBuildMap;
+
+UMocapApp::UMocapApp()
+{
+    CommandsHistory.MaxItems = 16;
 
     if (CommandParamBuildMap.empty())
     {
@@ -52,7 +57,7 @@ FMocapAvatar::FMocapAvatar()
             return CommandInterface->SetCommandExtraLong(MocapApi::CommandExtraLong_DeviceRadio, V, handle);
         };
         CommandParamBuildMap[EMCCommandParamName::ParamAvatarName] = [](MocapApi::IMCPCommand* CommandInterface, MocapApi::MCPCommandHandle_t handle, const FString& Value) -> MocapApi::EMCPError {
-            const char* V = TCHAR_TO_UTF8(*Value);
+            const char* V = FTCHARToUTF8(*Value).Get();
             return CommandInterface->SetCommandExtraLong(MocapApi::CommandExtraLong_AvatarName, reinterpret_cast<intptr_t>(V), handle);
         };
     }
@@ -245,7 +250,7 @@ bool UMocapApp::PollEvents()
         reinterpret_cast<void**>(&mcpApplication));
     ReturnFalseIFError("Get mcpApplication Class");
 
-    PrepareAndMocapCommand(mcpApplication);
+    PrepareAndSendMocapCommand(mcpApplication);
 
     TArray<MocapApi::MCPEvent_t> events;
     uint32_t unEvent = 0;
@@ -287,6 +292,19 @@ bool UMocapApp::PollEvents()
                 LastError = e.eventData.systemError.error;
                 ExtraErrorMsg = FString();
                 UE_LOG(LogMocapApi, Warning, TEXT("Got Error Event %d: %s"), LastError, *GetLastErrorMessage());
+                LastError = MocapApi::Error_None;
+            }
+            else if (e.eventType == MocapApi::MCPEvent_SensorModulesUpdated) {
+                // ignore
+            }
+            else if (e.eventType == MocapApi::MCPEvent_None) {
+                // ignore
+            }
+            else
+            {
+                LastError = INT_MAX;
+                ExtraErrorMsg = FString::Printf(TEXT("Logic Should not go here, event type %X in PollEvents"), e.eventType);
+                UE_LOG(LogMocapApi, Error, TEXT("Got Internal Error %d: %s"), LastError, *GetLastErrorMessage());
                 LastError = MocapApi::Error_None;
             }
         }
@@ -463,8 +481,23 @@ const FString UMocapApp::GetLastErrorMessage()
     case MocapApi::Error_ServerNotReady:
         LastErrorStr = TEXT("Error_ServerNotReady");
         break;
+    case MocapApi::Error_ClientNotReady:
+        LastErrorStr = TEXT("Error_ClientNotReady");
+        break;
+    case MocapApi::Error_IncompleteCommand:
+        LastErrorStr = TEXT("Error_IncompleteCommand");
+        break;
+    case MocapApi::Error_UDP:
+        LastErrorStr = TEXT("Error_UDP");
+        break;
+    case MocapApi::Error_TCP:
+        LastErrorStr = TEXT("Error_TCP");
+        break;
+    case MocapApi::Error_QueuedCommandFaild:
+        LastErrorStr = TEXT("Error_QueuedCommandFaild");
+        break;
     default:
-        LastErrorStr = TEXT("Error_Unknown");
+        LastErrorStr = FString::Printf(TEXT("Error_Unknown_%d"), Err);
         break;
     }
     return FString::Printf(TEXT("%s: %s"), *LastErrorStr, *ExtraErrorMsg);
@@ -761,10 +794,126 @@ bool UMocapApp::HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle, int ReservedD
 
 bool UMocapApp::HandleCommandReplyEvent(uint64 CommandHandle, int replay)
 {
+    MocapApi::IMCPCommand* CommandInterface = nullptr;
+    MocapApi::EMCPError mcpError = MocapApi::MCPGetGenericInterface(MocapApi::IMCPCommand_Version,
+        reinterpret_cast<void**>(&CommandInterface));
+    ReturnFalseIFError();
+
+    MocapApi::EMCPReplay Reply = (MocapApi::EMCPReplay)replay;
+    FMocapServerCommand* Cmd = nullptr;
+    if (QueuedCommands.Num() > 0)
+    {
+        if (QueuedCommands[0].CommandHandle == CommandHandle)
+        {
+            Cmd = &QueuedCommands[0];
+        }
+    }
+
+    if (Reply == MocapApi::EMCPReplay::MCPReplay_Result)
+    {
+        const char* msg = nullptr;
+        mcpError = CommandInterface->GetCommandResultMessage(&msg, CommandHandle);
+        FString MsgStr = FUTF8ToTCHAR(msg).Get();
+        
+        uint32 code = 0;
+        mcpError = CommandInterface->GetCommandResultCode(&code, CommandHandle);
+
+        UE_LOG(LogMocapApi, Log, TEXT("Get Result for Command CommandHandle %lld"), CommandHandle);
+        if (Cmd)
+        {
+            Cmd->Result = FString::Printf(TEXT("Code %d\nMsg: %s"), code, *MsgStr);
+            Cmd->OnResult.Broadcast(code, MsgStr);
+            PushCommandToHistory(*Cmd);
+            QueuedCommands.RemoveAt(0);
+        }
+
+        // destroy handle
+        CommandInterface->DestroyCommand(CommandHandle);
+    }
+    else if (Reply == MocapApi::EMCPReplay::MCPReplay_Running)
+    {
+        MocapApi::IMCPCalibrateMotionProgress* CalibrateMotionProgress = nullptr;
+        mcpError = MocapApi::MCPGetGenericInterface(MocapApi::IMCPCalibrateMotionProgress_Version,
+            reinterpret_cast<void**>(&CalibrateMotionProgress));
+        ReturnFalseIFError();
+
+        if (Cmd && Cmd->Cmd == EMCCommandType::CalibrateMotion)
+        {
+            uint32_t step = 0;
+            uint32_t substep = 0;
+            uint32_t subsubstep = 0;
+            uint32_t lenOfPose = 256;
+            char poseStr[256];
+
+            if (Cmd->ProgressHandle == 0)
+            {
+                MocapApi::MCPCalibrateMotionProgressHandle_t _calibrateMotionProgressHandle;
+                mcpError = CommandInterface->GetCommandProgress(MocapApi::CommandProgress_CalibrateMotion,
+                    reinterpret_cast<intptr_t>(&_calibrateMotionProgressHandle), CommandHandle);
+                ReturnFalseIFError();
+                Cmd->ProgressHandle = _calibrateMotionProgressHandle;
+
+                uint32_t countOfSupportPoses = 0;
+                mcpError = CalibrateMotionProgress->GetCalibrateMotionProgressCountOfSupportPoses(
+                    &countOfSupportPoses, _calibrateMotionProgressHandle);
+                for (uint32_t i = 0; i < countOfSupportPoses; ++i) {
+                    lenOfPose = 256;
+                    mcpError = CalibrateMotionProgress->GetCalibrateMotionProgressNameOfSupportPose(
+                        poseStr, &lenOfPose, i, _calibrateMotionProgressHandle);
+                    poseStr[lenOfPose] = '\0';
+                    Cmd->ProgressChain += FString::Printf(TEXT("%s->"), UTF8_TO_TCHAR(poseStr));
+                }
+            }
+
+            mcpError = CalibrateMotionProgress->GetCalibrateMotionProgressStepOfCurrentPose(
+                &step, poseStr, &lenOfPose, Cmd->ProgressHandle);
+            poseStr[lenOfPose] = '\0';
+            FString PoseName = UTF8_TO_TCHAR(poseStr);
+            FString PoseSubStepName;
+            switch (step)
+            {
+            case MocapApi::CalibrateMotionProgressStep_Prepare:
+                //ASSERT_TRUE(false);
+                break;
+            case MocapApi::CalibrateMotionProgressStep_Countdown:
+                {
+                    mcpError = CalibrateMotionProgress->GetCalibrateMotionProgressCountdownOfCurrentPose(
+                        &substep, poseStr, &lenOfPose, Cmd->ProgressHandle);
+                    poseStr[lenOfPose] = '\0';
+                    PoseSubStepName = FString::Printf(TEXT("[Countdown of %s %d]"), UTF8_TO_TCHAR(poseStr), substep);
+                }
+                break;
+            case MocapApi::CalibrateMotionProgressStep_Progress:
+                {
+                    mcpError = CalibrateMotionProgress->GetCalibrateMotionProgressProgressOfCurrentPose(
+                        &substep, poseStr, &lenOfPose, Cmd->ProgressHandle);
+                    poseStr[lenOfPose] = '\0';
+                    PoseSubStepName = FString::Printf(TEXT("[Progress of %s %d]"), UTF8_TO_TCHAR(poseStr), substep);
+                }
+                break;
+            default:
+                //ASSERT_TRUE(false);
+                break;
+            }
+            FString ProgressString = FString::Printf(TEXT("%s%s:%d:%d:%d"),
+                *PoseName, *PoseSubStepName, step, substep, subsubstep);
+
+            Cmd->OnProgress.Broadcast(Cmd->ProgressChain, ProgressString, PoseName, step, substep, subsubstep);
+        }
+        else
+        {
+            UE_LOG(LogMocapApi, Log, TEXT("Get Running for Command CommandHandle %lld, but not in QueuedCommands or is not CalibrateMotion Command"), CommandHandle);
+        }
+    }
+    else if (Reply == MocapApi::EMCPReplay::MCPReplay_Response)
+    {
+        UE_LOG(LogMocapApi, Log, TEXT("Get Response for Command CommandHandle %lld"), CommandHandle);
+    }
+    
     return true;
 }
 
-void UMocapApp::PrepareAndMocapCommand(MocapApi::IMCPApplication* mcpApplication)
+void UMocapApp::PrepareAndSendMocapCommand(MocapApi::IMCPApplication* mcpApplication)
 {
     if (QueuedCommands.Num() > 0)
     {
@@ -787,8 +936,14 @@ void UMocapApp::PrepareAndMocapCommand(MocapApi::IMCPApplication* mcpApplication
             mcpApplication->QueuedServerCommand(command, appcliation);
             ReturnIFError();
             Cmd.CommandHandle = command;
+            Cmd.SendTime = FDateTime::UtcNow().GetTicks();
         }
     }
+}
+
+void UMocapApp::PushCommandToHistory(const FMocapServerCommand& Cmd)
+{
+    CommandsHistory.Add(Cmd);
 }
 
 void UMocapApp::DumpData()
@@ -798,10 +953,19 @@ void UMocapApp::DumpData()
         *GetConnectionString(),
         IsConnecting? TEXT("TRUE"): TEXT("FALSE")
     );
-    UE_LOG(LogMocapApi, Log, TEXT("RigidBodies Num: %d Avatars Num: %d"),
+    UE_LOG(LogMocapApi, Log, TEXT("Trackers Num: %d RigidBodies Num: %d Avatars Num: %d"),
+        Trackers.Num(),
         RigidBodies.Num(),
         Avatars.Num()
     );
+    UE_LOG(LogMocapApi, Log, TEXT("==== Trackers ===="));
+    for (auto& tracker : Trackers)
+    {
+        const FMocapTracker& t = tracker.Value;
+        UE_LOG(LogMocapApi, Log, TEXT("%s: %d L%s R%s"),
+            *t.Name.ToString(), t.Status, *t.Position.ToString(), *t.Rotation.ToString()
+        );
+    }
     UE_LOG(LogMocapApi, Log, TEXT("==== RigidBodies ===="));
     for (auto& rigid : RigidBodies)
     {
@@ -828,6 +992,44 @@ void UMocapApp::DumpData()
                 *a.LocalRotation[i].ToString(),
                 *a.DefaultLocalPositions[i].ToString()
             );
+        }
+    }
+    UEnum* EMCCommandTypeEnum = StaticEnum<EMCCommandType>();
+    UEnum* EMCCommandParamEnum = StaticEnum<EMCCommandParamName>();
+    if (QueuedCommands.Num() > 0)
+    {
+        UE_LOG(LogMocapApi, Log, TEXT("==== Command Queue ===="));
+        
+        for (auto& Cmd : QueuedCommands)
+        {
+            FString CmdName = EMCCommandTypeEnum->GetValueAsString(Cmd.Cmd);
+            UE_LOG(LogMocapApi, Log, TEXT("Cmd %s handle %u SendTime %lld"), *CmdName, Cmd.CommandHandle, Cmd.SendTime);
+            if (Cmd.Params.Num() > 0)
+            {
+                for (auto& It : Cmd.Params)
+                {
+                    FString P = EMCCommandParamEnum->GetValueAsString(It.Key);
+                    UE_LOG(LogMocapApi, Log, TEXT("    Param %s - %s"), *P, *It.Value);
+                }
+            }
+        }
+    }
+    if (CommandsHistory.Num() > 0)
+    {
+        UE_LOG(LogMocapApi, Log, TEXT("==== Commands History ===="));
+        for (auto& Cmd : CommandsHistory)
+        {
+            FString CmdName = EMCCommandTypeEnum->GetValueAsString(Cmd.Cmd);
+            UE_LOG(LogMocapApi, Log, TEXT("Cmd %s handle %u SendTime %lld"), *CmdName, Cmd.CommandHandle, Cmd.SendTime);
+            if (Cmd.Params.Num() > 0)
+            {
+                for (auto& It : Cmd.Params)
+                {
+                    FString P = EMCCommandParamEnum->GetValueAsString(It.Key);
+                    UE_LOG(LogMocapApi, Log, TEXT("    Param %s - %s"), *P, *It.Value);
+                }
+            }
+            UE_LOG(LogMocapApi, Log, TEXT("    Result %s"), *Cmd.Result);
         }
     }
 }

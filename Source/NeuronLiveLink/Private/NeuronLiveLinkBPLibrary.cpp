@@ -6,6 +6,7 @@
 #include "LiveLinkClientReference.h"
 #include "MocapAppManager.h"
 #include "MocapStructs.h"
+#include "Misc/OutputDeviceNUll.h"
 
 
 UNeuronLiveLinkBPLibrary::UNeuronLiveLinkBPLibrary(const FObjectInitializer& ObjectInitializer)
@@ -146,7 +147,38 @@ void UNeuronLiveLinkBPLibrary::BuildMocapCmdParamStopCatpureExtraFlag(FMocapServ
 
 void UNeuronLiveLinkBPLibrary::SetMocapCmdPProgressHandler(UPARAM(ref) FMocapServerCommand& Cmd, UObject* Obj, FName Function)
 {
-
+	if (Obj)
+	{
+		UFunction* Func = Obj->GetClass()->FindFunctionByName(Function);
+		if (Func)
+		{
+			//FScriptDelegate Delegate;
+			//Delegate.BindUFunction(Obj, Function);
+			//Cmd.OnProgress.AddDelegate(MoveTemp(Delegate));
+			//Cmd.OnProgress.AddUObject(Obj, Func->GetNativeFunc());
+			//Cmd.OnProgress.AddUFunction(Obj, Func, const FString&/*SupportPoses*/, const FString&/*ProgressDesc*/, const FString&/*CurrentPose*/, int/*StepOfPose*/, int/*SubStepOfPose*/, int/*SubSubStepOfPose*/);
+			Cmd.OnProgress.AddLambda([&Obj,Function](const FString& SupportPoses, const FString& ProgressDesc, const FString& CurrentPose, int StepOfPose, int SubStepOfPose, int SubSubStepOfPose) {
+				if (Obj && !Obj->IsPendingKill())
+				{
+					FOutputDeviceNull Ar;
+					FString EventWithParam = FString::Printf(TEXT("%s %s %s %s %d %d %d"),
+						*Function.ToString(),
+						*SupportPoses,
+						*ProgressDesc,
+						*CurrentPose,
+						StepOfPose,
+						SubStepOfPose,
+						SubSubStepOfPose
+					);
+					bool result = Obj->CallFunctionByNameWithArguments(*EventWithParam, Ar, nullptr, true);
+					if (!result)
+					{
+						UE_LOG(LogMocapApi, Warning, TEXT("Failed to Delegate OnProgress event on %s function [%s]"), *Obj->GetFName().ToString(), * EventWithParam);
+					}
+				}
+			});
+		}
+	}
 }
 
 void UNeuronLiveLinkBPLibrary::SendNeuronCommand(const UObject* WorldContextObject, FName AppName, const FMocapServerCommand& Cmd, FLatentActionInfo LatentInfo, int& Result, FString& ResultStr)
