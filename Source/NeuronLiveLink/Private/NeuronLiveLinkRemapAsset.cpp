@@ -411,7 +411,7 @@ void UNeuronLiveLinkRemapAsset::GetSkeletonForwardVector_Implementation( TEnumAs
 	Axis = EAxisOption::Type::Y;
 }
 
-FName UNeuronLiveLinkRemapAsset::GetBonePrefix_Implementation( ) const
+FName UNeuronLiveLinkRemapAsset::GetBonePrefix_Implementation() const
 {
     if (bEnableBoneNamePrefix)
     {
