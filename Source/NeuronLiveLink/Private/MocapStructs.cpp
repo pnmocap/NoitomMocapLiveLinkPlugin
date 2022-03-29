@@ -252,6 +252,7 @@ bool UMocapApp::PollEvents()
 
     PrepareAndSendMocapCommand(mcpApplication);
 
+    //std::vector<MocapApi::MCPEvent_t> events;
     TArray<MocapApi::MCPEvent_t> events;
     uint32_t unEvent = 0;
 
@@ -263,11 +264,15 @@ bool UMocapApp::PollEvents()
     //retrive event data
     if (hasUnhandledEvents) {
         events.AddUninitialized(unEvent);
+        //events.resize(unEvent);
         for (auto & e : events) {
             e.size = sizeof(MocapApi::MCPEvent_t);
+            e.eventType = MocapApi::MCPEvent_None;
         }
         mcpError = mcpApplication->PollApplicationNextEvent(events.GetData(), &unEvent, appcliation);
         ReturnFalseIFError("PollApplicationNextEvent");
+        hasUnhandledEvents = unEvent > 0;
+        events.SetNum(unEvent);
     }
     if (hasUnhandledEvents) {
         FScopeLock Lock(&CriticalSection);
