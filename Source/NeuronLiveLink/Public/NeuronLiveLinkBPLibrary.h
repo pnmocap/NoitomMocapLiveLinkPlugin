@@ -4,6 +4,8 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "ILiveLinkSource.h"
 #include "MocapStructs.h"
+#include "Engine/Engine.h"
+#include "LatentActions.h"
 #include "NeuronLiveLinkBPLibrary.generated.h"
 
 /* 

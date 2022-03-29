@@ -4,6 +4,7 @@
 #include "Misc/ScopeLock.h"
 #include "MocapAppManager.h"
 #include <unordered_map>
+#include <functional>
 
 #define ReturnIFError(...) if (mcpError!=MocapApi::Error_None) { \
     LastError = mcpError; \
@@ -41,11 +42,10 @@ FMocapAvatar::FMocapAvatar()
 }
 
 static std::unordered_map<EMCCommandParamName, std::function<MocapApi::EMCPError(MocapApi::IMCPCommand*, MocapApi::MCPCommandHandle_t, const FString&)>> CommandParamBuildMap;
-
 UMocapApp::UMocapApp()
 {
     CommandsHistory.MaxItems = 16;
-
+    
     if (CommandParamBuildMap.empty())
     {
         CommandParamBuildMap[EMCCommandParamName::ParamStopCatpureExtraFlag] = [](MocapApi::IMCPCommand* CommandInterface, MocapApi::MCPCommandHandle_t handle, const FString& Value) -> MocapApi::EMCPError {
