@@ -7,6 +7,7 @@
 #include "MocapAppManager.h"
 #include "MocapStructs.h"
 #include "Misc/OutputDeviceNUll.h"
+#include "Kismet/KismetStringLibrary.h"
 
 
 UNeuronLiveLinkBPLibrary::UNeuronLiveLinkBPLibrary(const FObjectInitializer& ObjectInitializer)
@@ -71,6 +72,16 @@ public:
 	TArray<UMocapApp*> Apps;
 };
 
+void UNeuronLiveLinkBPLibrary::GetMocapAppNames(TArray<FName>& AppNames)
+{
+	MocapAppDataVisitor Visitor;
+	FMocapAppManager::GetInstance().EachRunningApp(Visitor);
+	for (UMocapApp* App : Visitor.Apps)
+	{
+		AppNames.Add(UKismetStringLibrary::Conv_StringToName(App->AppName));
+	}
+}
+
 void UNeuronLiveLinkBPLibrary::GetAvatarNames(TArray<FName>& AvatarNames)
 {
 	//FAnimationDataManager::GetInstance( )->GetAvatarNames( AvatarNames );
@@ -129,6 +140,11 @@ FMocapServerCommand UNeuronLiveLinkBPLibrary::MakeMocapCommand(EMCCommandType Cm
 	return C;
 }
 
+void UNeuronLiveLinkBPLibrary::ClearMocapCmdParams(FMocapServerCommand& Cmd)
+{
+	Cmd.Params.Empty();
+}
+
 void UNeuronLiveLinkBPLibrary::BuildMocapCmdParamInt(FMocapServerCommand& Cmd, EMCCommandParamName Name, int Val)
 {
 	Cmd.Params.Add(Name, FString::FromInt(Val));
@@ -145,7 +161,7 @@ void UNeuronLiveLinkBPLibrary::BuildMocapCmdParamStopCatpureExtraFlag(FMocapServ
 	Cmd.Params.Add(EMCCommandParamName::ParamStopCatpureExtraFlag, StrFlag);
 }
 
-void UNeuronLiveLinkBPLibrary::SetMocapCmdPProgressHandler(UPARAM(ref) FMocapServerCommand& Cmd, UObject* Obj, FName Function)
+void UNeuronLiveLinkBPLibrary::SetMocapCmdProgressHandler(UPARAM(ref) FMocapServerCommand& Cmd, UObject* Obj, FName Function)
 {
 	if (Obj)
 	{

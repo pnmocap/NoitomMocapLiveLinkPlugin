@@ -293,7 +293,7 @@ bool UMocapApp::PollEvents()
                 HandleCommandReplyEvent(e.eventData.commandRespond._commandHandle, e.eventData.commandRespond._replay);
             }
             else if (e.eventType == MocapApi::MCPEvent_Error) {
-                // handle error, just output the error, so use can se it
+                // handle error, just output the error, so use can see it
                 LastError = e.eventData.systemError.error;
                 ExtraErrorMsg = FString();
                 UE_LOG(LogMocapApi, Warning, TEXT("Got Error Event %d: %s"), LastError, *GetLastErrorMessage());
