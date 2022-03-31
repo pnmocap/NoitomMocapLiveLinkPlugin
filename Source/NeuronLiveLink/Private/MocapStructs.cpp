@@ -513,6 +513,11 @@ void UMocapApp::QueueMocapCommand(const FMocapServerCommand& Cmd)
     QueuedCommands.Add(Cmd);
 }
 
+bool UMocapApp::HasMocapCommandInQueue()
+{
+    return QueuedCommands.Num() > 0;
+}
+
 bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
 {
     MocapApi::IMCPAvatar* avatarMgr = nullptr;

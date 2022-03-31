@@ -161,6 +161,16 @@ void UNeuronLiveLinkBPLibrary::BuildMocapCmdParamStopCatpureExtraFlag(FMocapServ
 	Cmd.Params.Add(EMCCommandParamName::ParamStopCatpureExtraFlag, StrFlag);
 }
 
+bool UNeuronLiveLinkBPLibrary::HasMocapCommandInQueue(FName AppName)
+{
+	UMocapApp* App = FMocapAppManager::GetInstance().GetMocapAppByName(AppName);
+	if (App)
+	{
+		return App->HasMocapCommandInQueue();
+	}
+	return false;
+}
+
 void UNeuronLiveLinkBPLibrary::SetMocapCmdProgressHandler(UPARAM(ref) FMocapServerCommand& Cmd, UObject* Obj, FName Function)
 {
 	if (Obj)
@@ -197,12 +207,70 @@ void UNeuronLiveLinkBPLibrary::SetMocapCmdProgressHandler(UPARAM(ref) FMocapServ
 	}
 }
 
-void UNeuronLiveLinkBPLibrary::SendNeuronCommand(const UObject* WorldContextObject, FName AppName, const FMocapServerCommand& Cmd, FLatentActionInfo LatentInfo, int& Result, FString& ResultStr)
+class FNeuronCommandAction : public FPendingLatentAction
+{
+public:
+	bool Finished;
+	int& ResultCode;
+	FString& ResultMsg;
+	FName ExecutionFunction;
+	int32 OutputLink;
+	FWeakObjectPtr CallbackTarget;
+
+	FNeuronCommandAction(const FLatentActionInfo& LatentInfo, int& Result, FString& ResultStr)
+		: Finished(false)
+		, ResultCode(Result)
+		, ResultMsg(ResultStr)
+		, ExecutionFunction(LatentInfo.ExecutionFunction)
+		, OutputLink(LatentInfo.Linkage)
+		, CallbackTarget(LatentInfo.CallbackTarget)
+	{
+	}
+
+	virtual void UpdateOperation(FLatentResponse& Response) override
+	{
+		//TimeRemaining -= Response.ElapsedTime();
+		Response.FinishAndTriggerIf(Finished, ExecutionFunction, OutputLink, CallbackTarget);
+	}
+
+	void OnCommandResult(int Code, const FString& Result)
+	{
+		Finished = true;
+		ResultCode = Code;
+		ResultMsg = Result;
+	}
+
+#if WITH_EDITOR
+	// Returns a human readable description of the latent operation's current state
+	virtual FString GetDescription() const override
+	{
+		return TEXT("NeuronCommand Result Latent action");
+	}
+#endif
+};
+
+void UNeuronLiveLinkBPLibrary::SendNeuronCommand(const UObject* WorldContextObject, FName AppName, UPARAM(ref) FMocapServerCommand& Cmd, FLatentActionInfo LatentInfo, int& Result, FString& ResultStr)
 {
 	UMocapApp* App = FMocapAppManager::GetInstance().GetMocapAppByName(AppName);
 	if (App)
 	{
-		App->QueueMocapCommand(Cmd);
+		if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull))
+		{
+			FLatentActionManager& LatentManager = World->GetLatentActionManager();
+			if (LatentManager.FindExistingAction<FNeuronCommandAction>(LatentInfo.CallbackTarget, LatentInfo.UUID) == nullptr)
+			{
+				FNeuronCommandAction* NewAction = new FNeuronCommandAction(LatentInfo, Result, ResultStr);
+				LatentManager.AddNewAction(LatentInfo.CallbackTarget, LatentInfo.UUID, NewAction);
+				Cmd.OnResult.AddLambda([NewAction](int Code, const FString& CmdResult) {
+					if (NewAction)
+					{
+						NewAction->OnCommandResult(Code, CmdResult);
+					}
+				});
+
+				App->QueueMocapCommand(Cmd);
+			}
+		}
 	}
 	else
 	{

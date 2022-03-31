@@ -418,6 +418,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = MocapApi)
     void QueueMocapCommand(const FMocapServerCommand& Cmd);
 
+    UFUNCTION(BlueprintCallable, Category = MocapApi)
+    bool HasMocapCommandInQueue();
+
     // software buildin bonenames
     static TArray<FName> GetAvatarBuildinBoneNames();
     // software buildin bone parents, value in array is the index in GetAvatarBuildinBoneNames
