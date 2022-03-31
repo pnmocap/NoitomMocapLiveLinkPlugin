@@ -235,9 +235,9 @@ public:
 
 	void OnCommandResult(int Code, const FString& Result)
 	{
-		Finished = true;
 		ResultCode = Code;
 		ResultMsg = Result;
+		Finished = true;
 	}
 
 #if WITH_EDITOR
@@ -267,6 +267,7 @@ void UNeuronLiveLinkBPLibrary::SendNeuronCommand(const UObject* WorldContextObje
 						NewAction->OnCommandResult(Code, CmdResult);
 					}
 				});
+				//Cmd.OnResult.Add()
 
 				App->QueueMocapCommand(Cmd);
 			}
@@ -275,5 +276,19 @@ void UNeuronLiveLinkBPLibrary::SendNeuronCommand(const UObject* WorldContextObje
 	else
 	{
 		UE_LOG(LogMocapApi, Log, TEXT("Failed to find Mocap App Name: %s"), *(AppName.ToString()));
+	}
+}
+
+void UNeuronLiveLinkBPLibrary::DumpAllMocapApp()
+{
+	TArray<FName> AppNames;
+	GetMocapAppNames(AppNames);
+	for (auto AppName : AppNames)
+	{
+		UMocapApp* App = FMocapAppManager::GetInstance().GetMocapAppByName(AppName);
+		if (App)
+		{
+			App->DumpData();
+		}
 	}
 }

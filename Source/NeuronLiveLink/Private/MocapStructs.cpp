@@ -849,11 +849,12 @@ bool UMocapApp::HandleCommandReplyEvent(uint64 CommandHandle, int replay)
 
         if (Cmd && Cmd->Cmd == EMCCommandType::CalibrateMotion)
         {
+            const uint32_t maxPoseCnt = 256;
             uint32_t step = 0;
             uint32_t substep = 0;
             uint32_t subsubstep = 0;
-            uint32_t lenOfPose = 256;
-            char poseStr[256];
+            uint32_t lenOfPose = maxPoseCnt;
+            char poseStr[maxPoseCnt+1];
 
             if (Cmd->ProgressHandle == 0)
             {
@@ -867,7 +868,7 @@ bool UMocapApp::HandleCommandReplyEvent(uint64 CommandHandle, int replay)
                 mcpError = CalibrateMotionProgress->GetCalibrateMotionProgressCountOfSupportPoses(
                     &countOfSupportPoses, _calibrateMotionProgressHandle);
                 for (uint32_t i = 0; i < countOfSupportPoses; ++i) {
-                    lenOfPose = 256;
+                    lenOfPose = maxPoseCnt;
                     mcpError = CalibrateMotionProgress->GetCalibrateMotionProgressNameOfSupportPose(
                         poseStr, &lenOfPose, i, _calibrateMotionProgressHandle);
                     poseStr[lenOfPose] = '\0';
@@ -905,7 +906,7 @@ bool UMocapApp::HandleCommandReplyEvent(uint64 CommandHandle, int replay)
                 //ASSERT_TRUE(false);
                 break;
             }
-            FString ProgressString = FString::Printf(TEXT("%s%s:%d:%d:%d"),
+            FString ProgressString = FString::Printf(TEXT("%s_%s:%d:%d:%d"),
                 *PoseName, *PoseSubStepName, step, substep, subsubstep);
 
             Cmd->OnProgress.Broadcast(Cmd->ProgressChain, ProgressString, PoseName, step, substep, subsubstep);
@@ -1013,7 +1014,7 @@ void UMocapApp::DumpData()
         for (auto& Cmd : QueuedCommands)
         {
             FString CmdName = EMCCommandTypeEnum->GetValueAsString(Cmd.Cmd);
-            UE_LOG(LogMocapApi, Log, TEXT("Cmd %s handle %u SendTime %lld"), *CmdName, Cmd.CommandHandle, Cmd.SendTime);
+            UE_LOG(LogMocapApi, Log, TEXT("Cmd %s handle %lld SendTime %lld"), *CmdName, Cmd.CommandHandle, Cmd.SendTime);
             if (Cmd.Params.Num() > 0)
             {
                 for (auto& It : Cmd.Params)
@@ -1030,7 +1031,7 @@ void UMocapApp::DumpData()
         for (auto& Cmd : CommandsHistory)
         {
             FString CmdName = EMCCommandTypeEnum->GetValueAsString(Cmd.Cmd);
-            UE_LOG(LogMocapApi, Log, TEXT("Cmd %s handle %u SendTime %lld"), *CmdName, Cmd.CommandHandle, Cmd.SendTime);
+            UE_LOG(LogMocapApi, Log, TEXT("Cmd %s handle %lld SendTime %lld"), *CmdName, Cmd.CommandHandle, Cmd.SendTime);
             if (Cmd.Params.Num() > 0)
             {
                 for (auto& It : Cmd.Params)

@@ -98,4 +98,7 @@ class NEURONLIVELINK_API UNeuronLiveLinkBPLibrary : public UBlueprintFunctionLib
 
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContextObject", Latent = "", LatentInfo = "LatentInfo"), Category = "NeuronLiveLink")
 	static void SendNeuronCommand(const UObject* WorldContextObject, FName AppName, UPARAM(ref) FMocapServerCommand& Cmd, FLatentActionInfo LatentInfo, int& Result, FString& ResultStr);
+
+	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
+	static void DumpAllMocapApp();
 };
