@@ -906,8 +906,8 @@ bool UMocapApp::HandleCommandReplyEvent(uint64 CommandHandle, int replay)
                 //ASSERT_TRUE(false);
                 break;
             }
-            FString ProgressString = FString::Printf(TEXT("%s_%s:%d:%d:%d"),
-                *PoseName, *PoseSubStepName, step, substep, subsubstep);
+            FString ProgressString = FString::Printf(TEXT("%s step %d %s:%d:%d:%d"),
+                *PoseName, step, *PoseSubStepName, step, substep, subsubstep);
 
             Cmd->OnProgress.Broadcast(Cmd->ProgressChain, ProgressString, PoseName, step, substep, subsubstep);
         }

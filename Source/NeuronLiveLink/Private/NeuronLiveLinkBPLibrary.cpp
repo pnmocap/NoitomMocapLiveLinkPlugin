@@ -183,23 +183,37 @@ void UNeuronLiveLinkBPLibrary::SetMocapCmdProgressHandler(UPARAM(ref) FMocapServ
 			//Cmd.OnProgress.AddDelegate(MoveTemp(Delegate));
 			//Cmd.OnProgress.AddUObject(Obj, Func->GetNativeFunc());
 			//Cmd.OnProgress.AddUFunction(Obj, Func, const FString&/*SupportPoses*/, const FString&/*ProgressDesc*/, const FString&/*CurrentPose*/, int/*StepOfPose*/, int/*SubStepOfPose*/, int/*SubSubStepOfPose*/);
-			Cmd.OnProgress.AddLambda([&Obj,Function](const FString& SupportPoses, const FString& ProgressDesc, const FString& CurrentPose, int StepOfPose, int SubStepOfPose, int SubSubStepOfPose) {
-				if (Obj && !Obj->IsPendingKill())
+			FWeakObjectPtr TT = Obj;
+			Cmd.OnProgress.AddLambda([TT,Function](const FString& SupportPoses, const FString& ProgressDesc, const FString& CurrentPose, int StepOfPose, int SubStepOfPose, int SubSubStepOfPose) {
+				UE_LOG(LogMocapApi, Warning, TEXT("Cmd OnProgress event function[%s %s %s %s %d %d %d]"),
+					*Function.ToString(),
+					*SupportPoses,
+					*ProgressDesc,
+					*CurrentPose,
+					StepOfPose,
+					SubStepOfPose,
+					SubSubStepOfPose
+				);
+				if (TT.IsValid())
 				{
-					FOutputDeviceNull Ar;
-					FString EventWithParam = FString::Printf(TEXT("%s %s %s %s %d %d %d"),
-						*Function.ToString(),
-						*SupportPoses,
-						*ProgressDesc,
-						*CurrentPose,
-						StepOfPose,
-						SubStepOfPose,
-						SubSubStepOfPose
-					);
-					bool result = Obj->CallFunctionByNameWithArguments(*EventWithParam, Ar, nullptr, true);
-					if (!result)
+					UObject* Obj = TT.Get();
+					if (Obj)
 					{
-						UE_LOG(LogMocapApi, Warning, TEXT("Failed to Delegate OnProgress event on %s function [%s]"), *Obj->GetFName().ToString(), * EventWithParam);
+						FOutputDeviceNull Ar;
+						FString EventWithParam = FString::Printf(TEXT("%s \"%s\" \"%s\" \"%s\" %d %d %d"),
+							*Function.ToString(),
+							*SupportPoses,
+							*ProgressDesc,
+							*CurrentPose,
+							StepOfPose,
+							SubStepOfPose,
+							SubSubStepOfPose
+						);
+						bool result = Obj->CallFunctionByNameWithArguments(*EventWithParam, Ar, nullptr, true);
+						if (!result)
+						{
+							UE_LOG(LogMocapApi, Warning, TEXT("Failed to Delegate OnProgress event on %s function [%s]"), *Obj->GetFName().ToString(), *EventWithParam);
+						}
 					}
 				}
 			});

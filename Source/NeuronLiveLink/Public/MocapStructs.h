@@ -300,6 +300,7 @@ struct FMocapServerCommand
     FMocapServerCommand()
     {
         CommandHandle = 0;
+        ProgressHandle = 0;
         SendTime = 0;
     }
 
