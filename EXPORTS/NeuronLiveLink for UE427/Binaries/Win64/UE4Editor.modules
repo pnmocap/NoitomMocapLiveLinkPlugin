@@ -1,0 +1,9 @@
+{
+	"BuildId": "17155196",
+	"Modules": 
+	{
+		"MocapApiAdapter": "UE4Editor-MocapApiAdapter-0002.dll",
+		"NeuronLiveLink": "UE4Editor-NeuronLiveLink.dll",
+		"NeuronLiveLinkEditor": "UE4Editor-NeuronLiveLinkEditor.dll"
+	}
+}
