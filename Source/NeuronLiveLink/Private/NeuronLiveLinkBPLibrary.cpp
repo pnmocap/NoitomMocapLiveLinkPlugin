@@ -82,6 +82,28 @@ void UNeuronLiveLinkBPLibrary::GetMocapAppNames(TArray<FName>& AppNames)
 	}
 }
 
+void UNeuronLiveLinkBPLibrary::RemoveAllMocapLivelinkSource()
+{
+	FLiveLinkClientReference ClientRef;
+	ILiveLinkClient* Client = ClientRef.GetClient();
+	TArray<FGuid> Sources = Client->GetSources();
+	for (FGuid Src : Sources)
+	{
+		FText Tp = Client->GetSourceType(Src);
+		if (Tp.ToString().Contains(FNeuronLiveLinkSource::SourceType.ToString()))
+		{
+			ULiveLinkSourceSettings* Sett = Client->GetSourceSettings(Src);
+			FString Conn;
+			if (Sett)
+			{
+				Conn = Sett->ConnectionString;
+			}
+			UE_LOG(LogMocapApi, Warning, TEXT("Remove MocapSource Guid %s SourceType [%s] ConnectionString [%s] "), *Src.ToString(), *Tp.ToString(), *Conn);
+			Client->RemoveSource(Src);
+		}
+	}
+}
+
 void UNeuronLiveLinkBPLibrary::GetAvatarNames(TArray<FName>& AvatarNames)
 {
 	//FAnimationDataManager::GetInstance( )->GetAvatarNames( AvatarNames );

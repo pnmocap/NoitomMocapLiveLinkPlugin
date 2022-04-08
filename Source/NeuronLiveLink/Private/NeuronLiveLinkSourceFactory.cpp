@@ -90,7 +90,7 @@ TSharedPtr<ILiveLinkSource> UNeuronLiveLinkSourceFactory::CreateSourceAtRuntime(
 		return EmptySource;
 	}
 
-	EmptySource->Init( LocalEndpoint, IsUDP, RemoteEndpoint, RotOrderS);
+	EmptySource->Init( LocalEndpoint, IsUDP, RemoteEndpoint, RotOrderS, RecvPoint);
 	return EmptySource;
 }
 
