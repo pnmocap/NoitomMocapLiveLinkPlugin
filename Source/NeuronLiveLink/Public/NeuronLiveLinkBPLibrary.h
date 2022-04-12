@@ -55,6 +55,12 @@ class NEURONLIVELINK_API UNeuronLiveLinkBPLibrary : public UBlueprintFunctionLib
 	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
 		static void RemoveAllMocapLivelinkSource();
 
+	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
+		static void GetMocapAppStatus(FName AppName, bool& IsConnected, bool& IsReady);
+
+	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
+		static void GetAllMocapLivelinkSourceStatus(TArray<FString>& StatusArr);
+
 	UFUNCTION( BlueprintCallable, Category = "NeuronLiveLink" )
 		static void GetAvatarNames( TArray<FName>& AvatarNames );
 

@@ -104,6 +104,40 @@ void UNeuronLiveLinkBPLibrary::RemoveAllMocapLivelinkSource()
 	}
 }
 
+void UNeuronLiveLinkBPLibrary::GetMocapAppStatus(FName AppName, bool& IsConnected, bool& IsReady)
+{
+	UMocapApp* App =  FMocapAppManager::GetInstance().GetMocapAppByName(AppName);
+	IsConnected = false;
+	IsReady = false;
+	if (App)
+	{
+		IsConnected = App->GetIsConnecting();
+		IsReady = App->GetIsReadyToUse();
+	}
+}
+
+void UNeuronLiveLinkBPLibrary::GetAllMocapLivelinkSourceStatus(TArray<FString>& StatusArr)
+{
+	MocapAppDataVisitor Visitor;
+	FMocapAppManager::GetInstance().EachRunningApp(Visitor);
+	for (UMocapApp* App : Visitor.Apps)
+	{
+		FString Status = TEXT("Offline");
+		if (App->GetIsConnecting())
+		{
+			if (App->GetIsReadyToUse())
+			{
+				Status = TEXT("Online");
+			}
+			else
+			{
+				Status = TEXT("Online Connection Error");
+			}
+		}
+		StatusArr.Add(FString::Printf(TEXT("%s: %s"), *App->AppName, *Status));
+	}
+}
+
 void UNeuronLiveLinkBPLibrary::GetAvatarNames(TArray<FName>& AvatarNames)
 {
 	//FAnimationDataManager::GetInstance( )->GetAvatarNames( AvatarNames );

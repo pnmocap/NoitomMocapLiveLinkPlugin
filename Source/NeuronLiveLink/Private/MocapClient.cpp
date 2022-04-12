@@ -249,7 +249,14 @@ const FString FMocapAppClient::GetStatus()
         {
             if (App->GetIsConnecting())
             {
-                Status = TEXT("Online");
+                if (App->GetIsReadyToUse())
+                {
+                    Status = TEXT("Online");
+                }
+                else
+                {
+                    Status = TEXT("Online Connection Error");
+                }
             }
         }
     }

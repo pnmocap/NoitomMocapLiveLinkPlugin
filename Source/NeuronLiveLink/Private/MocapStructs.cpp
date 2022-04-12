@@ -229,6 +229,11 @@ void UMocapApp::Disconnect()
     AppHandle = 0;
     AppHandleInternal = TEXT("0");
     IsConnecting = false;
+    Trackers.Empty();
+    RigidBodies.Empty();
+    Avatars.Empty();
+    QueuedCommands.Empty();
+    CommandsHistory.Empty();
 
     FMocapAppManager::GetInstance().RemoveMocapApp(this);
     UE_LOG(LogMocapApi, Log, TEXT("App %s Disconnect."),
@@ -297,7 +302,8 @@ bool UMocapApp::PollEvents()
                 LastError = e.eventData.systemError.error;
                 ExtraErrorMsg = FString();
                 UE_LOG(LogMocapApi, Warning, TEXT("Got Error Event %d: %s"), LastError, *GetLastErrorMessage());
-                LastError = MocapApi::Error_None;
+                //LastError = MocapApi::Error_None;-
+                IsReady = !((LastError == MocapApi::Error_ServerNotReady) || (LastError == MocapApi::Error_ClientNotReady) || (LastError == MocapApi::Error_AddressInUse));
             }
             else if (e.eventType == MocapApi::MCPEvent_SensorModulesUpdated) {
                 // ignore
@@ -310,8 +316,12 @@ bool UMocapApp::PollEvents()
                 LastError = INT_MAX;
                 ExtraErrorMsg = FString::Printf(TEXT("Logic Should not go here, event type %X in PollEvents"), e.eventType);
                 UE_LOG(LogMocapApi, Error, TEXT("Got Internal Error %d: %s"), LastError, *GetLastErrorMessage());
-                LastError = MocapApi::Error_None;
+                //LastError = MocapApi::Error_None;
             }
+        }
+        if (!IsReady && LastError == 0)
+        {
+            IsReady = true;
         }
     }
     return hasUnhandledEvents;
@@ -429,15 +439,14 @@ const FMocapAvatar* UMocapApp::GetAvatarData(const FString& AvatarName)
     return avatar;
 }
 
-const FString UMocapApp::GetLastErrorMessage()
+void UMocapApp::GetLastErrorStr(int ErrorId, FString& LastErrorStr)
 {
-    //LastError enum + ExtraErrorMsg
-    FString LastErrorStr;
-    MocapApi::EMCPError Err = (MocapApi::EMCPError)(LastError);
+    MocapApi::EMCPError Err = (MocapApi::EMCPError)(ErrorId);
     switch (Err)
     {
     case MocapApi::Error_None:
-        return TEXT("");
+        LastErrorStr = TEXT("");
+        break;
     case MocapApi::Error_MoreEvent:
         LastErrorStr = TEXT("Error_MoreEvent");
         break;
@@ -505,7 +514,19 @@ const FString UMocapApp::GetLastErrorMessage()
         LastErrorStr = FString::Printf(TEXT("Error_Unknown_%d"), Err);
         break;
     }
+}
+
+const FString UMocapApp::GetLastErrorMessage()
+{
+    //LastError enum + ExtraErrorMsg
+    FString LastErrorStr;
+    GetLastErrorStr(LastError, LastErrorStr);
     return FString::Printf(TEXT("%s: %s"), *LastErrorStr, *ExtraErrorMsg);
+}
+
+const int UMocapApp::GetLastErrorId()
+{
+    return LastError;
 }
 
 void UMocapApp::QueueMocapCommand(const FMocapServerCommand& Cmd)

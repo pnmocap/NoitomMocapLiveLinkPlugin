@@ -141,7 +141,7 @@ FText FNeuronLiveLinkSource::GetSourceStatus() const
     {
         return ConstStatus_Offline;
     }
-    return ConstStatus_Running;
+    return FText::FromString(Status);// ConstStatus_Running;
 }
 
 void FNeuronLiveLinkSource::PushAvatarSubject( FName Subject, const TArray<FName>& PropertyNames )
