@@ -5,6 +5,9 @@
 #include "Interfaces/IPluginManager.h"
 #include "Misc/Paths.h"
 #include "Engine/EngineTypes.h"
+#include "Engine/StaticMesh.h"
+#include "Components\StaticMeshComponent.h"
+#include "UObject/ConstructorHelpers.h"
 
 float DefaultVolumeWidth = 3.0f;
 float DefaultVolumeDepth = 3.0f;
@@ -20,11 +23,11 @@ ANeuronVPVolume::ANeuronVPVolume()
 	NeuronVPVolume->SetupAttachment(NeuronRoot);
 
 	//Finds the current UE project Plugins folder
-	FString NeuronPluginDir = FPaths::ProjectPluginsDir();
+	//FString NeuronPluginDir = FPaths::ProjectPluginsDir();
 	//Makes a new path string from the current project's plugins folder and combines it with the relative path to our static mesh plane uasset
-	FString NeuronPlanePath = FPaths::Combine(*NeuronPluginDir, TEXT("StaticMesh'/NeuronLiveLink/VirtualProduction/Plane.Plane'"));
+	//FString NeuronPlanePath = FPaths::Combine(*NeuronPluginDir, TEXT("StaticMesh'/NeuronLiveLink/VirtualProduction/Plane.Plane'"));
 	//Creates an object based off the static mesh item found in the path above by reference. Effectiuvely creates a visual asset to populate in the scene
-	static ConstructorHelpers::FObjectFinder<UStaticMesh>PlaneVisualAsset(*NeuronPlanePath);
+	static ConstructorHelpers::FObjectFinder<UStaticMesh>PlaneVisualAsset(TEXT("StaticMesh'/NeuronLiveLink/VirtualProduction/PN_VolumeGuide.PN_VolumeGuide'"));
 
 	//static ConstructorHelpers::FObjectFinder<UStaticMesh>PlaneVisualAsset(TEXT("/Game/StarterContent/Shapes/Shape_Plane.Shape_Plane"));
 

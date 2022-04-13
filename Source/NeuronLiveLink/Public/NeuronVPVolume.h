@@ -14,9 +14,9 @@ class  NEURONLIVELINK_API ANeuronVPVolume : public AActor
 public:
 	ANeuronVPVolume();
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Neuron VP Volume Controls")
 		USceneComponent* NeuronRoot;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Neuron VP Volume Controls")
 		UStaticMeshComponent* NeuronVPVolume;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Neuron VP Volume Controls")

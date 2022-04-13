@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Containers/MRUArray.h"
 #include "MocapStructs.generated.h"
 
 /**
@@ -256,6 +257,80 @@ struct FMocapAvatar
 };
 
 /**
+ * EMCCommandType is the unreal type for MocapApi EMCPCommand
+ */
+UENUM(BlueprintType)
+enum class EMCCommandType : uint8
+{
+    StartCapture,
+    StopCapture,
+    ZeroPosition,
+    CalibrateMotion,
+    StartRecored,
+    StopRecored,
+    ResumeOriginalPosture,
+};
+
+/**
+ * EMCCommandExtraFlag is the unreal type for MocapApi EMCPCommandStopCatpureExtraFlag etc.
+ */
+UENUM(BlueprintType)
+enum class EMCCommandExtraFlag : uint8
+{
+    StopCatpureExtraFlag_SensorsModulesPowerOff,
+    StopCatpureExtraFlag_SensorsModulesHibernate,
+};
+
+UENUM(BlueprintType)
+enum class EMCCommandParamName : uint8
+{
+    ParamStopCatpureExtraFlag,
+    ParamDeviceRadio,
+    ParamAvatarName,
+};
+
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnMocapServerCommandResult, int/*Code*/, const FString&/*Result*/)
+DECLARE_MULTICAST_DELEGATE_SixParams(FOnMocapServerCommandProgress, const FString&/*SupportPoses*/, const FString&/*ProgressDesc*/, const FString&/*CurrentPose*/, int/*StepOfPose*/, int/*SubStepOfPose*/, int/*SubSubStepOfPose*/)
+
+USTRUCT(BlueprintType)
+struct FMocapServerCommand
+{
+    GENERATED_BODY()
+
+    FMocapServerCommand()
+    {
+        CommandHandle = 0;
+        SendTime = 0;
+    }
+
+    UPROPERTY()
+    EMCCommandType Cmd;
+
+    UPROPERTY()
+    TMap<EMCCommandParamName, FString> Params;
+
+    UPROPERTY()
+    FString Result;
+
+    FString ProgressChain;
+
+    FOnMocapServerCommandResult OnResult;
+
+    FOnMocapServerCommandProgress OnProgress;
+
+    uint64 CommandHandle;
+
+    uint64 ProgressHandle;
+
+    int64 SendTime;
+};
+
+namespace MocapApi
+{
+    class IMCPApplication;
+}
+
+/**
  * UMocapApp is the unreal type for MocapApi IMCPApplication
  */
 UCLASS()
@@ -264,6 +339,7 @@ class NEURONLIVELINK_API UMocapApp : public UObject
     GENERATED_BODY()
 
 public:
+    UMocapApp();
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MocapApi")
         FString AppName;
@@ -339,6 +415,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = MocapApi)
     const FString GetLastErrorMessage();
 
+    UFUNCTION(BlueprintCallable, Category = MocapApi)
+    void QueueMocapCommand(const FMocapServerCommand& Cmd);
+
     // software buildin bonenames
     static TArray<FName> GetAvatarBuildinBoneNames();
     // software buildin bone parents, value in array is the index in GetAvatarBuildinBoneNames
@@ -363,9 +442,17 @@ private:
 
 	bool HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle, int ReservedData = 0);
 
+    bool HandleCommandReplyEvent(uint64 CommandHandle, int replay);
+
+    void PrepareAndSendMocapCommand(MocapApi::IMCPApplication* mcpApplication);
+
+    void PushCommandToHistory(const FMocapServerCommand& Cmd);
+
 	TMap<FString, FMocapTracker> Trackers;
 	TMap<FString, FMocapRigidBody> RigidBodies;
     TMap<FString, FMocapAvatar> Avatars;
+    TArray<FMocapServerCommand> QueuedCommands;
+    TMRUArray<FMocapServerCommand> CommandsHistory;
     static TArray<FName> AvatarBoneNames;
     static TArray<int> AvatarBoneParents;
     static void InitAvatarBuildinInfo();
