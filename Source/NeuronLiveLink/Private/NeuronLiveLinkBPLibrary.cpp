@@ -208,7 +208,10 @@ void UNeuronLiveLinkBPLibrary::BuildMocapCmdParamInt(FMocapServerCommand& Cmd, E
 
 void UNeuronLiveLinkBPLibrary::BuildMocapCmdParam(FMocapServerCommand& Cmd, EMCCommandParamName Name, const FString& Val)
 {
-	Cmd.Params.Add(Name, Val);
+	if (!Val.IsEmpty())
+	{
+		Cmd.Params.Add(Name, Val);
+	}
 }
 
 void UNeuronLiveLinkBPLibrary::BuildMocapCmdParamStopCatpureExtraFlag(FMocapServerCommand& Cmd, EMCCommandExtraFlag flag)
