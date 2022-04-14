@@ -300,7 +300,6 @@ struct FMocapServerCommand
     FMocapServerCommand()
     {
         CommandHandle = 0;
-        ProgressHandle = 0;
         SendTime = 0;
     }
 
@@ -408,28 +407,16 @@ public:
     // if MocapApp is connected
     UFUNCTION(BlueprintCallable, Category = MocapApi)
     bool GetIsConnecting() const { return IsConnecting; };
-
-    UFUNCTION(BlueprintCallable, Category = MocapApi)
-        bool GetIsReadyToUse() const { return IsReady; };
     
     // query avatar data struct by name
     const FMocapAvatar* GetAvatarData(const FString& AvatarName);
 
     // get last error message for error handling
     UFUNCTION(BlueprintCallable, Category = MocapApi)
-    static void GetLastErrorStr(int ErrorId, FString& Str);
-
-    UFUNCTION(BlueprintCallable, Category = MocapApi)
     const FString GetLastErrorMessage();
 
     UFUNCTION(BlueprintCallable, Category = MocapApi)
-    const int GetLastErrorId();
-
-    UFUNCTION(BlueprintCallable, Category = MocapApi)
     void QueueMocapCommand(const FMocapServerCommand& Cmd);
-
-    UFUNCTION(BlueprintCallable, Category = MocapApi)
-    bool HasMocapCommandInQueue();
 
     // software buildin bonenames
     static TArray<FName> GetAvatarBuildinBoneNames();
@@ -440,7 +427,6 @@ public:
     void DumpData();
 private:
     bool IsConnecting = false;
-    bool IsReady = true;
     int LastError = 0;
     FString ExtraErrorMsg;
 

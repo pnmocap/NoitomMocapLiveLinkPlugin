@@ -27,7 +27,7 @@ ANeuronVPVolume::ANeuronVPVolume()
 	//Makes a new path string from the current project's plugins folder and combines it with the relative path to our static mesh plane uasset
 	//FString NeuronPlanePath = FPaths::Combine(*NeuronPluginDir, TEXT("StaticMesh'/NeuronLiveLink/VirtualProduction/Plane.Plane'"));
 	//Creates an object based off the static mesh item found in the path above by reference. Effectiuvely creates a visual asset to populate in the scene
-	static ConstructorHelpers::FObjectFinder<UStaticMesh>PlaneVisualAsset(TEXT("StaticMesh'/NeuronLiveLink/VirtualProduction/Plane.Plane'"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh>PlaneVisualAsset(TEXT("StaticMesh'/NeuronLiveLink/VirtualProduction/PN_VolumeGuide.PN_VolumeGuide'"));
 
 	//static ConstructorHelpers::FObjectFinder<UStaticMesh>PlaneVisualAsset(TEXT("/Game/StarterContent/Shapes/Shape_Plane.Shape_Plane"));
 

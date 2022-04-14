@@ -70,17 +70,6 @@ void FNeuronLiveLinkSource::ReceiveClient (ILiveLinkClient* InClient, FGuid InSo
     }
 }
 
-void FNeuronLiveLinkSource::InitializeSettings(ULiveLinkSourceSettings* Settings)
-{
-    Settings->ConnectionString = FString::Printf(TEXT("%s:%d,%d,%s:%d,%s,%d"),
-        *LocalEndpoint.Address.ToString(), LocalEndpoint.Port,
-        IsUDP?1:0,
-        *RemoteEndpoint.Address.ToString(), RemoteEndpoint.Port,
-        *RotationOrder,
-        UDPRecvPort
-    );
-}
-
 bool FNeuronLiveLinkSource::IsSourceStillValid () const
 {
     return mocapClient && (mocapClient->IsRunning()); // mDataReceiver->IsRunning();
@@ -103,7 +92,7 @@ FText FNeuronLiveLinkSource::GetSourceType() const
     FString HostStr;
     if (IsUDP)
     {
-        HostStr = LocalEndpoint.ToString() + FString::Printf(TEXT(":%d"), UDPRecvPort);
+        HostStr = LocalEndpoint.ToString();
     }
     else
     {
@@ -141,7 +130,7 @@ FText FNeuronLiveLinkSource::GetSourceStatus() const
     {
         return ConstStatus_Offline;
     }
-    return FText::FromString(Status);// ConstStatus_Running;
+    return ConstStatus_Running;
 }
 
 void FNeuronLiveLinkSource::PushAvatarSubject( FName Subject, const TArray<FName>& PropertyNames )

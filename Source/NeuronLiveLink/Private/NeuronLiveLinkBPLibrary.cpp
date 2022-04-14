@@ -7,7 +7,6 @@
 #include "MocapAppManager.h"
 #include "MocapStructs.h"
 #include "Misc/OutputDeviceNUll.h"
-#include "Kismet/KismetStringLibrary.h"
 
 
 UNeuronLiveLinkBPLibrary::UNeuronLiveLinkBPLibrary(const FObjectInitializer& ObjectInitializer)
@@ -72,72 +71,6 @@ public:
 	TArray<UMocapApp*> Apps;
 };
 
-void UNeuronLiveLinkBPLibrary::GetMocapAppNames(TArray<FName>& AppNames)
-{
-	MocapAppDataVisitor Visitor;
-	FMocapAppManager::GetInstance().EachRunningApp(Visitor);
-	for (UMocapApp* App : Visitor.Apps)
-	{
-		AppNames.Add(UKismetStringLibrary::Conv_StringToName(App->AppName));
-	}
-}
-
-void UNeuronLiveLinkBPLibrary::RemoveAllMocapLivelinkSource()
-{
-	FLiveLinkClientReference ClientRef;
-	ILiveLinkClient* Client = ClientRef.GetClient();
-	TArray<FGuid> Sources = Client->GetSources();
-	for (FGuid Src : Sources)
-	{
-		FText Tp = Client->GetSourceType(Src);
-		if (Tp.ToString().Contains(FNeuronLiveLinkSource::SourceType.ToString()))
-		{
-			ULiveLinkSourceSettings* Sett = Client->GetSourceSettings(Src);
-			FString Conn;
-			if (Sett)
-			{
-				Conn = Sett->ConnectionString;
-			}
-			UE_LOG(LogMocapApi, Warning, TEXT("Remove MocapSource Guid %s SourceType [%s] ConnectionString [%s] "), *Src.ToString(), *Tp.ToString(), *Conn);
-			Client->RemoveSource(Src);
-		}
-	}
-}
-
-void UNeuronLiveLinkBPLibrary::GetMocapAppStatus(FName AppName, bool& IsConnected, bool& IsReady)
-{
-	UMocapApp* App =  FMocapAppManager::GetInstance().GetMocapAppByName(AppName);
-	IsConnected = false;
-	IsReady = false;
-	if (App)
-	{
-		IsConnected = App->GetIsConnecting();
-		IsReady = App->GetIsReadyToUse();
-	}
-}
-
-void UNeuronLiveLinkBPLibrary::GetAllMocapLivelinkSourceStatus(TArray<FString>& StatusArr)
-{
-	MocapAppDataVisitor Visitor;
-	FMocapAppManager::GetInstance().EachRunningApp(Visitor);
-	for (UMocapApp* App : Visitor.Apps)
-	{
-		FString Status = TEXT("Offline");
-		if (App->GetIsConnecting())
-		{
-			if (App->GetIsReadyToUse())
-			{
-				Status = TEXT("Online");
-			}
-			else
-			{
-				Status = TEXT("Online Connection Error");
-			}
-		}
-		StatusArr.Add(FString::Printf(TEXT("%s: %s"), *App->AppName, *Status));
-	}
-}
-
 void UNeuronLiveLinkBPLibrary::GetAvatarNames(TArray<FName>& AvatarNames)
 {
 	//FAnimationDataManager::GetInstance( )->GetAvatarNames( AvatarNames );
@@ -196,11 +129,6 @@ FMocapServerCommand UNeuronLiveLinkBPLibrary::MakeMocapCommand(EMCCommandType Cm
 	return C;
 }
 
-void UNeuronLiveLinkBPLibrary::ClearMocapCmdParams(FMocapServerCommand& Cmd)
-{
-	Cmd.Params.Empty();
-}
-
 void UNeuronLiveLinkBPLibrary::BuildMocapCmdParamInt(FMocapServerCommand& Cmd, EMCCommandParamName Name, int Val)
 {
 	Cmd.Params.Add(Name, FString::FromInt(Val));
@@ -217,17 +145,7 @@ void UNeuronLiveLinkBPLibrary::BuildMocapCmdParamStopCatpureExtraFlag(FMocapServ
 	Cmd.Params.Add(EMCCommandParamName::ParamStopCatpureExtraFlag, StrFlag);
 }
 
-bool UNeuronLiveLinkBPLibrary::HasMocapCommandInQueue(FName AppName)
-{
-	UMocapApp* App = FMocapAppManager::GetInstance().GetMocapAppByName(AppName);
-	if (App)
-	{
-		return App->HasMocapCommandInQueue();
-	}
-	return false;
-}
-
-void UNeuronLiveLinkBPLibrary::SetMocapCmdProgressHandler(UPARAM(ref) FMocapServerCommand& Cmd, UObject* Obj, FName Function)
+void UNeuronLiveLinkBPLibrary::SetMocapCmdPProgressHandler(UPARAM(ref) FMocapServerCommand& Cmd, UObject* Obj, FName Function)
 {
 	if (Obj)
 	{
@@ -239,37 +157,23 @@ void UNeuronLiveLinkBPLibrary::SetMocapCmdProgressHandler(UPARAM(ref) FMocapServ
 			//Cmd.OnProgress.AddDelegate(MoveTemp(Delegate));
 			//Cmd.OnProgress.AddUObject(Obj, Func->GetNativeFunc());
 			//Cmd.OnProgress.AddUFunction(Obj, Func, const FString&/*SupportPoses*/, const FString&/*ProgressDesc*/, const FString&/*CurrentPose*/, int/*StepOfPose*/, int/*SubStepOfPose*/, int/*SubSubStepOfPose*/);
-			FWeakObjectPtr TT = Obj;
-			Cmd.OnProgress.AddLambda([TT,Function](const FString& SupportPoses, const FString& ProgressDesc, const FString& CurrentPose, int StepOfPose, int SubStepOfPose, int SubSubStepOfPose) {
-				UE_LOG(LogMocapApi, Warning, TEXT("Cmd OnProgress event function[%s %s %s %s %d %d %d]"),
-					*Function.ToString(),
-					*SupportPoses,
-					*ProgressDesc,
-					*CurrentPose,
-					StepOfPose,
-					SubStepOfPose,
-					SubSubStepOfPose
-				);
-				if (TT.IsValid())
+			Cmd.OnProgress.AddLambda([&Obj,Function](const FString& SupportPoses, const FString& ProgressDesc, const FString& CurrentPose, int StepOfPose, int SubStepOfPose, int SubSubStepOfPose) {
+				if (Obj && !Obj->IsPendingKill())
 				{
-					UObject* Obj = TT.Get();
-					if (Obj)
+					FOutputDeviceNull Ar;
+					FString EventWithParam = FString::Printf(TEXT("%s %s %s %s %d %d %d"),
+						*Function.ToString(),
+						*SupportPoses,
+						*ProgressDesc,
+						*CurrentPose,
+						StepOfPose,
+						SubStepOfPose,
+						SubSubStepOfPose
+					);
+					bool result = Obj->CallFunctionByNameWithArguments(*EventWithParam, Ar, nullptr, true);
+					if (!result)
 					{
-						FOutputDeviceNull Ar;
-						FString EventWithParam = FString::Printf(TEXT("%s \"%s\" \"%s\" \"%s\" %d %d %d"),
-							*Function.ToString(),
-							*SupportPoses,
-							*ProgressDesc,
-							*CurrentPose,
-							StepOfPose,
-							SubStepOfPose,
-							SubSubStepOfPose
-						);
-						bool result = Obj->CallFunctionByNameWithArguments(*EventWithParam, Ar, nullptr, true);
-						if (!result)
-						{
-							UE_LOG(LogMocapApi, Warning, TEXT("Failed to Delegate OnProgress event on %s function [%s]"), *Obj->GetFName().ToString(), *EventWithParam);
-						}
+						UE_LOG(LogMocapApi, Warning, TEXT("Failed to Delegate OnProgress event on %s function [%s]"), *Obj->GetFName().ToString(), * EventWithParam);
 					}
 				}
 			});
@@ -277,88 +181,15 @@ void UNeuronLiveLinkBPLibrary::SetMocapCmdProgressHandler(UPARAM(ref) FMocapServ
 	}
 }
 
-class FNeuronCommandAction : public FPendingLatentAction
-{
-public:
-	bool Finished;
-	int& ResultCode;
-	FString& ResultMsg;
-	FName ExecutionFunction;
-	int32 OutputLink;
-	FWeakObjectPtr CallbackTarget;
-
-	FNeuronCommandAction(const FLatentActionInfo& LatentInfo, int& Result, FString& ResultStr)
-		: Finished(false)
-		, ResultCode(Result)
-		, ResultMsg(ResultStr)
-		, ExecutionFunction(LatentInfo.ExecutionFunction)
-		, OutputLink(LatentInfo.Linkage)
-		, CallbackTarget(LatentInfo.CallbackTarget)
-	{
-	}
-
-	virtual void UpdateOperation(FLatentResponse& Response) override
-	{
-		//TimeRemaining -= Response.ElapsedTime();
-		Response.FinishAndTriggerIf(Finished, ExecutionFunction, OutputLink, CallbackTarget);
-	}
-
-	void OnCommandResult(int Code, const FString& Result)
-	{
-		ResultCode = Code;
-		ResultMsg = Result;
-		Finished = true;
-	}
-
-#if WITH_EDITOR
-	// Returns a human readable description of the latent operation's current state
-	virtual FString GetDescription() const override
-	{
-		return TEXT("NeuronCommand Result Latent action");
-	}
-#endif
-};
-
-void UNeuronLiveLinkBPLibrary::SendNeuronCommand(const UObject* WorldContextObject, FName AppName, UPARAM(ref) FMocapServerCommand& Cmd, FLatentActionInfo LatentInfo, int& Result, FString& ResultStr)
+void UNeuronLiveLinkBPLibrary::SendNeuronCommand(const UObject* WorldContextObject, FName AppName, const FMocapServerCommand& Cmd, FLatentActionInfo LatentInfo, int& Result, FString& ResultStr)
 {
 	UMocapApp* App = FMocapAppManager::GetInstance().GetMocapAppByName(AppName);
 	if (App)
 	{
-		if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull))
-		{
-			FLatentActionManager& LatentManager = World->GetLatentActionManager();
-			if (LatentManager.FindExistingAction<FNeuronCommandAction>(LatentInfo.CallbackTarget, LatentInfo.UUID) == nullptr)
-			{
-				FNeuronCommandAction* NewAction = new FNeuronCommandAction(LatentInfo, Result, ResultStr);
-				LatentManager.AddNewAction(LatentInfo.CallbackTarget, LatentInfo.UUID, NewAction);
-				Cmd.OnResult.AddLambda([NewAction](int Code, const FString& CmdResult) {
-					if (NewAction)
-					{
-						NewAction->OnCommandResult(Code, CmdResult);
-					}
-				});
-				//Cmd.OnResult.Add()
-
-				App->QueueMocapCommand(Cmd);
-			}
-		}
+		App->QueueMocapCommand(Cmd);
 	}
 	else
 	{
 		UE_LOG(LogMocapApi, Log, TEXT("Failed to find Mocap App Name: %s"), *(AppName.ToString()));
-	}
-}
-
-void UNeuronLiveLinkBPLibrary::DumpAllMocapApp()
-{
-	TArray<FName> AppNames;
-	GetMocapAppNames(AppNames);
-	for (auto AppName : AppNames)
-	{
-		UMocapApp* App = FMocapAppManager::GetInstance().GetMocapAppByName(AppName);
-		if (App)
-		{
-			App->DumpData();
-		}
 	}
 }

@@ -241,7 +241,6 @@ void SNeuronBoneMappingWidget::SetDstBoneName(FName Name)
         {
             TargetAsset->BoneMapping[SrcBoneName] = DstBoneName;
         }
-        TargetAsset->Modify(true);
     }
 }
 
