@@ -1,2 +1,2 @@
-# NoitomMocapLiveLinkPlugin
+# NoitomMocapLiveLinkPlugin Packaged Plugins
 
