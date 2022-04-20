@@ -539,6 +539,41 @@ bool UMocapApp::HasMocapCommandInQueue()
     return QueuedCommands.Num() > 0;
 }
 
+static TArray<int> GroundableJoints = {
+    MocapApi::JointTag_Hips,
+    MocapApi::JointTag_RightFoot,
+    MocapApi::JointTag_LeftFoot,
+    MocapApi::JointTag_Head,
+    MocapApi::JointTag_RightHand,
+    MocapApi::JointTag_LeftHand,
+};
+
+static void HandleJointGroundablePoints(MocapApi::IMCPJoint* mcpJoint, uint64 jointHandle, TArray<FVector>& GroundablePoints, int& LowestIndex)
+{
+    const int MaxNumOfPoints = 16;
+    uint32 BufferCount = 0;
+    uint32 plowest_index = 0;
+    MocapApi::EMCPError mcpError = mcpJoint->GetJointGroundablePoints(nullptr, /*0xyz/1xyz */
+        &BufferCount, &plowest_index, jointHandle);
+    if (BufferCount > 0)
+    {
+        float points[MaxNumOfPoints*3];
+        uint32 PointCount = BufferCount / 3;
+        ensureMsgf(PointCount <= MaxNumOfPoints, TEXT("Point size is bigger than %d"), MaxNumOfPoints);
+        mcpError = mcpJoint->GetJointGroundablePoints(points, /*0xyz/1xyz */
+            &BufferCount, &plowest_index, jointHandle);
+        LowestIndex = plowest_index;
+        GroundablePoints.SetNum(BufferCount/3);
+
+        for (uint32 i = 0; i < PointCount; ++i)
+        {
+            GroundablePoints[i].X = points[i * 3];
+            GroundablePoints[i].Y = points[i * 3 + 1];
+            GroundablePoints[i].Z = points[i * 3 + 2];
+        }
+    }
+}
+
 bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
 {
     MocapApi::IMCPAvatar* avatarMgr = nullptr;
@@ -560,13 +595,17 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
     }
     FString Name = FUTF8ToTCHAR(AvatarName).Get();
 
-	if (Name.IsEmpty())
-	{
-		ReturnFalseIFError("Avatar Name is Empty");
-	}
+    if (Name.IsEmpty())
+    {
+        //ReturnFalseIFError("Avatar Name is Empty");
+        Name = TEXT("AvatarNameisEmpty");
+    }
     
     FMocapAvatar& avatar = Avatars.FindOrAdd(Name);
     avatar.Name = FName(Name);
+    avatar.JointIsGrounding.Empty();
+    avatar.LeftFootLowestIndex = -1;
+    avatar.RightFootLowestIndex = -1;
 
     // Get Root Joint at Avatar [1/8/2021 brian.wang]
     MocapApi::MCPJointHandle_t RootJoint = 0;
@@ -632,6 +671,23 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
             FQuat& q = avatar.LocalRotation[jointTag];
             mcpJoint->GetJointLocalRotation(&RotX, &RotY, &RotZ, &RotW, handle);
             q = FQuat(RotX, RotY, RotZ, RotW);
+
+            if (GroundableJoints.Contains(jointTag))
+            {
+                MocapApi::EMCPGroundingState GroundingState = MocapApi::GroundingState_Flying;
+                mcpJoint->GetJointGroundingState(&GroundingState, handle);
+                avatar.JointIsGrounding.Add(jointTag, (GroundingState == MocapApi::GroundingState_Grounding));
+            }
+
+            if (jointTag == MocapApi::JointTag_LeftFoot)
+            {
+                HandleJointGroundablePoints(mcpJoint, handle, avatar.LeftFootGroundablePoints, avatar.LeftFootLowestIndex);
+            }
+
+            if (jointTag == MocapApi::JointTag_RightFoot)
+            {
+                HandleJointGroundablePoints(mcpJoint, handle, avatar.RightFootGroundablePoints, avatar.RightFootLowestIndex);
+            }
         }
     }
     

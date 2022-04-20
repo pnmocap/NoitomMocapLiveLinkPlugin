@@ -254,6 +254,12 @@ struct FMocapAvatar
 
     UPROPERTY()
     TArray<FQuat> LocalRotation;
+
+    TMap<int, bool> JointIsGrounding;
+    TArray<FVector> LeftFootGroundablePoints;
+    TArray<FVector> RightFootGroundablePoints;
+    int LeftFootLowestIndex;
+    int RightFootLowestIndex;
 };
 
 /**

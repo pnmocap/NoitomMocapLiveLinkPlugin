@@ -3,32 +3,23 @@
 
 #include <cstdint>
 #if defined(_WIN32)
-
-#ifdef MCP_API_EXPORT
-#define MCP_INTERFACE extern "C" __declspec( dllexport )
-#elif (defined MCP_API_STATIC)
-#define MCP_INTERFACE extern "C"
-#else
-#define MCP_INTERFACE extern "C" __declspec( dllimport )
-#endif
-
+    #define MCP_CALLTYPE __cdecl
+    #ifdef MCP_API_EXPORT
+        #define MCP_INTERFACE extern "C" __declspec( dllexport )
+    #elif (defined MCP_API_STATIC)
+        #define MCP_INTERFACE extern "C"
+    #else
+        #define MCP_INTERFACE extern "C" __declspec( dllimport )
+    #endif
 #elif defined(__GNUC__) || defined(COMPILER_GCC) || defined(__APPLE__)
-
-#ifdef MCP_API_EXPORT
-#define MCP_INTERFACE extern "C" __attribute__((visibility("default")))
+    #define MCP_CALLTYPE 
+    #ifdef MCP_API_EXPORT
+        #define MCP_INTERFACE extern "C" __attribute__((visibility("default")))
+    #else
+        #define MCP_INTERFACE extern "C" 
+    #endif
 #else
-#define MCP_INTERFACE extern "C" 
-#endif
-
-#else
-#error "Unsupported Platform."
-#endif
-
-
-#if defined( _WIN32 )
-#define MCP_CALLTYPE __cdecl
-#else
-#define MCP_CALLTYPE 
+    #error "Unsupported Platform."
 #endif
 
 namespace MocapApi {
@@ -208,6 +199,12 @@ namespace MocapApi {
     };
     static const char * IMCPBodyPart_Version = "IMCPBodyPart_001";
 
+    enum EMCPGroundingState 
+    {
+        GroundingState_Grounding,
+        GroundingState_Flying,
+    };
+
     typedef uint64_t MCPJointHandle_t;
     class IMCPJoint
     {
@@ -249,6 +246,12 @@ namespace MocapApi {
 
         virtual EMCPError GetJointParentJointTag(EMCPJointTag * pJointTag, 
             EMCPJointTag jointTag) = 0;
+
+        virtual EMCPError GetJointGroundingState(EMCPGroundingState * pGroundingState,
+            MCPJointHandle_t ulJointHandle) = 0;
+
+        virtual EMCPError GetJointGroundablePoints(float * pointsPostion, /*0xyz/1xyz */
+            uint32_t * numberOfPoints, uint32_t* plowest_index, MCPJointHandle_t ulJointHandle) = 0;
 
 
     };
@@ -635,7 +638,7 @@ namespace MocapApi {
     };
     static const char * const IMCPApplication_Version = "IMCPApplication_002";
 
-    extern "C" __declspec(dllexport) EMCPError __cdecl MCPGetGenericInterface(const char * pchInterfaceVersion,
+    MCP_INTERFACE EMCPError MCP_CALLTYPE MCPGetGenericInterface(const char * pchInterfaceVersion,
         void ** ppInterface);
 }
 #endif  // end _NOITOM_MOCAPAPI_H [10/30/2020 brian.wang]

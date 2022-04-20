@@ -5,6 +5,7 @@
 #include "Roles/LiveLinkTransformTypes.h"
 #include "Roles/LiveLinkAnimationTypes.h"
 #include "Misc/App.h"
+#include "MocapApi.h"
 
 static TMap<FString, EMCBvhRotationOrder> OrderMap = {
     { TEXT("XYZ"), EMCBvhRotationOrder::XYZ },
@@ -149,8 +150,24 @@ void FMocapAppClient::PollEvents()
                     continue;
                 }
 
-                const TArray<FName> PropertyNames({ FName(TEXT("WithDisplacement")) });;
-                TArray<float> PropertyValues({ (float)(Data->HasLocalPositions[1]? 1.0: 0.0) });
+                const TArray<FName> PropertyNames({ 
+                    FName(TEXT("WithDisplacement")),
+                    FName(TEXT("Hips_Grounding")),
+                    FName(TEXT("RightFoot_Grounding")),
+                    FName(TEXT("LeftFoot_Grounding")),
+                    FName(TEXT("Head_Grounding")),
+                    FName(TEXT("RightHand_Grounding")),
+                    FName(TEXT("LeftHand_Grounding")),
+                });;
+                TArray<float> PropertyValues({
+                    (float)(Data->HasLocalPositions[1]? 1.0: 0.0),
+                    (Data->JointIsGrounding[MocapApi::JointTag_Hips]? 1.0f: 0.0f),
+                    (Data->JointIsGrounding[MocapApi::JointTag_RightFoot]? 1.0f: 0.0f),
+                    (Data->JointIsGrounding[MocapApi::JointTag_LeftFoot] ? 1.0f : 0.0f),
+                    (Data->JointIsGrounding[MocapApi::JointTag_Head] ? 1.0f : 0.0f),
+                    (Data->JointIsGrounding[MocapApi::JointTag_RightHand] ? 1.0f : 0.0f),
+                    (Data->JointIsGrounding[MocapApi::JointTag_LeftHand] ? 1.0f : 0.0f),
+                });
 
                 QualifiedTime = GetTimecode(Data->ReceiveTime);
 
@@ -167,7 +184,7 @@ void FMocapAppClient::PollEvents()
                 {
                     FrameData.Transforms.Add(FTransform(Data->LocalRotation[i], Data->LocalPositions[i]));
                 }
-                
+
                 FName AvatarSubjectName = Data->Name;
                 if (!FMocapAppManager::GetInstance().IsNameUsedByApp(AvatarSubjectName, App))
                 {

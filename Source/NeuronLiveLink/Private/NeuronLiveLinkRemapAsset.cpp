@@ -1,6 +1,7 @@
 // Copyright 2021 Noitom Technology Co., Ltd. All Rights Reserved.
 #include "NeuronLiveLinkRemapAsset.h"
 #include "NeuronLiveLinkLog.h"
+#include "MocapApi.h"
 #include "LiveLinkTypes.h"
 #include "BonePose.h"
 #include "Engine/Blueprint.h"
@@ -58,12 +59,55 @@ void MakeCurveMapFromFrame (const FCompactPose& InPose, const FLiveLinkSkeletonS
 void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, const FLiveLinkSkeletonStaticData* InSkeletonData, const FLiveLinkAnimationFrameData* InFrameData, FCompactPose& OutPose )
 {
 	float Out_WithDisplacement = 0.0f;
-	const FName Property_WithDisplacement( TEXT( "WithDisplacement" ) );
+	const FName Property_WithDisplacement(TEXT("WithDisplacement"));
+	const FName Property_Hips_Grounding(TEXT("Hips_Grounding"));
+	const FName Property_RightFoot_Grounding(TEXT("RightFoot_Grounding"));
+	const FName Property_LeftFoot_Grounding(TEXT("LeftFoot_Grounding"));
+	const FName Property_Head_Grounding(TEXT("Head_Grounding"));
+	const FName Property_RightHand_Grounding(TEXT("RightHand_Grounding"));
+	const FName Property_LeftHand_Grounding(TEXT("LeftHand_Grounding"));
+	bool HipsGrounding = false;
+	bool RightFootGrounding = false;
+	bool LeftFootGrounding = false;
+	bool HeadGrounding = false;
+	bool RightHandGrounding = false;
+	bool LeftHandGrounding = false;
+
+	float PropVal = 0;
+	
 	if (!InSkeletonData->FindPropertyValue( *InFrameData, Property_WithDisplacement, Out_WithDisplacement ))
 	{
 		AN_LOG( Error, TEXT( "Cannot find [WithDisplacement] property in Axis Studio BVH stream data." ) );
 		return; // lihongce fix bug
 	}
+
+	if (InSkeletonData->FindPropertyValue(*InFrameData, Property_Hips_Grounding, PropVal))
+	{
+		HipsGrounding = PropVal > 0.5f;
+	}
+	
+	if (InSkeletonData->FindPropertyValue(*InFrameData, Property_RightFoot_Grounding, PropVal))
+	{
+		RightFootGrounding = PropVal > 0.5f;
+	}
+	if (InSkeletonData->FindPropertyValue(*InFrameData, Property_LeftFoot_Grounding, PropVal))
+	{
+		LeftFootGrounding = PropVal > 0.5f;
+	}
+	if (InSkeletonData->FindPropertyValue(*InFrameData, Property_Head_Grounding, PropVal))
+	{
+		HeadGrounding = PropVal > 0.5f;
+	}
+	if (InSkeletonData->FindPropertyValue(*InFrameData, Property_RightHand_Grounding, PropVal))
+	{
+		RightHandGrounding = PropVal > 0.5f;
+	}
+	if (InSkeletonData->FindPropertyValue(*InFrameData, Property_LeftHand_Grounding, PropVal))
+	{
+		LeftHandGrounding = PropVal > 0.5f;
+	}
+
+	//AN_LOG(Log, TEXT("Grounding L %d R %d"), LeftFootGrounding ? 1 : 0, RightFootGrounding ? 1 : 0);
 
 	bool bWithDisplacement = bUseDisplacementData && (Out_WithDisplacement > 0.5f);
 
