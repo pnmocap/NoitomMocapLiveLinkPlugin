@@ -14,6 +14,12 @@
 #endif
 #include "NeuronLiveLinkRemapAsset.generated.h"
 
+struct FMocapHipPosData
+{
+	FVector Loc;
+	float Dt;
+};
+
 /*
 * UNeuronLiveLinkRemapAsset  live link remap asset for retargeting
 */
@@ -104,7 +110,8 @@ protected:
 	bool LeftFootGroundingPrevFrame;
 	FVector LeftFootLockLoc;
 	FVector CSHipLoc;
-	TMRUArray<FVector> HipSpeedInCS;
+	FVector HipVelocity;
+	TMRUArray<FMocapHipPosData> HipPosCacheCS;
 	TArray<float> HipSpeedWeight;
 	float OffsetToFloor;
 };

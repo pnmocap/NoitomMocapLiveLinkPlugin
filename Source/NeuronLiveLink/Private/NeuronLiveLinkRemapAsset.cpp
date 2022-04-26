@@ -20,12 +20,8 @@ UNeuronLiveLinkRemapAsset::UNeuronLiveLinkRemapAsset (const FObjectInitializer& 
 #endif
 	RightFootGroundingPrevFrame = false;
 	LeftFootGroundingPrevFrame = false;
-	HipSpeedWeight = { 0.6, 0.3, 0.1};
 	
-	// normalize HipSpeedWeight to make sure sum is 1
-	//HipSpeedWeight
-
-	HipSpeedInCS.MaxItems = HipSpeedWeight.Num();
+	HipPosCacheCS.MaxItems = 10;
 }
 
 void UNeuronLiveLinkRemapAsset::BeginDestroy ()
@@ -116,7 +112,7 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 		LeftHandGrounding = PropVal > 0.5f;
 	}
 
-	AN_LOG(Log, TEXT("Grounding L %d R %d"), LeftFootGrounding ? 1 : 0, RightFootGrounding ? 1 : 0);
+	//AN_LOG(Log, TEXT("Grounding L %d R %d"), LeftFootGrounding ? 1 : 0, RightFootGrounding ? 1 : 0);
 
 	bool bWithDisplacement = bUseDisplacementData && (Out_WithDisplacement > 0.5f);
 
@@ -442,7 +438,7 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 				OffsetToFloor = -V.Z;
 				RightFootLockLoc = FVector(V.X, V.Y, 0);
 			}
-			if (LeftFootGrounding && LeftFootGroundingPrevFrame)
+			if (LeftFootGrounding && !LeftFootGroundingPrevFrame)
 			{
 				FTransform T = CSPose.GetComponentSpaceTransform(CPLeftFootIndex);
 				FVector V = T.GetTranslation();
@@ -466,13 +462,16 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 			}
 			else
 			{
-				Idx = CPRightFootIndex;
-				FTransform T = CSPose.GetComponentSpaceTransform(CPRightFootIndex);
-				FVector V = T.GetTranslation();
-				DstHip = FVector(V.X, V.Y, V.Z + OffsetToFloor);
+				//Idx = CPRightFootIndex;
+				//FTransform T = CSPose.GetComponentSpaceTransform(CPRightFootIndex);
+				//FVector V = T.GetTranslation();
+				//DstHip = FVector(V.X, V.Y, V.Z + OffsetToFloor);
+				HipPosCacheCS.Empty();
+				CSHipLoc += FVector(HipVelocity.X, HipVelocity.Y, 0) * DeltaTime;
+				AN_LOG(Log, TEXT("Floating Speed %s Loc %s"), *HipVelocity.ToString(), *CSHipLoc.ToString());
 			}
 
-			//if (RightFootGrounding || LeftFootGrounding)
+			if (RightFootGrounding || LeftFootGrounding)
 			{
 				while (Idx != INDEX_NONE)
 				{
@@ -493,13 +492,58 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 					DstHip += Dir * Lens[i-1];
 				}
 
-				FTransform T = CSPose.GetComponentSpaceTransform(CPHipIndex);
-				T.SetTranslation(DstHip);
-				CSPose.SetComponentSpaceTransform(CPHipIndex, T);
-				T = CSPose.GetLocalSpaceTransform(CPHipIndex);
-				CSHipLoc = (T.GetTranslation());
+				//bool ReFillSpeed = (RightFootGrounding && !RightFootGroundingPrevFrame)
+				//	|| (LeftFootGrounding && !LeftFootGroundingPrevFrame);
+				//if (ReFillSpeed)
+				//{
+				//	CSHipLoc = DstHip;
+				//	for (int i = 0; i < HipSpeedInCS.MaxItems; ++i)
+				//	{
+				//		HipSpeedInCS.Add(FVector::ZeroVector);
+				//	}
+				//}
+
+				CSHipLoc = DstHip;
+
+				const float MinDelta = 1.f / 60;
+				if (HipPosCacheCS.Num() == 0)
+				{
+					HipPosCacheCS.Add({ DstHip , DeltaTime });
+				}
+				else if (HipPosCacheCS[0].Dt >= MinDelta)
+				{
+					HipPosCacheCS.Add({ DstHip , DeltaTime });
+					int Num = HipPosCacheCS.Num();
+					if (Num > 2)
+					{
+						Num = 3;
+						HipVelocity = (HipPosCacheCS[1].Loc - HipPosCacheCS[2].Loc) / (HipPosCacheCS[1].Dt);
+						for (int i = 2; i < Num - 1; ++i)
+						{
+							HipVelocity += (HipPosCacheCS[i].Loc - HipPosCacheCS[i + 1].Loc) * (Num - i) / (HipPosCacheCS[i].Dt);
+						}
+						//HipVelocity /= Num * (Num - 1) / 2;
+					}
+					else
+					{
+						HipVelocity = FVector::ZeroVector;
+					}
+				}
+				else
+				{
+					HipPosCacheCS[0].Loc = DstHip;
+					HipPosCacheCS[0].Dt += DeltaTime;
+				}
+
+				
+				AN_LOG(Log, TEXT("Grounding Speed %s Loc %s dt %f"), *HipVelocity.ToString(), *CSHipLoc.ToString(), DeltaTime);
 			}
-			OutPose[CPHipIndex].SetTranslation(CSHipLoc);
+
+			FTransform T = CSPose.GetComponentSpaceTransform(CPHipIndex);
+			T.SetTranslation(CSHipLoc);
+			CSPose.SetComponentSpaceTransform(CPHipIndex, T);
+			T = CSPose.GetLocalSpaceTransform(CPHipIndex);
+			OutPose[CPHipIndex].SetTranslation(T.GetTranslation());
 		}
 		RightFootGroundingPrevFrame = RightFootGrounding;
 		LeftFootGroundingPrevFrame = LeftFootGrounding;
