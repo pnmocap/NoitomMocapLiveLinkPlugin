@@ -597,8 +597,8 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
 
     if (Name.IsEmpty())
     {
-        //ReturnFalseIFError("Avatar Name is Empty");
-        Name = TEXT("AvatarNameisEmpty");
+        //ReturnFalseIFError("Avatar Name Is Empty");
+        Name = TEXT("AvatarNameIsEmpty");
     }
     
     FMocapAvatar& avatar = Avatars.FindOrAdd(Name);

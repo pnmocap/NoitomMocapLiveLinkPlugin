@@ -2,6 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Containers/MRUArray.h"
 #include "Roles/LiveLinkAnimationTypes.h"
 #include "Animation/AnimTypes.h"
 #include "NeuronBoneMappingInfo.h"
@@ -97,4 +98,13 @@ protected:
 
 	UPROPERTY ()
 		FTransform HipsParentsTransform = FTransform::Identity;
+
+	bool RightFootGroundingPrevFrame;
+	FVector RightFootLockLoc;
+	bool LeftFootGroundingPrevFrame;
+	FVector LeftFootLockLoc;
+	FVector CSHipLoc;
+	TMRUArray<FVector> HipSpeedInCS;
+	TArray<float> HipSpeedWeight;
+	float OffsetToFloor;
 };

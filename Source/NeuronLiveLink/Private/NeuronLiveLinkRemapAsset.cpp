@@ -2,6 +2,7 @@
 #include "NeuronLiveLinkRemapAsset.h"
 #include "NeuronLiveLinkLog.h"
 #include "MocapApi.h"
+#include "MocapStructs.h"
 #include "LiveLinkTypes.h"
 #include "BonePose.h"
 #include "Engine/Blueprint.h"
@@ -17,6 +18,14 @@ UNeuronLiveLinkRemapAsset::UNeuronLiveLinkRemapAsset (const FObjectInitializer& 
 		OnBlueprintCompiledDelegate = Blueprint->OnCompiled( ).AddUObject( this, &UNeuronLiveLinkRemapAsset::OnBlueprintClassCompiled );
 	}
 #endif
+	RightFootGroundingPrevFrame = false;
+	LeftFootGroundingPrevFrame = false;
+	HipSpeedWeight = { 0.6, 0.3, 0.1};
+	
+	// normalize HipSpeedWeight to make sure sum is 1
+	//HipSpeedWeight
+
+	HipSpeedInCS.MaxItems = HipSpeedWeight.Num();
 }
 
 void UNeuronLiveLinkRemapAsset::BeginDestroy ()
@@ -107,7 +116,7 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 		LeftHandGrounding = PropVal > 0.5f;
 	}
 
-	//AN_LOG(Log, TEXT("Grounding L %d R %d"), LeftFootGrounding ? 1 : 0, RightFootGrounding ? 1 : 0);
+	AN_LOG(Log, TEXT("Grounding L %d R %d"), LeftFootGrounding ? 1 : 0, RightFootGrounding ? 1 : 0);
 
 	bool bWithDisplacement = bUseDisplacementData && (Out_WithDisplacement > 0.5f);
 
@@ -375,7 +384,9 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 					{
 						FVector Dest_HipsPosition_InCS = BoneTransform.GetLocation( );
 						FTransform Dest_HipsTransform_InCS( RotationInCS, Dest_HipsPosition_InCS );
-						OutPose[CPBoneIndex] = Dest_HipsTransform_InCS * HipsParentsTransform.Inverse( );
+						FTransform Dest = Dest_HipsTransform_InCS * HipsParentsTransform.Inverse();
+						//Dest.SetTranslation(Dest.GetTranslation() + FVector(0, 0, -30));
+						OutPose[CPBoneIndex] = Dest;// Dest_HipsTransform_InCS* HipsParentsTransform.Inverse();
 						continue;
 					}
 
@@ -408,6 +419,100 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 			}
 		}
 	}
+
+	int RightFootBoneIndex = MocapApi::JointTag_RightFoot;
+	int LeftFootBoneIndex = MocapApi::JointTag_LeftFoot;
+	FName RightFootBoneName = TransformedBoneNames[RightFootBoneIndex];
+	FName LeftFootBoneName = TransformedBoneNames[LeftFootBoneIndex];
+	int32 RightFootMeshIndex = OutPose.GetBoneContainer().GetPoseBoneIndexForBoneName(RightFootBoneName);
+	int32 LeftFootMeshIndex = OutPose.GetBoneContainer().GetPoseBoneIndexForBoneName(LeftFootBoneName);
+	if (RightFootMeshIndex != INDEX_NONE || LeftFootMeshIndex != INDEX_NONE)
+	{
+		FCompactPoseBoneIndex CPRightFootIndex = OutPose.GetBoneContainer().MakeCompactPoseIndex(FMeshPoseBoneIndex(RightFootMeshIndex));
+		FCompactPoseBoneIndex CPLeftFootIndex = OutPose.GetBoneContainer().MakeCompactPoseIndex(FMeshPoseBoneIndex(LeftFootMeshIndex));
+		FCompactPoseBoneIndex CPHipIndex = OutPose.GetBoneContainer().MakeCompactPoseIndex(FMeshPoseBoneIndex(MocapApi::JointTag_Hips));
+		//if (CPRightFootIndex != INDEX_NONE)
+		{
+			FCSPose<FCompactPose> CSPose;
+			CSPose.InitPose(OutPose);
+			if (RightFootGrounding && !RightFootGroundingPrevFrame)
+			{
+				FTransform T = CSPose.GetComponentSpaceTransform(CPRightFootIndex);
+				FVector V = T.GetTranslation();
+				OffsetToFloor = -V.Z;
+				RightFootLockLoc = FVector(V.X, V.Y, 0);
+			}
+			if (LeftFootGrounding && LeftFootGroundingPrevFrame)
+			{
+				FTransform T = CSPose.GetComponentSpaceTransform(CPLeftFootIndex);
+				FVector V = T.GetTranslation();
+				OffsetToFloor = -V.Z;
+				LeftFootLockLoc = FVector(V.X, V.Y, 0);
+			}
+
+			FCompactPoseBoneIndex Idx(INDEX_NONE);
+			FVector DstHip = RightFootLockLoc;
+			TArray<FVector> Points;
+			TArray<float> Lens;
+			if (RightFootGrounding)
+			{
+				Idx = CPRightFootIndex;
+				DstHip = RightFootLockLoc;
+			}
+			else if (LeftFootGrounding)
+			{
+				Idx = CPLeftFootIndex;
+				DstHip = LeftFootLockLoc;
+			}
+			else
+			{
+				Idx = CPRightFootIndex;
+				FTransform T = CSPose.GetComponentSpaceTransform(CPRightFootIndex);
+				FVector V = T.GetTranslation();
+				DstHip = FVector(V.X, V.Y, V.Z + OffsetToFloor);
+			}
+
+			//if (RightFootGrounding || LeftFootGrounding)
+			{
+				while (Idx != INDEX_NONE)
+				{
+					Points.Add(CSPose.GetComponentSpaceTransform(Idx).GetTranslation());
+					int32 MeshIndex = BoneContainerRef.MakeMeshPoseIndex(Idx).GetInt();
+					Idx = OutPose.GetParentBoneIndex(Idx);
+					if (Idx != INDEX_NONE)
+					{
+						int32 ParentMeshIndex = BoneContainerRef.MakeMeshPoseIndex(Idx).GetInt();
+						Lens.Add(FVector::Distance(WorldPositions[ParentMeshIndex], WorldPositions[MeshIndex]));
+					}
+				}
+				
+				for (int i = 1; i < Points.Num(); ++i)
+				{
+					FVector Dir = (Points[i] - Points[i - 1]);
+					Dir.Normalize();
+					DstHip += Dir * Lens[i-1];
+				}
+
+				FTransform T = CSPose.GetComponentSpaceTransform(CPHipIndex);
+				T.SetTranslation(DstHip);
+				CSPose.SetComponentSpaceTransform(CPHipIndex, T);
+				T = CSPose.GetLocalSpaceTransform(CPHipIndex);
+				CSHipLoc = (T.GetTranslation());
+			}
+			OutPose[CPHipIndex].SetTranslation(CSHipLoc);
+		}
+		RightFootGroundingPrevFrame = RightFootGrounding;
+		LeftFootGroundingPrevFrame = LeftFootGrounding;
+	}
+
+	//if (LeftFootMeshIndex != INDEX_NONE)
+	//{
+	//	FCompactPoseBoneIndex CPLeftFootIndex = OutPose.GetBoneContainer().MakeCompactPoseIndex(FMeshPoseBoneIndex(LeftFootMeshIndex));
+	//	if (CPLeftFootIndex != INDEX_NONE)
+	//	{
+	//		OutPose[CPLeftFootIndex] = FTransform(FQuat(FRotator(0, 45, 0)), FVector(-20, 0, 0));// RightFootBoneTransform;
+	//	}
+	//}
 }
 
 void UNeuronLiveLinkRemapAsset::BuildPoseAndCurveFromBaseData( float DeltaTime, const FLiveLinkBaseStaticData* InBaseStaticData, const FLiveLinkBaseFrameData* InBaseFrameData, FCompactPose& OutPose, FBlendedCurve& OutCurve )
