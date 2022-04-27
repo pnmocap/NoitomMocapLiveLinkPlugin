@@ -229,6 +229,11 @@ void UMocapApp::Disconnect()
     AppHandle = 0;
     AppHandleInternal = TEXT("0");
     IsConnecting = false;
+    Trackers.Empty();
+    RigidBodies.Empty();
+    Avatars.Empty();
+    QueuedCommands.Empty();
+    CommandsHistory.Empty();
 
     FMocapAppManager::GetInstance().RemoveMocapApp(this);
     UE_LOG(LogMocapApi, Log, TEXT("App %s Disconnect."),
@@ -293,11 +298,12 @@ bool UMocapApp::PollEvents()
                 HandleCommandReplyEvent(e.eventData.commandRespond._commandHandle, e.eventData.commandRespond._replay);
             }
             else if (e.eventType == MocapApi::MCPEvent_Error) {
-                // handle error, just output the error, so use can se it
+                // handle error, just output the error, so use can see it
                 LastError = e.eventData.systemError.error;
                 ExtraErrorMsg = FString();
                 UE_LOG(LogMocapApi, Warning, TEXT("Got Error Event %d: %s"), LastError, *GetLastErrorMessage());
-                LastError = MocapApi::Error_None;
+                //LastError = MocapApi::Error_None;-
+                IsReady = !((LastError == MocapApi::Error_ServerNotReady) || (LastError == MocapApi::Error_ClientNotReady) || (LastError == MocapApi::Error_AddressInUse));
             }
             else if (e.eventType == MocapApi::MCPEvent_SensorModulesUpdated) {
                 // ignore
@@ -310,8 +316,12 @@ bool UMocapApp::PollEvents()
                 LastError = INT_MAX;
                 ExtraErrorMsg = FString::Printf(TEXT("Logic Should not go here, event type %X in PollEvents"), e.eventType);
                 UE_LOG(LogMocapApi, Error, TEXT("Got Internal Error %d: %s"), LastError, *GetLastErrorMessage());
-                LastError = MocapApi::Error_None;
+                //LastError = MocapApi::Error_None;
             }
+        }
+        if (!IsReady && LastError == 0)
+        {
+            IsReady = true;
         }
     }
     return hasUnhandledEvents;
@@ -429,15 +439,14 @@ const FMocapAvatar* UMocapApp::GetAvatarData(const FString& AvatarName)
     return avatar;
 }
 
-const FString UMocapApp::GetLastErrorMessage()
+void UMocapApp::GetLastErrorStr(int ErrorId, FString& LastErrorStr)
 {
-    //LastError enum + ExtraErrorMsg
-    FString LastErrorStr;
-    MocapApi::EMCPError Err = (MocapApi::EMCPError)(LastError);
+    MocapApi::EMCPError Err = (MocapApi::EMCPError)(ErrorId);
     switch (Err)
     {
     case MocapApi::Error_None:
-        return TEXT("");
+        LastErrorStr = TEXT("");
+        break;
     case MocapApi::Error_MoreEvent:
         LastErrorStr = TEXT("Error_MoreEvent");
         break;
@@ -505,12 +514,29 @@ const FString UMocapApp::GetLastErrorMessage()
         LastErrorStr = FString::Printf(TEXT("Error_Unknown_%d"), Err);
         break;
     }
+}
+
+const FString UMocapApp::GetLastErrorMessage()
+{
+    //LastError enum + ExtraErrorMsg
+    FString LastErrorStr;
+    GetLastErrorStr(LastError, LastErrorStr);
     return FString::Printf(TEXT("%s: %s"), *LastErrorStr, *ExtraErrorMsg);
+}
+
+const int UMocapApp::GetLastErrorId()
+{
+    return LastError;
 }
 
 void UMocapApp::QueueMocapCommand(const FMocapServerCommand& Cmd)
 {
     QueuedCommands.Add(Cmd);
+}
+
+bool UMocapApp::HasMocapCommandInQueue()
+{
+    return QueuedCommands.Num() > 0;
 }
 
 bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
@@ -844,11 +870,12 @@ bool UMocapApp::HandleCommandReplyEvent(uint64 CommandHandle, int replay)
 
         if (Cmd && Cmd->Cmd == EMCCommandType::CalibrateMotion)
         {
+            const uint32_t maxPoseCnt = 256;
             uint32_t step = 0;
             uint32_t substep = 0;
             uint32_t subsubstep = 0;
-            uint32_t lenOfPose = 256;
-            char poseStr[256];
+            uint32_t lenOfPose = maxPoseCnt;
+            char poseStr[maxPoseCnt+1];
 
             if (Cmd->ProgressHandle == 0)
             {
@@ -862,7 +889,7 @@ bool UMocapApp::HandleCommandReplyEvent(uint64 CommandHandle, int replay)
                 mcpError = CalibrateMotionProgress->GetCalibrateMotionProgressCountOfSupportPoses(
                     &countOfSupportPoses, _calibrateMotionProgressHandle);
                 for (uint32_t i = 0; i < countOfSupportPoses; ++i) {
-                    lenOfPose = 256;
+                    lenOfPose = maxPoseCnt;
                     mcpError = CalibrateMotionProgress->GetCalibrateMotionProgressNameOfSupportPose(
                         poseStr, &lenOfPose, i, _calibrateMotionProgressHandle);
                     poseStr[lenOfPose] = '\0';
@@ -900,8 +927,8 @@ bool UMocapApp::HandleCommandReplyEvent(uint64 CommandHandle, int replay)
                 //ASSERT_TRUE(false);
                 break;
             }
-            FString ProgressString = FString::Printf(TEXT("%s%s:%d:%d:%d"),
-                *PoseName, *PoseSubStepName, step, substep, subsubstep);
+            FString ProgressString = FString::Printf(TEXT("%s step %d %s:%d:%d:%d"),
+                *PoseName, step, *PoseSubStepName, step, substep, subsubstep);
 
             Cmd->OnProgress.Broadcast(Cmd->ProgressChain, ProgressString, PoseName, step, substep, subsubstep);
         }
@@ -1008,7 +1035,7 @@ void UMocapApp::DumpData()
         for (auto& Cmd : QueuedCommands)
         {
             FString CmdName = EMCCommandTypeEnum->GetValueAsString(Cmd.Cmd);
-            UE_LOG(LogMocapApi, Log, TEXT("Cmd %s handle %u SendTime %lld"), *CmdName, Cmd.CommandHandle, Cmd.SendTime);
+            UE_LOG(LogMocapApi, Log, TEXT("Cmd %s handle %lld SendTime %lld"), *CmdName, Cmd.CommandHandle, Cmd.SendTime);
             if (Cmd.Params.Num() > 0)
             {
                 for (auto& It : Cmd.Params)
@@ -1025,7 +1052,7 @@ void UMocapApp::DumpData()
         for (auto& Cmd : CommandsHistory)
         {
             FString CmdName = EMCCommandTypeEnum->GetValueAsString(Cmd.Cmd);
-            UE_LOG(LogMocapApi, Log, TEXT("Cmd %s handle %u SendTime %lld"), *CmdName, Cmd.CommandHandle, Cmd.SendTime);
+            UE_LOG(LogMocapApi, Log, TEXT("Cmd %s handle %lld SendTime %lld"), *CmdName, Cmd.CommandHandle, Cmd.SendTime);
             if (Cmd.Params.Num() > 0)
             {
                 for (auto& It : Cmd.Params)

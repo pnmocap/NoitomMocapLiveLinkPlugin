@@ -49,6 +49,18 @@ class NEURONLIVELINK_API UNeuronLiveLinkBPLibrary : public UBlueprintFunctionLib
 	UFUNCTION( BlueprintCallable, Category = "NeuronLiveLink" )
 		static int32 GetNeuronParentJoint( int32 JointID );
 
+	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
+		static void GetMocapAppNames(TArray<FName>& AppNames);
+
+	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
+		static void RemoveAllMocapLivelinkSource();
+
+	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
+		static void GetMocapAppStatus(FName AppName, bool& IsConnected, bool& IsReady);
+
+	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
+		static void GetAllMocapLivelinkSourceStatus(TArray<FString>& StatusArr);
+
 	UFUNCTION( BlueprintCallable, Category = "NeuronLiveLink" )
 		static void GetAvatarNames( TArray<FName>& AvatarNames );
 
@@ -70,10 +82,13 @@ class NEURONLIVELINK_API UNeuronLiveLinkBPLibrary : public UBlueprintFunctionLib
 	 * And the data recognize the positive x-axis of UE4 as the forward direction.
 	 */
 	UFUNCTION( BlueprintCallable, Category = "NeuronLiveLink" )
-		static void GetNeuronFrameInUE4( const FName& AvatarName, bool& WithDisplacement, TArray<FVector>& Locations, TArray<FQuat>& Rotations );
+	static void GetNeuronFrameInUE4( const FName& AvatarName, bool& WithDisplacement, TArray<FVector>& Locations, TArray<FQuat>& Rotations );
 
 	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
-		static FMocapServerCommand MakeMocapCommand(EMCCommandType Cmd);
+	static FMocapServerCommand MakeMocapCommand(EMCCommandType Cmd);
+
+	UFUNCTION(BlueprintCallable, meta = (Name = "ParamDeviceRadio", Val = 2471), Category = "NeuronLiveLink")
+	static void ClearMocapCmdParams(UPARAM(ref) FMocapServerCommand& Cmd);
 
 	UFUNCTION(BlueprintCallable, meta = (Name = "ParamDeviceRadio", Val = 2471), Category = "NeuronLiveLink")
 	static void BuildMocapCmdParamInt(UPARAM(ref) FMocapServerCommand& Cmd, EMCCommandParamName Name, int Val);
@@ -85,8 +100,14 @@ class NEURONLIVELINK_API UNeuronLiveLinkBPLibrary : public UBlueprintFunctionLib
 	static void BuildMocapCmdParamStopCatpureExtraFlag(UPARAM(ref) FMocapServerCommand& Cmd, EMCCommandExtraFlag flag);
 
 	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
-	static void SetMocapCmdPProgressHandler(UPARAM(ref) FMocapServerCommand& Cmd, UObject* Obj, FName Function);
+	static void SetMocapCmdProgressHandler(UPARAM(ref) FMocapServerCommand& Cmd, UObject* Obj, FName Function);
 	
+	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
+	static bool HasMocapCommandInQueue(FName AppName);
+
 	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContextObject", Latent = "", LatentInfo = "LatentInfo"), Category = "NeuronLiveLink")
-	static void SendNeuronCommand(const UObject* WorldContextObject, FName AppName, const FMocapServerCommand& Cmd, FLatentActionInfo LatentInfo, int& Result, FString& ResultStr);
+	static void SendNeuronCommand(const UObject* WorldContextObject, FName AppName, UPARAM(ref) FMocapServerCommand& Cmd, FLatentActionInfo LatentInfo, int& Result, FString& ResultStr);
+
+	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
+	static void DumpAllMocapApp();
 };

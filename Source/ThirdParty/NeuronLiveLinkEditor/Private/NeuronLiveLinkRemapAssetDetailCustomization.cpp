@@ -201,6 +201,7 @@ void FNeuronLiveLinkRemapAssetDetailCustomization::OnEnableMappingCheckboxStateC
     if (EditedObject.IsValid())
     {
         UNeuronLiveLinkRemapAsset* SelectedPtr = Cast<UNeuronLiveLinkRemapAsset>(EditedObject.Get());
+        bool OldState = SelectedPtr->bEnableBoneMapping;
         SelectedPtr->bEnableBoneMapping = Enabled;
         for (auto& W : BoneMappingWidgets)
         {
@@ -211,6 +212,10 @@ void FNeuronLiveLinkRemapAssetDetailCustomization::OnEnableMappingCheckboxStateC
             }
         }
         SkeletonPickerComboButton->SetEnabled(Enabled);
+        if (OldState != Enabled)
+        {
+            SelectedPtr->Modify(true);
+        }
     }
 }
 

@@ -52,7 +52,11 @@ bool FMocapAppManager::RemoveMocapApp(UMocapApp* App)
 
 UMocapApp* FMocapAppManager::GetMocapAppByName(FName AppName)
 {
-    return *RunningApps.Find(AppName);
+    if (AppName != NAME_None)
+    {
+        return *RunningApps.Find(AppName);
+    }
+    return nullptr;
 }
 
 void FMocapAppManager::EachRunningApp(MocapAppVisitor& Visitor)
