@@ -20,8 +20,9 @@ UNeuronLiveLinkRemapAsset::UNeuronLiveLinkRemapAsset (const FObjectInitializer& 
 #endif
 	RightFootGroundingPrevFrame = false;
 	LeftFootGroundingPrevFrame = false;
-	
-	HipPosCacheCS.MaxItems = 10;
+
+	HipPosCacheCS.Add({ FVector::ZeroVector, 0 });
+	HipPosCacheCS.Add({ FVector::ZeroVector, 0 });
 }
 
 void UNeuronLiveLinkRemapAsset::BeginDestroy ()
@@ -466,8 +467,17 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 				//FTransform T = CSPose.GetComponentSpaceTransform(CPRightFootIndex);
 				//FVector V = T.GetTranslation();
 				//DstHip = FVector(V.X, V.Y, V.Z + OffsetToFloor);
-				HipPosCacheCS.Empty();
+				//HipPosCacheCS.Empty();
+				//const float MinDelta = 1.f / 20;
+				//if (HipPosCacheCS.Num() > 2 && HipPosCacheCS[0].Dt > 0 && HipPosCacheCS[0].Dt < MinDelta)
+				//{
+				//	HipVelocity = (HipPosCacheCS[0].Loc - HipPosCacheCS[2].Loc) / (HipPosCacheCS[0].Dt+ HipPosCacheCS[1].Dt);
+				//	AN_LOG(Log, TEXT("Floating new Speed %s"), *HipVelocity.ToString());
+				//}
 				CSHipLoc += FVector(HipVelocity.X, HipVelocity.Y, 0) * DeltaTime;
+				HipPosCacheCS[HipPosCacheCSIndex] = { CSHipLoc, 0, };
+				//FTransform T = CSPose.GetComponentSpaceTransform(CPHipIndex);
+				//CSHipLoc = FMath::Lerp
 				AN_LOG(Log, TEXT("Floating Speed %s Loc %s"), *HipVelocity.ToString(), *CSHipLoc.ToString());
 			}
 
@@ -492,51 +502,21 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 					DstHip += Dir * Lens[i-1];
 				}
 
-				//bool ReFillSpeed = (RightFootGrounding && !RightFootGroundingPrevFrame)
-				//	|| (LeftFootGrounding && !LeftFootGroundingPrevFrame);
-				//if (ReFillSpeed)
-				//{
-				//	CSHipLoc = DstHip;
-				//	for (int i = 0; i < HipSpeedInCS.MaxItems; ++i)
-				//	{
-				//		HipSpeedInCS.Add(FVector::ZeroVector);
-				//	}
-				//}
-
 				CSHipLoc = DstHip;
-
-				const float MinDelta = 1.f / 60;
-				if (HipPosCacheCS.Num() == 0)
+				const float MinDelta = 1.f / 20;
 				{
-					HipPosCacheCS.Add({ DstHip , DeltaTime });
-				}
-				else if (HipPosCacheCS[0].Dt >= MinDelta)
-				{
-					HipPosCacheCS.Add({ DstHip , DeltaTime });
-					int Num = HipPosCacheCS.Num();
-					if (Num > 2)
+					HipPosCacheCS[HipPosCacheCSIndex].Loc = DstHip;
+					HipPosCacheCS[HipPosCacheCSIndex].Dt += DeltaTime;
+					if (HipPosCacheCS[HipPosCacheCSIndex].Dt >= MinDelta)
 					{
-						Num = 3;
-						HipVelocity = (HipPosCacheCS[1].Loc - HipPosCacheCS[2].Loc) / (HipPosCacheCS[1].Dt);
-						for (int i = 2; i < Num - 1; ++i)
-						{
-							HipVelocity += (HipPosCacheCS[i].Loc - HipPosCacheCS[i + 1].Loc) * (Num - i) / (HipPosCacheCS[i].Dt);
-						}
-						//HipVelocity /= Num * (Num - 1) / 2;
-					}
-					else
-					{
-						HipVelocity = FVector::ZeroVector;
+						int NextIdx = (HipPosCacheCSIndex + 1) % 2;
+						HipVelocity = (HipPosCacheCS[HipPosCacheCSIndex].Loc - HipPosCacheCS[NextIdx].Loc) / (HipPosCacheCS[HipPosCacheCSIndex].Dt);
+						AN_LOG(Log, TEXT("Grounding new Speed %s Loc %s %s dt %f"), *HipVelocity.ToString(), *HipPosCacheCS[HipPosCacheCSIndex].Loc.ToString(), *HipPosCacheCS[NextIdx].Loc.ToString(), HipPosCacheCS[HipPosCacheCSIndex].Dt);
+						HipPosCacheCSIndex = NextIdx;
+						HipPosCacheCS[NextIdx].Dt = 0;
 					}
 				}
-				else
-				{
-					HipPosCacheCS[0].Loc = DstHip;
-					HipPosCacheCS[0].Dt += DeltaTime;
-				}
-
-				
-				AN_LOG(Log, TEXT("Grounding Speed %s Loc %s dt %f"), *HipVelocity.ToString(), *CSHipLoc.ToString(), DeltaTime);
+				//AN_LOG(Log, TEXT("Grounding Speed %s Loc %s dt %f"), *HipVelocity.ToString(), *CSHipLoc.ToString(), DeltaTime);
 			}
 
 			FTransform T = CSPose.GetComponentSpaceTransform(CPHipIndex);

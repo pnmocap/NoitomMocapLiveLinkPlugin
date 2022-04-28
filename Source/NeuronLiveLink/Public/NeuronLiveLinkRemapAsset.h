@@ -2,7 +2,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Containers/MRUArray.h"
 #include "Roles/LiveLinkAnimationTypes.h"
 #include "Animation/AnimTypes.h"
 #include "NeuronBoneMappingInfo.h"
@@ -111,7 +110,8 @@ protected:
 	FVector LeftFootLockLoc;
 	FVector CSHipLoc;
 	FVector HipVelocity;
-	TMRUArray<FMocapHipPosData> HipPosCacheCS;
+	TArray<FMocapHipPosData> HipPosCacheCS;
+	int HipPosCacheCSIndex = 0;
 	TArray<float> HipSpeedWeight;
 	float OffsetToFloor;
 };
