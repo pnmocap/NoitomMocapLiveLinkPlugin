@@ -466,15 +466,7 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 				//Idx = CPRightFootIndex;
 				FTransform T = CSPose.GetComponentSpaceTransform(CPHipIndex);
 				FVector V = T.GetTranslation();
-				//DstHip = FVector(V.X, V.Y, V.Z + OffsetToFloor);
-				//HipPosCacheCS.Empty();
-				//const float MinDelta = 1.f / 20;
-				//if (HipPosCacheCS.Num() > 2 && HipPosCacheCS[0].Dt > 0 && HipPosCacheCS[0].Dt < MinDelta)
-				//{
-				//	HipVelocity = (HipPosCacheCS[0].Loc - HipPosCacheCS[2].Loc) / (HipPosCacheCS[0].Dt+ HipPosCacheCS[1].Dt);
-				//	AN_LOG(Log, TEXT("Floating new Speed %s"), *HipVelocity.ToString());
-				//}
-				CSHipLoc += FVector(HipVelocity.X, HipVelocity.Y, 0) * DeltaTime;
+				CSHipLoc += FVector(HipVelocity.X, HipVelocity.Y, HipVelocity.Z-5*DeltaTime) * DeltaTime;
 				//CSHipLoc = FMath::Lerp(CSHipLoc, V, 0.8f);
 				HipPosCacheCS[HipPosCacheCSIndex] = { CSHipLoc, 0, };
 				//FTransform T = CSPose.GetComponentSpaceTransform(CPHipIndex);
