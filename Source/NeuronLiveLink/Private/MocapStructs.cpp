@@ -44,7 +44,8 @@ FMocapAvatar::FMocapAvatar()
 static std::unordered_map<EMCCommandParamName, std::function<MocapApi::EMCPError(MocapApi::IMCPCommand*, MocapApi::MCPCommandHandle_t, const FString&)>> CommandParamBuildMap;
 UMocapApp::UMocapApp()
 {
-    CommandsHistory.MaxItems = 16;
+    MaxCommandHistory = 16;
+    LastCommandHistoryIndex = 0;
     
     if (CommandParamBuildMap.empty())
     {
@@ -234,6 +235,7 @@ void UMocapApp::Disconnect()
     Avatars.Empty();
     QueuedCommands.Empty();
     CommandsHistory.Empty();
+    LastCommandHistoryIndex = 0;
 
     FMocapAppManager::GetInstance().RemoveMocapApp(this);
     UE_LOG(LogMocapApi, Log, TEXT("App %s Disconnect."),
@@ -975,7 +977,15 @@ void UMocapApp::PrepareAndSendMocapCommand(MocapApi::IMCPApplication* mcpApplica
 
 void UMocapApp::PushCommandToHistory(const FMocapServerCommand& Cmd)
 {
-    CommandsHistory.Add(Cmd);
+    if (CommandsHistory.Num() < MaxCommandHistory)
+    {
+        CommandsHistory.Add(Cmd);
+    }
+    else
+    {
+        CommandsHistory[LastCommandHistoryIndex] = Cmd;
+    }
+    LastCommandHistoryIndex = (LastCommandHistoryIndex + 1) % MaxCommandHistory;
 }
 
 void UMocapApp::DumpData()
@@ -1049,8 +1059,11 @@ void UMocapApp::DumpData()
     if (CommandsHistory.Num() > 0)
     {
         UE_LOG(LogMocapApi, Log, TEXT("==== Commands History ===="));
-        for (auto& Cmd : CommandsHistory)
+        int CommandCnt = FMath::Min(MaxCommandHistory, CommandsHistory.Num());
+        for (int i = 0; i < CommandCnt; ++i)
         {
+            int realIndex = (LastCommandHistoryIndex + MaxCommandHistory - 1 - i) % MaxCommandHistory;
+            auto& Cmd = CommandsHistory[realIndex];
             FString CmdName = EMCCommandTypeEnum->GetValueAsString(Cmd.Cmd);
             UE_LOG(LogMocapApi, Log, TEXT("Cmd %s handle %lld SendTime %lld"), *CmdName, Cmd.CommandHandle, Cmd.SendTime);
             if (Cmd.Params.Num() > 0)

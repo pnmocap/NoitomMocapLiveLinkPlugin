@@ -2,7 +2,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Containers/MRUArray.h"
 #include "MocapStructs.generated.h"
 
 /**
@@ -466,7 +465,9 @@ private:
 	TMap<FString, FMocapRigidBody> RigidBodies;
     TMap<FString, FMocapAvatar> Avatars;
     TArray<FMocapServerCommand> QueuedCommands;
-    TMRUArray<FMocapServerCommand> CommandsHistory;
+    TArray<FMocapServerCommand> CommandsHistory;
+    int MaxCommandHistory;
+    int LastCommandHistoryIndex;
     static TArray<FName> AvatarBoneNames;
     static TArray<int> AvatarBoneParents;
     static void InitAvatarBuildinInfo();
