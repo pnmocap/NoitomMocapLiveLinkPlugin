@@ -464,8 +464,8 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 			else
 			{
 				//Idx = CPRightFootIndex;
-				//FTransform T = CSPose.GetComponentSpaceTransform(CPRightFootIndex);
-				//FVector V = T.GetTranslation();
+				FTransform T = CSPose.GetComponentSpaceTransform(CPHipIndex);
+				FVector V = T.GetTranslation();
 				//DstHip = FVector(V.X, V.Y, V.Z + OffsetToFloor);
 				//HipPosCacheCS.Empty();
 				//const float MinDelta = 1.f / 20;
@@ -475,10 +475,11 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 				//	AN_LOG(Log, TEXT("Floating new Speed %s"), *HipVelocity.ToString());
 				//}
 				CSHipLoc += FVector(HipVelocity.X, HipVelocity.Y, 0) * DeltaTime;
+				//CSHipLoc = FMath::Lerp(CSHipLoc, V, 0.8f);
 				HipPosCacheCS[HipPosCacheCSIndex] = { CSHipLoc, 0, };
 				//FTransform T = CSPose.GetComponentSpaceTransform(CPHipIndex);
 				//CSHipLoc = FMath::Lerp
-				AN_LOG(Log, TEXT("Floating Speed %s Loc %s"), *HipVelocity.ToString(), *CSHipLoc.ToString());
+				AN_LOG(Log, TEXT("Floating Speed %s Loc %s b %s"), *HipVelocity.ToString(), *CSHipLoc.ToString(), *V.ToString());
 			}
 
 			if (RightFootGrounding || LeftFootGrounding)
@@ -502,7 +503,7 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 					DstHip += Dir * Lens[i-1];
 				}
 
-				CSHipLoc = DstHip;
+				CSHipLoc = FMath::Lerp(CSHipLoc, DstHip, 0.8f); //DstHip;
 				const float MinDelta = 1.f / 20;
 				{
 					HipPosCacheCS[HipPosCacheCSIndex].Loc = DstHip;
