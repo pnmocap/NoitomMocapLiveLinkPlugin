@@ -73,6 +73,9 @@ class NEURONLIVELINK_API UNeuronLiveLinkRemapAsset : public ULiveLinkRetargetAss
     UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "AxisNeuron Live Link Retarget")
         bool bUseDisplacementData = true;
 
+	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "AxisNeuron Live Link Retarget")
+		bool bUseRootMotion = true;
+
 private:
 
 	void OnBlueprintClassCompiled (UBlueprint* TargetBlueprint);

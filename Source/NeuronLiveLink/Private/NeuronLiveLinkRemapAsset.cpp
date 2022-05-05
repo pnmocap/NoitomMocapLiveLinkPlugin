@@ -61,6 +61,35 @@ void MakeCurveMapFromFrame (const FCompactPose& InPose, const FLiveLinkSkeletonS
 	}
 }
 
+static FVector GetHipLocFromFootIndex(FCompactPose& OutPose, FCSPose<FCompactPose>& CSPose, const TArray<FVector>& WorldPositions, FCompactPoseBoneIndex Idx, const FVector& Loc) {
+	FVector DstHip = Loc;
+
+	const FBoneContainer& BoneContainerRef = OutPose.GetBoneContainer();
+
+	TArray<FVector> Points;
+	TArray<float> Lens;
+	while (Idx != INDEX_NONE)
+	{
+		Points.Add(CSPose.GetComponentSpaceTransform(Idx).GetTranslation());
+		int32 MeshIndex = BoneContainerRef.MakeMeshPoseIndex(Idx).GetInt();
+		Idx = OutPose.GetParentBoneIndex(Idx);
+		if (Idx != INDEX_NONE)
+		{
+			int32 ParentMeshIndex = BoneContainerRef.MakeMeshPoseIndex(Idx).GetInt();
+			Lens.Add(FVector::Distance(WorldPositions[ParentMeshIndex], WorldPositions[MeshIndex]));
+		}
+	}
+
+	for (int i = 1; i < Points.Num(); ++i)
+	{
+		FVector Dir = (Points[i] - Points[i - 1]);
+		Dir.Normalize();
+		DstHip += Dir * Lens[i - 1];
+	}
+
+	return DstHip;
+}
+
 //void UNeuronLiveLinkRemapAsset::BuildPoseForSubject (float DeltaTime, const FLiveLinkSubjectFrame& InFrame, FCompactPose& OutPose, FBlendedCurve& OutCurve)
 void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, const FLiveLinkSkeletonStaticData* InSkeletonData, const FLiveLinkAnimationFrameData* InFrameData, FCompactPose& OutPose )
 {
@@ -417,14 +446,21 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 		}
 	}
 
+	if (!bUseRootMotion)
+	{
+		return;
+	}
+
 	int RightFootBoneIndex = MocapApi::JointTag_RightFoot;
 	int LeftFootBoneIndex = MocapApi::JointTag_LeftFoot;
 	FName RightFootBoneName = TransformedBoneNames[RightFootBoneIndex];
 	FName LeftFootBoneName = TransformedBoneNames[LeftFootBoneIndex];
 	int32 RightFootMeshIndex = OutPose.GetBoneContainer().GetPoseBoneIndexForBoneName(RightFootBoneName);
 	int32 LeftFootMeshIndex = OutPose.GetBoneContainer().GetPoseBoneIndexForBoneName(LeftFootBoneName);
+
 	if (RightFootMeshIndex != INDEX_NONE || LeftFootMeshIndex != INDEX_NONE)
 	{
+		float FloorHeight = 0.f;
 		FCompactPoseBoneIndex CPRightFootIndex = OutPose.GetBoneContainer().MakeCompactPoseIndex(FMeshPoseBoneIndex(RightFootMeshIndex));
 		FCompactPoseBoneIndex CPLeftFootIndex = OutPose.GetBoneContainer().MakeCompactPoseIndex(FMeshPoseBoneIndex(LeftFootMeshIndex));
 		FCompactPoseBoneIndex CPHipIndex = OutPose.GetBoneContainer().MakeCompactPoseIndex(FMeshPoseBoneIndex(MocapApi::JointTag_Hips));
@@ -436,15 +472,15 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 			{
 				FTransform T = CSPose.GetComponentSpaceTransform(CPRightFootIndex);
 				FVector V = T.GetTranslation();
-				OffsetToFloor = -V.Z;
-				RightFootLockLoc = FVector(V.X, V.Y, 0);
+				OffsetToFloor = FloorHeight - V.Z;
+				RightFootLockLoc = FVector(V.X, V.Y, FloorHeight);
 			}
 			if (LeftFootGrounding && !LeftFootGroundingPrevFrame)
 			{
 				FTransform T = CSPose.GetComponentSpaceTransform(CPLeftFootIndex);
 				FVector V = T.GetTranslation();
-				OffsetToFloor = -V.Z;
-				LeftFootLockLoc = FVector(V.X, V.Y, 0);
+				OffsetToFloor = FloorHeight - V.Z;
+				LeftFootLockLoc = FVector(V.X, V.Y, FloorHeight);
 			}
 
 			FCompactPoseBoneIndex Idx(INDEX_NONE);
@@ -463,37 +499,42 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 			}
 			else
 			{
+				FTransform T = CSPose.GetComponentSpaceTransform(CPRightFootIndex);
+				DstHip = T.GetTranslation();
+				DstHip.Z += OffsetToFloor;
+				DstHip = GetHipLocFromFootIndex(OutPose, CSPose, WorldPositions, CPRightFootIndex, DstHip);
 				//Idx = CPRightFootIndex;
-				FTransform T = CSPose.GetComponentSpaceTransform(CPHipIndex);
-				FVector V = T.GetTranslation();
-				CSHipLoc += FVector(HipVelocity.X, HipVelocity.Y, HipVelocity.Z-5*DeltaTime) * DeltaTime;
-				//CSHipLoc = FMath::Lerp(CSHipLoc, V, 0.8f);
+				//FTransform T = CSPose.GetComponentSpaceTransform(CPHipIndex);
+				//FVector V = T.GetTranslation();
+				//CSHipLoc += FVector(HipVelocity.X, HipVelocity.Y, FMath::Max(HipVelocity.Z-5*DeltaTime, FloorHeight)) * DeltaTime;
+				CSHipLoc = FMath::Lerp(CSHipLoc, DstHip, 0.8f);
 				HipPosCacheCS[HipPosCacheCSIndex] = { CSHipLoc, 0, };
 				//FTransform T = CSPose.GetComponentSpaceTransform(CPHipIndex);
 				//CSHipLoc = FMath::Lerp
-				AN_LOG(Log, TEXT("Floating Speed %s Loc %s b %s"), *HipVelocity.ToString(), *CSHipLoc.ToString(), *V.ToString());
+				//AN_LOG(Log, TEXT("Floating Speed %s Loc %s b %s"), *HipVelocity.ToString(), *CSHipLoc.ToString(), *V.ToString());
 			}
 
 			if (RightFootGrounding || LeftFootGrounding)
 			{
-				while (Idx != INDEX_NONE)
-				{
-					Points.Add(CSPose.GetComponentSpaceTransform(Idx).GetTranslation());
-					int32 MeshIndex = BoneContainerRef.MakeMeshPoseIndex(Idx).GetInt();
-					Idx = OutPose.GetParentBoneIndex(Idx);
-					if (Idx != INDEX_NONE)
-					{
-						int32 ParentMeshIndex = BoneContainerRef.MakeMeshPoseIndex(Idx).GetInt();
-						Lens.Add(FVector::Distance(WorldPositions[ParentMeshIndex], WorldPositions[MeshIndex]));
-					}
-				}
-				
-				for (int i = 1; i < Points.Num(); ++i)
-				{
-					FVector Dir = (Points[i] - Points[i - 1]);
-					Dir.Normalize();
-					DstHip += Dir * Lens[i-1];
-				}
+				DstHip = GetHipLocFromFootIndex(OutPose, CSPose, WorldPositions, Idx, DstHip);
+				//while (Idx != INDEX_NONE)
+				//{
+				//	Points.Add(CSPose.GetComponentSpaceTransform(Idx).GetTranslation());
+				//	int32 MeshIndex = BoneContainerRef.MakeMeshPoseIndex(Idx).GetInt();
+				//	Idx = OutPose.GetParentBoneIndex(Idx);
+				//	if (Idx != INDEX_NONE)
+				//	{
+				//		int32 ParentMeshIndex = BoneContainerRef.MakeMeshPoseIndex(Idx).GetInt();
+				//		Lens.Add(FVector::Distance(WorldPositions[ParentMeshIndex], WorldPositions[MeshIndex]));
+				//	}
+				//}
+				//
+				//for (int i = 1; i < Points.Num(); ++i)
+				//{
+				//	FVector Dir = (Points[i] - Points[i - 1]);
+				//	Dir.Normalize();
+				//	DstHip += Dir * Lens[i-1];
+				//}
 
 				CSHipLoc = FMath::Lerp(CSHipLoc, DstHip, 0.8f); //DstHip;
 				const float MinDelta = 1.f / 20;
