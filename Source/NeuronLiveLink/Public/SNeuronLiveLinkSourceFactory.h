@@ -44,6 +44,7 @@ private:
 
 	void OnLocalEndpointChanged( const FText& NewValue, ETextCommit::Type );
 	void OnRemoteEndpointChanged( const FText& NewValue, ETextCommit::Type );
+	void OnPortChanged(const FText& NewValue, ETextCommit::Type);
 	void OnRotationOrderSelectionChanged( FRotationOrderComboItemType NewValue, ESelectInfo::Type );
 	FText GetCurrentItemLabel( ) const;
 

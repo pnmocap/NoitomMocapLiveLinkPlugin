@@ -145,6 +145,7 @@ void SNeuronLiveLinkSourceFactory::Construct( const FArguments& Args )
                                 [
                                     SAssignNew(LocalRecvPortText, SEditableTextBox)
                                     .Text(FText::FromString(LocalRecvPort))
+                                    .OnTextCommitted(this, &SNeuronLiveLinkSourceFactory::OnPortChanged)
                                 ]
                         ]
 					+ SVerticalBox::Slot()
@@ -227,7 +228,7 @@ void SNeuronLiveLinkSourceFactory::Construct( const FArguments& Args )
 		];
 }
 
-void SNeuronLiveLinkSourceFactory::OnRemoteEndpointChanged( const FText& NewValue, ETextCommit::Type )
+void SNeuronLiveLinkSourceFactory::OnRemoteEndpointChanged( const FText& NewValue, ETextCommit::Type CommitType)
 {
 	TSharedPtr<SEditableTextBox> EditabledTextPin = RemoteAddressText.Pin( );
 	if (EditabledTextPin.IsValid( ))
@@ -244,10 +245,26 @@ void SNeuronLiveLinkSourceFactory::OnRemoteEndpointChanged( const FText& NewValu
                 CheckBoxPin->SetIsChecked(ECheckBoxState::Unchecked);
             }
 		}
+		else
+		{
+			if (CommitType == ETextCommit::Type::OnEnter)
+			{
+				OnOkClicked();
+			}
+		}
 	}
 }
 
-void SNeuronLiveLinkSourceFactory::OnLocalEndpointChanged( const FText& NewValue, ETextCommit::Type )
+void SNeuronLiveLinkSourceFactory::OnPortChanged(const FText& NewValue, ETextCommit::Type CommitType)
+{
+	TSharedPtr<SEditableTextBox> EditabledTextPin = LocalRecvPortText.Pin();
+	if (CommitType == ETextCommit::Type::OnEnter && EditabledTextPin.IsValid() && NewValue.IsNumeric())
+	{
+		OnOkClicked();
+	}
+}
+
+void SNeuronLiveLinkSourceFactory::OnLocalEndpointChanged( const FText& NewValue, ETextCommit::Type CommitType)
 {
 	TSharedPtr<SEditableTextBox> EditabledTextPin = LocalAddressText.Pin( );
 	if (EditabledTextPin.IsValid( ))
@@ -263,6 +280,13 @@ void SNeuronLiveLinkSourceFactory::OnLocalEndpointChanged( const FText& NewValue
             {
                 CheckBoxPin->SetIsChecked(ECheckBoxState::Checked);
             }
+		}
+		else
+		{
+			if (CommitType == ETextCommit::Type::OnEnter)
+			{
+				OnOkClicked();
+			}
 		}
 	}
 }
