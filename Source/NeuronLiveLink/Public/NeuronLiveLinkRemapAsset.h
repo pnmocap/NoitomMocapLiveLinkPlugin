@@ -107,6 +107,7 @@ protected:
 	UPROPERTY ()
 		FTransform HipsParentsTransform = FTransform::Identity;
 
+	bool GroundingPoseInited;
 	bool RightFootGroundingPrevFrame;
 	FVector RightFootLockLoc;
 	bool LeftFootGroundingPrevFrame;
