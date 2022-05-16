@@ -113,6 +113,7 @@ protected:
 	bool LeftFootGroundingPrevFrame;
 	FVector LeftFootLockLoc;
 	FVector CSHipLoc;
+	FVector CSHipLocPrev;
 	FVector HipVelocity;
 	TArray<FMocapHipPosData> HipPosCacheCS;
 	int HipPosCacheCSIndex = 0;
