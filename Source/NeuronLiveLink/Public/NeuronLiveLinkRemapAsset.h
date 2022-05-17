@@ -19,6 +19,81 @@ struct FMocapHipPosData
 	float Dt;
 };
 
+//template<int N>
+//class TRollingAverage final
+//{
+//public:
+//
+//	TRollingAverage()
+//		: Current(N)
+//		, Denom(SumToN<N>())
+//	{
+//		for (uint32 Idx = 0; Idx < N; Idx++)
+//			Data[Idx] = FVector::ZeroVector;
+//	}
+//
+//	void Fill(const FVector& NewData)
+//	{
+//		for (uint32 Idx = 0; Idx < N; Idx++)
+//			Data[Idx] = NewData;
+//	}
+//
+//	FVector CurrentValue() const
+//	{
+//		return Data[Current];
+//	}
+//
+//	FVector InsertAndGetNextAverage(const FVector& NewData)
+//	{
+//		// 1 / Denominator
+//		static const float Multiplier = 1.0f / static_cast<float>(Denom);
+//
+//		Current = (Current + 1) % N;
+//
+//		Data[Current] = NewData;
+//
+//		FVector Average = FVector::ZeroVector;
+//
+//		uint32 Count = 0;
+//		uint32 Index = Current;
+//
+//		while (Count < N)
+//		{
+//			Index = (Current + Count) % N;
+//
+//			uint32 Proportion = N - Count;
+//
+//			float Percentage = static_cast<float>(Proportion) * Multiplier;
+//
+//			Average += Percentage * Data[Index];
+//
+//			Count++;
+//		}
+//
+//		return Average;
+//	}
+//
+//private:
+//
+//	template<uint32 N>
+//	static constexpr uint32 SumToN()
+//	{
+//		return N + SumToN<N - 1>();
+//	}
+//
+//	template<>
+//	static constexpr uint32 SumToN<0>()
+//	{
+//		return 0;
+//	}
+//
+//private:
+//
+//	uint32 Current;
+//	uint32 Denom;
+//	FVector Data[N];
+//};
+
 /*
 * UNeuronLiveLinkRemapAsset  live link remap asset for retargeting
 */
@@ -76,6 +151,9 @@ class NEURONLIVELINK_API UNeuronLiveLinkRemapAsset : public ULiveLinkRetargetAss
 	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "AxisNeuron Live Link Retarget")
 		bool bUseRootMotion = true;
 
+	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "AxisNeuron Live Link Retarget")
+		float RootMotionLerpAlpha = 0.25f;
+
 private:
 
 	void OnBlueprintClassCompiled (UBlueprint* TargetBlueprint);
@@ -107,16 +185,16 @@ protected:
 	UPROPERTY ()
 		FTransform HipsParentsTransform = FTransform::Identity;
 
-	bool GroundingPoseInited;
 	bool RightFootGroundingPrevFrame;
 	FVector RightFootLockLoc;
+	FVector RightFootLocPrev;
 	bool LeftFootGroundingPrevFrame;
 	FVector LeftFootLockLoc;
+	FVector LeftFootLocPrev;
 	FVector CSHipLoc;
-	FVector CSHipLocPrev;
-	FVector HipVelocity;
-	TArray<FMocapHipPosData> HipPosCacheCS;
-	int HipPosCacheCSIndex = 0;
-	TArray<float> HipSpeedWeight;
+	//FVector HipVelocity;
+	//TArray<FMocapHipPosData> HipPosCacheCS;
 	float OffsetToFloor;
+	int32 TrustFootPrev;
+	int32 TrustFootNext;
 };
