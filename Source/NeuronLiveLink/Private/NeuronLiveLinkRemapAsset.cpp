@@ -501,7 +501,7 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 
 	if (RightFootMeshIndex != INDEX_NONE || LeftFootMeshIndex != INDEX_NONE)
 	{
-		float FloorHeight = 0.f;
+		float BaseFloorHeight = 0.f;
 		FCompactPoseBoneIndex CPRightFootIndex = OutPose.GetBoneContainer().MakeCompactPoseIndex(FMeshPoseBoneIndex(RightFootMeshIndex));
 		FCompactPoseBoneIndex CPLeftFootIndex = OutPose.GetBoneContainer().MakeCompactPoseIndex(FMeshPoseBoneIndex(LeftFootMeshIndex));
 		FCompactPoseBoneIndex CPHipIndex = OutPose.GetBoneContainer().MakeCompactPoseIndex(FMeshPoseBoneIndex(MocapApi::JointTag_Hips));
@@ -560,29 +560,37 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 			{
 				if (TrustFoot == RightFootMeshIndex)
 				{
-					RightFootLocPrev.Z = FloorHeight;
+					RightFootLocPrev.Z = BaseFloorHeight;
 					RightFootLockLoc = RightFootLocPrev;
-
 					RightFootLoc = RightFootLockLoc;
 				}
 				else if (TrustFoot == LeftFootMeshIndex)
 				{
-					LeftFootLocPrev.Z = FloorHeight;
+					LeftFootLocPrev.Z = BaseFloorHeight;
 					LeftFootLockLoc = LeftFootLocPrev;
 					LeftFootLoc = LeftFootLockLoc;
 				}
 			}
 			else
 			{
-				RightFootLoc = RightFootLocPrev;// FMath::Lerp(RightFootLocPrev, RightFootLoc, RootMotionLerpAlpha);
-				LeftFootLoc = LeftFootLocPrev;// FMath::Lerp(LeftFootLocPrev, LeftFootLoc, RootMotionLerpAlpha);
+				if (RightFootGrounding || LeftFootGrounding)
+				{
+					RightFootLoc = RightFootLocPrev;
+					LeftFootLoc = LeftFootLocPrev;
+				}
+				else
+				{
+					// floating
+					RightFootLoc = FMath::Lerp(RightFootLocPrev, RightFootLoc, RootMotionFloatingLerpAlpha);
+					LeftFootLoc = FMath::Lerp(LeftFootLocPrev, LeftFootLoc, RootMotionFloatingLerpAlpha);
+				}
 			}
 
 			FVector DstRightHip = GetHipLocFromFootIndex(OutPose, CSPose, WorldPositions, CPRightFootIndex, RightFootLoc);
 			FVector DstLeftHip = GetHipLocFromFootIndex(OutPose, CSPose, WorldPositions, CPLeftFootIndex, LeftFootLoc);
 			FVector LeftFootFromRight = GetFootLocFromHip(OutPose, CSPose, WorldPositions, CPLeftFootIndex, DstRightHip);
 			FVector RightFootFromLeft = GetFootLocFromHip(OutPose, CSPose, WorldPositions, CPRightFootIndex, DstLeftHip);
-			const float LerpAlpha = RootMotionLerpAlpha;// 0.3f;
+			const float LerpAlpha = RootMotionGroundingLerpAlpha;
 			if (TrustFoot == RightFootMeshIndex)
 			{
 				
@@ -615,9 +623,8 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 				}
 			}
 
-			AN_LOG(Log, TEXT("Foot %d P%d L%d R%d"), TrustFoot, TrustFootPrev, LeftFootGrounding?1:0, RightFootGrounding?1:0);
+			AN_LOG(Log, TEXT("Foot %d P%d L%d R%d H %f"), TrustFoot, TrustFootPrev, LeftFootGrounding?1:0, RightFootGrounding?1:0, CSHipLoc.Z);
 
-			
 			FVector FinalVal = CSHipLoc;// RollingAverage.InsertAndGetNextAverage(CSHipLoc);
 			FTransform T = CSPose.GetComponentSpaceTransform(CPHipIndex);
 			T.SetTranslation(FinalVal);

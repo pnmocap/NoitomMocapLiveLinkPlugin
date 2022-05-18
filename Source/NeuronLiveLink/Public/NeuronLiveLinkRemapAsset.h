@@ -152,8 +152,10 @@ class NEURONLIVELINK_API UNeuronLiveLinkRemapAsset : public ULiveLinkRetargetAss
 		bool bUseRootMotion = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "AxisNeuron Live Link Retarget")
-		float RootMotionLerpAlpha = 0.25f;
+		float RootMotionGroundingLerpAlpha = 0.1f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "AxisNeuron Live Link Retarget")
+		float RootMotionFloatingLerpAlpha = 0.8f;
 private:
 
 	void OnBlueprintClassCompiled (UBlueprint* TargetBlueprint);
@@ -194,7 +196,6 @@ protected:
 	FVector CSHipLoc;
 	//FVector HipVelocity;
 	//TArray<FMocapHipPosData> HipPosCacheCS;
-	float OffsetToFloor;
 	int32 TrustFootPrev;
 	int32 TrustFootNext;
 };
