@@ -49,6 +49,7 @@ void UNeuronLiveLinkRemapAsset::OnBlueprintClassCompiled (UBlueprint* TargetBlue
 	CurveNameMap.Reset ();
 	RightFootGroundingPrevFrame = false;
 	LeftFootGroundingPrevFrame = false;
+	//bHaveInit = false;
 }
 
 void MakeCurveMapFromFrame (const FCompactPose& InPose, const FLiveLinkSkeletonStaticData* InSkeletonData, const FLiveLinkAnimationFrameData* InFrameData, const TArray<FName, TMemStackAllocator<>>& TransformedCurveNames, TMap<FName, float>& OutCurveMap)
@@ -65,19 +66,19 @@ void MakeCurveMapFromFrame (const FCompactPose& InPose, const FLiveLinkSkeletonS
 	}
 }
 
-static FVector GetHipLocFromFootIndex(FCompactPose& OutPose, FCSPose<FCompactPose>& CSPose, const TArray<FVector>& WorldPositions, FCompactPoseBoneIndex Idx, const FVector& Loc) {
+static FVector GetHipLocFromFootIndex(FCompactPose& OutPose, FCSPose<FCompactPose>& CSPose, const TArray<FVector>& WorldPositions, FCompactPoseBoneIndex Idx, FCompactPoseBoneIndex HipIdx, const FVector& Loc) {
 	FVector DstHip = Loc;
 
 	const FBoneContainer& BoneContainerRef = OutPose.GetBoneContainer();
-
+	FCompactPoseBoneIndex ParentOfHip = OutPose.GetParentBoneIndex(HipIdx);
 	TArray<FVector> Points;
 	TArray<float> Lens;
-	while (Idx != INDEX_NONE)
+	while (Idx != ParentOfHip)
 	{
 		Points.Add(CSPose.GetComponentSpaceTransform(Idx).GetTranslation());
 		int32 MeshIndex = BoneContainerRef.MakeMeshPoseIndex(Idx).GetInt();
 		Idx = OutPose.GetParentBoneIndex(Idx);
-		if (Idx != INDEX_NONE)
+		if (Idx != ParentOfHip)
 		{
 			int32 ParentMeshIndex = BoneContainerRef.MakeMeshPoseIndex(Idx).GetInt();
 			Lens.Add(FVector::Distance(WorldPositions[ParentMeshIndex], WorldPositions[MeshIndex]));
@@ -94,19 +95,19 @@ static FVector GetHipLocFromFootIndex(FCompactPose& OutPose, FCSPose<FCompactPos
 	return DstHip;
 }
 
-static FVector GetFootLocFromHip(FCompactPose& OutPose, FCSPose<FCompactPose>& CSPose, const TArray<FVector>& WorldPositions, FCompactPoseBoneIndex Idx, const FVector& HipLoc) {
+static FVector GetFootLocFromHip(FCompactPose& OutPose, FCSPose<FCompactPose>& CSPose, const TArray<FVector>& WorldPositions, FCompactPoseBoneIndex Idx, FCompactPoseBoneIndex HipIdx, const FVector& HipLoc) {
 	FVector DstLoc = FVector::ZeroVector;
 
 	const FBoneContainer& BoneContainerRef = OutPose.GetBoneContainer();
-
+	FCompactPoseBoneIndex ParentOfHip = OutPose.GetParentBoneIndex(HipIdx);
 	TArray<FVector> Points;
 	TArray<float> Lens;
-	while (Idx != INDEX_NONE)
+	while (Idx != ParentOfHip)
 	{
 		Points.Add(CSPose.GetComponentSpaceTransform(Idx).GetTranslation());
 		int32 MeshIndex = BoneContainerRef.MakeMeshPoseIndex(Idx).GetInt();
 		Idx = OutPose.GetParentBoneIndex(Idx);
-		if (Idx != INDEX_NONE)
+		if (Idx != ParentOfHip)
 		{
 			int32 ParentMeshIndex = BoneContainerRef.MakeMeshPoseIndex(Idx).GetInt();
 			Lens.Add(FVector::Distance(WorldPositions[ParentMeshIndex], WorldPositions[MeshIndex]));
@@ -495,18 +496,18 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 	FName HipBoneName = TransformedBoneNames[HipBoneIndex];
 	int32 RightFootMeshIndex = OutPose.GetBoneContainer().GetPoseBoneIndexForBoneName(RightFootBoneName);
 	int32 LeftFootMeshIndex = OutPose.GetBoneContainer().GetPoseBoneIndexForBoneName(LeftFootBoneName);
-	int32 HeadMeshIndex = OutPose.GetBoneContainer().GetPoseBoneIndexForBoneName(HipBoneName);
+	int32 HipMeshIndex = OutPose.GetBoneContainer().GetPoseBoneIndexForBoneName(HipBoneName);
 	float OriginHipHeight = 170.f;
-	float Delta = WorldPositions[HeadMeshIndex].Z / OriginHipHeight;
+	float Delta = WorldPositions[HipMeshIndex].Z / OriginHipHeight;
 	FVector DeltaV(Delta, Delta, 1);
 
 	if (RightFootMeshIndex != INDEX_NONE || LeftFootMeshIndex != INDEX_NONE)
 	{
 		float BaseFloorHeight = 0.f;
-		float BaseFootHeight = 7.8f;
+		float BaseFootHeight = (WorldPositions[RightFootMeshIndex].Z + WorldPositions[LeftFootMeshIndex].Z) * 0.5f; // 7.8f;
 		FCompactPoseBoneIndex CPRightFootIndex = OutPose.GetBoneContainer().MakeCompactPoseIndex(FMeshPoseBoneIndex(RightFootMeshIndex));
 		FCompactPoseBoneIndex CPLeftFootIndex = OutPose.GetBoneContainer().MakeCompactPoseIndex(FMeshPoseBoneIndex(LeftFootMeshIndex));
-		FCompactPoseBoneIndex CPHipIndex = OutPose.GetBoneContainer().MakeCompactPoseIndex(FMeshPoseBoneIndex(MocapApi::JointTag_Hips));
+		FCompactPoseBoneIndex CPHipIndex = OutPose.GetBoneContainer().MakeCompactPoseIndex(FMeshPoseBoneIndex(HipMeshIndex));
 
 		//if (CPRightFootIndex != INDEX_NONE)
 		{
@@ -597,10 +598,10 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 				}
 			}
 
-			FVector DstRightHip = GetHipLocFromFootIndex(OutPose, CSPose, WorldPositions, CPRightFootIndex, RightFootLoc);
-			FVector DstLeftHip = GetHipLocFromFootIndex(OutPose, CSPose, WorldPositions, CPLeftFootIndex, LeftFootLoc);
-			FVector LeftFootFromRight = GetFootLocFromHip(OutPose, CSPose, WorldPositions, CPLeftFootIndex, DstRightHip);
-			FVector RightFootFromLeft = GetFootLocFromHip(OutPose, CSPose, WorldPositions, CPRightFootIndex, DstLeftHip);
+			FVector DstRightHip = GetHipLocFromFootIndex(OutPose, CSPose, WorldPositions, CPRightFootIndex, CPHipIndex, RightFootLoc);
+			FVector DstLeftHip = GetHipLocFromFootIndex(OutPose, CSPose, WorldPositions, CPLeftFootIndex, CPHipIndex, LeftFootLoc);
+			FVector LeftFootFromRight = GetFootLocFromHip(OutPose, CSPose, WorldPositions, CPLeftFootIndex, CPHipIndex, DstRightHip);
+			FVector RightFootFromLeft = GetFootLocFromHip(OutPose, CSPose, WorldPositions, CPRightFootIndex, CPHipIndex, DstLeftHip);
 			
 			const float LerpAlpha = RootMotionGroundingLerpAlpha;
 			if (TrustFoot == RightFootMeshIndex)
