@@ -155,7 +155,7 @@ class NEURONLIVELINK_API UNeuronLiveLinkRemapAsset : public ULiveLinkRetargetAss
 		float RootMotionGroundingLerpAlpha = 0.1f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "AxisNeuron Live Link Retarget")
-		float RootMotionFloatingLerpAlpha = 0.8f;
+		float RootMotionFloatingLerpAlpha = 0.1f;
 private:
 
 	void OnBlueprintClassCompiled (UBlueprint* TargetBlueprint);
@@ -188,11 +188,13 @@ protected:
 		FTransform HipsParentsTransform = FTransform::Identity;
 
 	bool RightFootGroundingPrevFrame;
+	bool LeftFootGroundingPrevFrame;
 	FVector RightFootLockLoc;
 	FVector RightFootLocPrev;
-	bool LeftFootGroundingPrevFrame;
+	FVector RightGroundOff;
 	FVector LeftFootLockLoc;
 	FVector LeftFootLocPrev;
+	FVector LeftGroundOff;
 	FVector CSHipLoc;
 	//FVector HipVelocity;
 	//TArray<FMocapHipPosData> HipPosCacheCS;
