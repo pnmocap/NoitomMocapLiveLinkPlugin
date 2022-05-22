@@ -13,10 +13,22 @@
 #endif
 #include "NeuronLiveLinkRemapAsset.generated.h"
 
-struct FMocapHipPosData
+USTRUCT(BlueprintType)
+struct FRootMotionConfig
 {
-	FVector Loc;
-	float Dt;
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(EditAnywhere, Category = "RootMotionConfig")
+		FName LockRightFootBoneName;
+
+	UPROPERTY(EditAnywhere, Category = "RootMotionConfig")
+		FName LockLeftFootBoneName;
+
+	UPROPERTY(EditAnywhere, Category = "RootMotionConfig")
+		float RootMotionGroundingLerpAlpha = 0.1f;
+
+	//UPROPERTY(EditAnywhere, Category = "RootMotionConfig")
+	//	float RootMotionFloatingLerpAlpha = 0.1f;
 };
 
 //template<int N>
@@ -148,14 +160,11 @@ class NEURONLIVELINK_API UNeuronLiveLinkRemapAsset : public ULiveLinkRetargetAss
     UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "AxisNeuron Live Link Retarget")
         bool bUseDisplacementData = true;
 
-	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "AxisNeuron Live Link Retarget")
-		bool bUseRootMotion = true;
+	UPROPERTY(EditAnywhere, BlueprintReadonly, meta = (InlineEditConditionToggle), Category = "AxisNeuron Live Link Retarget")
+		bool bUseRootMotion = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "AxisNeuron Live Link Retarget")
-		float RootMotionGroundingLerpAlpha = 0.1f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "AxisNeuron Live Link Retarget")
-		float RootMotionFloatingLerpAlpha = 0.1f;
+	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "AxisNeuron Live Link Retarget", meta = (NeverAsPin, EditCondition = "bUseRootMotion"))
+		FRootMotionConfig RootMotionConfig;
 private:
 
 	void OnBlueprintClassCompiled (UBlueprint* TargetBlueprint);
@@ -196,8 +205,6 @@ protected:
 	FVector LeftFootLocPrev;
 	FVector LeftGroundOff;
 	FVector CSHipLoc;
-	//FVector HipVelocity;
-	//TArray<FMocapHipPosData> HipPosCacheCS;
 	int32 TrustFootPrev;
 	int32 TrustFootNext;
 };
