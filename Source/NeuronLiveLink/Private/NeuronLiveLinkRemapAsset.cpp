@@ -561,32 +561,30 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 				RightFootLockLoc = RightFootLoc;
 				RightFootLockLoc.Z = BaseFootHeight;
 			}
+			//if (RightFootGrounding)
+			//{
+			//	treat slide
+			//}
 			if (LeftFootGrounding && !LeftFootGroundingPrevFrame)
 			{
 				// lock left foot position
 				LeftFootLockLoc = LeftFootLoc;
 				LeftFootLockLoc.Z = BaseFootHeight;
 			}
+			//if (LeftFootGrounding)
+			//{
+			// treat slide
+			//}
 
 			if (TrustFoot == RightFootMeshIndex)
 			{
-				//if (DeltaRightFoot.SizeSquared2D() >= RootMotionConfig.SlideThreshold * RootMotionConfig.SlideThreshold)
-				//{
-				//	//RightFootLoc.Z = BaseFootHeight;
-				//	RightFootLockLoc = FMath::Lerp(RightFootLockLoc, RightFootLoc, RootMotionConfig.RootMotionGroundingLerpAlpha);
-				//}
 				//RightFootLoc = RightFootLockLoc;
-				RightFootLoc = FMath::Lerp(RightFootLoc, RightFootLockLoc, 0.02f);
+				RightFootLoc = FMath::Lerp(RightFootLoc, RightFootLockLoc, 0.05f);
 			}
 			else if (TrustFoot == LeftFootMeshIndex)
 			{
-				//if (DeltaLeftFoot.SizeSquared2D() >= RootMotionConfig.SlideThreshold * RootMotionConfig.SlideThreshold)
-				//{
-				//	//LeftFootLoc.Z = BaseFootHeight;
-				//	LeftFootLockLoc = FMath::Lerp(LeftFootLockLoc, LeftFootLoc, RootMotionConfig.RootMotionGroundingLerpAlpha);
-				//}
 				//LeftFootLoc = LeftFootLockLoc;
-				LeftFootLoc = FMath::Lerp(LeftFootLoc, LeftFootLockLoc, 0.02f);
+				LeftFootLoc = FMath::Lerp(LeftFootLoc, LeftFootLockLoc, 0.05f);
 			}
 		}
 		else

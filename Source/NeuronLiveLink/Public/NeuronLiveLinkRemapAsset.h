@@ -30,8 +30,8 @@ struct FRootMotionConfig
 	UPROPERTY(EditAnywhere, Category = "RootMotionConfig")
 		float RootMotionGroundingLerpAlpha = 0.1f;
 
-	UPROPERTY(EditAnywhere, Category = "RootMotionConfig")
-		float SlideThreshold = 2.0f;
+	//UPROPERTY(EditAnywhere, Category = "RootMotionConfig")
+	//	float SlideThreshold = 2.0f;
 
 	//UPROPERTY(EditAnywhere, Category = "RootMotionConfig")
 	//	float RootMotionFloatingLerpAlpha = 0.1f;
