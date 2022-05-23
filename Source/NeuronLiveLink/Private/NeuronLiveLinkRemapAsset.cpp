@@ -20,7 +20,6 @@ UNeuronLiveLinkRemapAsset::UNeuronLiveLinkRemapAsset (const FObjectInitializer& 
 #endif
 	RightFootGroundingPrevFrame = false;
 	LeftFootGroundingPrevFrame = false;
-	TrustFootNext = 0;
 	TrustFootPrev = 0;
 
 	//HipPosCacheCS.Add({ FVector::ZeroVector, 0 });
@@ -49,7 +48,8 @@ void UNeuronLiveLinkRemapAsset::OnBlueprintClassCompiled (UBlueprint* TargetBlue
 	CurveNameMap.Reset ();
 	RightFootGroundingPrevFrame = false;
 	LeftFootGroundingPrevFrame = false;
-	//bHaveInit = false;
+	bHaveInit = false;
+	TrustFootPrev = 0;
 }
 
 void MakeCurveMapFromFrame (const FCompactPose& InPose, const FLiveLinkSkeletonStaticData* InSkeletonData, const FLiveLinkAnimationFrameData* InFrameData, const TArray<FName, TMemStackAllocator<>>& TransformedCurveNames, TMap<FName, float>& OutCurveMap)
@@ -493,221 +493,158 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 	int HipBoneIndex = MocapApi::JointTag_Hips;
 	FName RightFootBoneName = TransformedBoneNames[RightFootBoneIndex];
 	FName LeftFootBoneName = TransformedBoneNames[LeftFootBoneIndex];
+	FName HipBoneName = TransformedBoneNames[HipBoneIndex];
+
 	if (RootMotionConfig.LockRightFootBoneName != NAME_None && RootMotionConfig.LockLeftFootBoneName != NAME_None)
 	{
 		RightFootBoneName = RootMotionConfig.LockRightFootBoneName;
 		LeftFootBoneName = RootMotionConfig.LockLeftFootBoneName;
 	}
-	FName HipBoneName = TransformedBoneNames[HipBoneIndex];
+
 	int32 RightFootMeshIndex = OutPose.GetBoneContainer().GetPoseBoneIndexForBoneName(RightFootBoneName);
 	int32 LeftFootMeshIndex = OutPose.GetBoneContainer().GetPoseBoneIndexForBoneName(LeftFootBoneName);
 	int32 HipMeshIndex = OutPose.GetBoneContainer().GetPoseBoneIndexForBoneName(HipBoneName);
-	float OriginHipHeight = 97.f;
-	float Delta = WorldPositions[HipMeshIndex].Z / OriginHipHeight;
-	FVector DeltaV(Delta, Delta, Delta);
+	float BaseFloorHeight = 0.f;
+	float BaseFootHeight = (WorldPositions[RightFootMeshIndex].Z + WorldPositions[LeftFootMeshIndex].Z) * 0.5f; // 7.8f;
+	float DeltaScale = RootMotionConfig.RootMotionScale;
+	FVector DeltaScaleV(DeltaScale, DeltaScale, DeltaScale);
 
 	if (RightFootMeshIndex != INDEX_NONE || LeftFootMeshIndex != INDEX_NONE)
 	{
-		float BaseFloorHeight = 0.f;
-		float BaseFootHeight = (WorldPositions[RightFootMeshIndex].Z + WorldPositions[LeftFootMeshIndex].Z) * 0.5f; // 7.8f;
 		FCompactPoseBoneIndex CPRightFootIndex = OutPose.GetBoneContainer().MakeCompactPoseIndex(FMeshPoseBoneIndex(RightFootMeshIndex));
 		FCompactPoseBoneIndex CPLeftFootIndex = OutPose.GetBoneContainer().MakeCompactPoseIndex(FMeshPoseBoneIndex(LeftFootMeshIndex));
 		FCompactPoseBoneIndex CPHipIndex = OutPose.GetBoneContainer().MakeCompactPoseIndex(FMeshPoseBoneIndex(HipMeshIndex));
 
-		//if (CPRightFootIndex != INDEX_NONE)
-		{
-			FCSPose<FCompactPose> CSPose;
-			CSPose.InitPose(OutPose);
-			FVector RightFootLoc = CSPose.GetComponentSpaceTransform(CPRightFootIndex).GetTranslation();
-			FVector LeftFootLoc = CSPose.GetComponentSpaceTransform(CPLeftFootIndex).GetTranslation();
-			FVector HipInputLoc = CSPose.GetComponentSpaceTransform(CPLeftFootIndex).GetTranslation();
-			//RightFootLoc *= DeltaV;
-			//LeftFootLoc *= DeltaV;
-			bool UseLockedFootPose = false;
-			bool IsFloating = false;
-			bool SwitchFoot = false;
-			
-			int32 TrustFoot = TrustFootPrev;
-			if (TrustFootPrev != TrustFootNext)
-			{
-				if (!RightFootGrounding && TrustFootNext == LeftFootMeshIndex)
-				{
-					TrustFoot = TrustFootNext;
-					SwitchFoot = true;
-				}
-				if (!LeftFootGrounding && TrustFootNext == RightFootMeshIndex)
-				{
-					TrustFoot = TrustFootNext;
-					SwitchFoot = true;
-				}
-			}
-			UseLockedFootPose = (RightFootGrounding || LeftFootGrounding);
-			if (RightFootGrounding && !RightFootGroundingPrevFrame)
-			{
-				TrustFootNext = RightFootMeshIndex;
-				UseLockedFootPose = false;
-			}
-			if (!RightFootGrounding && RightFootGroundingPrevFrame)
-			{
-				TrustFootNext = LeftFootGrounding ? LeftFootMeshIndex : TrustFootPrev;
-			}
-			if (LeftFootGrounding && !LeftFootGroundingPrevFrame)
-			{
-				TrustFootNext = LeftFootMeshIndex;
-				UseLockedFootPose = false;
-			}
-			if (!LeftFootGrounding && LeftFootGroundingPrevFrame)
-			{
-				TrustFootNext = RightFootGrounding ? RightFootMeshIndex : TrustFootPrev;
-			}
+		FCSPose<FCompactPose> CSPose;
+		CSPose.InitPose(OutPose);
+		FVector RightFootLoc = CSPose.GetComponentSpaceTransform(CPRightFootIndex).GetTranslation();
+		FVector LeftFootLoc = CSPose.GetComponentSpaceTransform(CPLeftFootIndex).GetTranslation();
+		//FVector HipInputLoc = CSPose.GetComponentSpaceTransform(CPLeftFootIndex).GetTranslation();
 
-			if (TrustFoot == 0)
+		FVector DeltaRightFoot = (RightFootLoc - RightFootLocRawPrev) * DeltaScaleV;
+		FVector DeltaLeftFoot = (LeftFootLoc - LeftFootLocRawPrev) * DeltaScaleV;
+
+		// save raw previous frame location
+		RightFootLocRawPrev = RightFootLoc;
+		LeftFootLocRawPrev = LeftFootLoc;
+
+		RightFootLoc = RightFootLocPrev + DeltaRightFoot;
+		LeftFootLoc = LeftFootLocPrev + DeltaLeftFoot;
+
+		bool UseLockedFootPose =  (RightFootGrounding || LeftFootGrounding);
+		//bool IsFloating = !UseLockedFootPose;
+		if (TrustFootPrev == 0)
+		{
+			TrustFootPrev = RightFootMeshIndex;
+		}
+		int32 TrustFoot = TrustFootPrev;
+		if (UseLockedFootPose)
+		{
+			if (RightFootGrounding && !LeftFootGrounding)
 			{
 				TrustFoot = RightFootMeshIndex;
 			}
-
-			TrustFootPrev = TrustFoot;
-
-			bool LockedFootPoseWhenFloating = false;
-			if (!UseLockedFootPose)
+			else if(!RightFootGrounding && LeftFootGrounding)
 			{
-				if (RightFootGrounding || LeftFootGrounding)
-				{
-					RightFootLoc = RightFootLocPrev;
-					LeftFootLoc = LeftFootLocPrev;
-				}
-				else
-				{
-					// floating
-					IsFloating = true;
-					if (TrustFoot == RightFootMeshIndex)
-					{
-						RightFootLoc += RightGroundOff;// FVector(RightGroundOff.X, RightGroundOff.Y, -30);
-						LeftFootLoc += RightGroundOff;// FVector(RightGroundOff.X, RightGroundOff.Y, -30);// RightGroundOff;
-						if (RightFootLoc.Z < BaseFootHeight)
-						{
-							RightFootLoc.Z = BaseFootHeight;
-							LockedFootPoseWhenFloating = true;
-						}
-					}
-					else if (TrustFoot == LeftFootMeshIndex)
-					{
-						RightFootLoc += LeftGroundOff;
-						LeftFootLoc += LeftGroundOff;
-						if (LeftFootLoc.Z < BaseFootHeight)
-						{
-							LeftFootLoc.Z = BaseFootHeight;
-							LockedFootPoseWhenFloating = true;
-						}
-					}
-					// (HipInputLoc - CSHipInputLocPrev)
-				}
+				TrustFoot = LeftFootMeshIndex;
+			}
+		}
+		bool SwitchFoot = (TrustFoot != TrustFootPrev);
+
+		if (UseLockedFootPose)
+		{
+			//RightGroundOff = RightFootLockLoc - RightFootLoc;
+			//LeftGroundOff = LeftFootLockLoc - LeftFootLoc;
+			if (RightFootGrounding && !RightFootGroundingPrevFrame)
+			{
+				// lock right foot position
+				RightFootLockLoc = RightFootLoc;
+				RightFootLockLoc.Z = BaseFootHeight;
+			}
+			if (LeftFootGrounding && !LeftFootGroundingPrevFrame)
+			{
+				// lock left foot position
+				LeftFootLockLoc = LeftFootLoc;
+				LeftFootLockLoc.Z = BaseFootHeight;
 			}
 
-			if (UseLockedFootPose || LockedFootPoseWhenFloating)
-			{
-				if (SwitchFoot)
-				{
-					// use previous foot to calc
-					TrustFoot = TrustFootPrev;
-				}
-				if (TrustFoot == RightFootMeshIndex)
-				{
-					RightFootLocPrev.Z = BaseFootHeight;
-					RightFootLockLoc = RightFootLocPrev;
-					if (UseLockedFootPose)
-					{
-						RightGroundOff = RightFootLockLoc - RightFootLoc;
-						RightGroundOff.Z = -30.f;
-					}
-					RightFootLoc = RightFootLockLoc;
-
-					LeftFootLoc += RightGroundOff;
-				}
-				else if (TrustFoot == LeftFootMeshIndex)
-				{
-					LeftFootLocPrev.Z = BaseFootHeight;
-					LeftFootLockLoc = LeftFootLocPrev;
-					if (UseLockedFootPose)
-					{
-						LeftGroundOff = LeftFootLockLoc - LeftFootLoc;
-						LeftGroundOff.Z = -30.f;
-					}
-					LeftFootLoc = LeftFootLockLoc;
-
-					RightFootLoc += LeftGroundOff;
-				}
-			}
-
-			//if (RightFootLoc.Z < BaseFootHeight)
-			//{
-			//	;
-			//}
-			//if (LeftFootLoc.Z < BaseFootHeight)
-			//{
-			//	LeftFootLoc.Z = BaseFootHeight;
-			//}
-			float deltaFloatZ = 0;
-			if (IsFloating)
-			{
-				deltaFloatZ = FMath::Max3<double>(BaseFootHeight - RightFootLoc.Z, BaseFootHeight - LeftFootLoc.Z, 0.0);
-			}
-
-			FVector DstRightHip = GetHipLocFromFootIndex(OutPose, CSPose, WorldPositions, CPRightFootIndex, CPHipIndex, RightFootLoc);
-			FVector DstLeftHip = GetHipLocFromFootIndex(OutPose, CSPose, WorldPositions, CPLeftFootIndex, CPHipIndex, LeftFootLoc);
-			FVector LeftFootFromRight = GetFootLocFromHip(OutPose, CSPose, WorldPositions, CPLeftFootIndex, CPHipIndex, DstRightHip);
-			FVector RightFootFromLeft = GetFootLocFromHip(OutPose, CSPose, WorldPositions, CPRightFootIndex, CPHipIndex, DstLeftHip);
-
-			const float LerpAlpha = RootMotionConfig.RootMotionGroundingLerpAlpha;
 			if (TrustFoot == RightFootMeshIndex)
 			{
-				if (UseLockedFootPose)
-				{
-					RightFootLocPrev = RightFootLoc;
-					LeftFootLocPrev = LeftFootFromRight;
-					CSHipLoc = DstRightHip;// FMath::Lerp(CSHipLoc, DstRightHip, LerpAlpha);
-				}
-				else
-				{
-					RightFootLocPrev = FMath::Lerp(RightFootLoc, RightFootFromLeft, LerpAlpha);
-					LeftFootLocPrev = FMath::Lerp(LeftFootFromRight, LeftFootLoc, LerpAlpha);
-					CSHipLoc = FMath::Lerp(DstRightHip, DstLeftHip, LerpAlpha);
-				}
+				//if (DeltaRightFoot.SizeSquared2D() >= RootMotionConfig.SlideThreshold * RootMotionConfig.SlideThreshold)
+				//{
+				//	//RightFootLoc.Z = BaseFootHeight;
+				//	RightFootLockLoc = FMath::Lerp(RightFootLockLoc, RightFootLoc, RootMotionConfig.RootMotionGroundingLerpAlpha);
+				//}
+				//RightFootLoc = RightFootLockLoc;
+				RightFootLoc = FMath::Lerp(RightFootLoc, RightFootLockLoc, 0.02f);
 			}
 			else if (TrustFoot == LeftFootMeshIndex)
 			{
-				if (UseLockedFootPose)
-				{
-					RightFootLocPrev = RightFootFromLeft;
-					LeftFootLocPrev = LeftFootLoc;
-					CSHipLoc = DstLeftHip;// FMath::Lerp(CSHipLoc, DstLeftHip, LerpAlpha);
-				}
-				else
-				{
-					RightFootLocPrev = FMath::Lerp(RightFootFromLeft, RightFootLoc, LerpAlpha);
-					LeftFootLocPrev = FMath::Lerp(LeftFootLoc, LeftFootFromRight, LerpAlpha);
-					CSHipLoc = FMath::Lerp(DstLeftHip, DstRightHip, LerpAlpha);
-				}
+				//if (DeltaLeftFoot.SizeSquared2D() >= RootMotionConfig.SlideThreshold * RootMotionConfig.SlideThreshold)
+				//{
+				//	//LeftFootLoc.Z = BaseFootHeight;
+				//	LeftFootLockLoc = FMath::Lerp(LeftFootLockLoc, LeftFootLoc, RootMotionConfig.RootMotionGroundingLerpAlpha);
+				//}
+				//LeftFootLoc = LeftFootLockLoc;
+				LeftFootLoc = FMath::Lerp(LeftFootLoc, LeftFootLockLoc, 0.02f);
 			}
-
-			//CSHipLoc.Z = 70.f;
-			if (IsFloating)
-			{
-				CSHipLoc.Z += deltaFloatZ;
-			}
-
-
-			AN_LOG(Log, TEXT("Foot %d P%d L%d R%d %d H %f - %f %f"), TrustFoot, TrustFootPrev, LeftFootGrounding?1:0, RightFootGrounding?1:0, UseLockedFootPose?1:0, CSHipLoc.Z, LeftGroundOff.Z, RightGroundOff.Z);
-
-			FVector FinalVal = CSHipLoc;
-			FTransform T = CSPose.GetComponentSpaceTransform(CPHipIndex);
-			T.SetTranslation(FinalVal);
-			CSPose.SetComponentSpaceTransform(CPHipIndex, T);
-			T = CSPose.GetLocalSpaceTransform(CPHipIndex);
-			OutPose[CPHipIndex].SetTranslation(T.GetTranslation());
 		}
+		else
+		{
+			//RightFootLoc += RightGroundOff;
+			//LeftFootLoc += LeftGroundOff;
+		}
+
+
+		FVector DstRightHip = GetHipLocFromFootIndex(OutPose, CSPose, WorldPositions, CPRightFootIndex, CPHipIndex, RightFootLoc);
+		FVector DstLeftHip = GetHipLocFromFootIndex(OutPose, CSPose, WorldPositions, CPLeftFootIndex, CPHipIndex, LeftFootLoc);
+		FVector LeftFootFromRight = GetFootLocFromHip(OutPose, CSPose, WorldPositions, CPLeftFootIndex, CPHipIndex, DstRightHip);
+		FVector RightFootFromLeft = GetFootLocFromHip(OutPose, CSPose, WorldPositions, CPRightFootIndex, CPHipIndex, DstLeftHip);
+
+		const float LerpAlpha = RootMotionConfig.RootMotionGroundingLerpAlpha;
+		if (TrustFoot == RightFootMeshIndex)
+		{
+			if (UseLockedFootPose)
+			{
+				RightFootLocPrev = RightFootLoc;
+				LeftFootLocPrev = LeftFootFromRight;
+				CSHipLoc = DstRightHip;// FMath::Lerp(CSHipLoc, DstRightHip, LerpAlpha);
+			}
+			else
+			{
+				RightFootLocPrev = FMath::Lerp(RightFootLoc, RightFootFromLeft, LerpAlpha);
+				LeftFootLocPrev = FMath::Lerp(LeftFootFromRight, LeftFootLoc, LerpAlpha);
+				CSHipLoc = FMath::Lerp(DstRightHip, DstLeftHip, LerpAlpha);
+			}
+		}
+		else if (TrustFoot == LeftFootMeshIndex)
+		{
+			if (UseLockedFootPose)
+			{
+				RightFootLocPrev = RightFootFromLeft;
+				LeftFootLocPrev = LeftFootLoc;
+				CSHipLoc = DstLeftHip;// FMath::Lerp(CSHipLoc, DstLeftHip, LerpAlpha);
+			}
+			else
+			{
+				RightFootLocPrev = FMath::Lerp(RightFootFromLeft, RightFootLoc, LerpAlpha);
+				LeftFootLocPrev = FMath::Lerp(LeftFootLoc, LeftFootFromRight, LerpAlpha);
+				CSHipLoc = FMath::Lerp(DstLeftHip, DstRightHip, LerpAlpha);
+			}
+		}
+
+		AN_LOG(Log, TEXT("Foot %d P%d L%d R%d %d H %f - %f %f | %f %f"), TrustFoot, TrustFootPrev, LeftFootGrounding?1:0, RightFootGrounding?1:0, UseLockedFootPose?1:0, CSHipLoc.Z, LeftFootLocRawPrev.Z, RightFootLocRawPrev.Z, DstLeftHip.Z, DstRightHip.Z);
+
+		FVector FinalVal = CSHipLoc;
+		FTransform T = CSPose.GetComponentSpaceTransform(CPHipIndex);
+		T.SetTranslation(FinalVal);
+		CSPose.SetComponentSpaceTransform(CPHipIndex, T);
+		T = CSPose.GetLocalSpaceTransform(CPHipIndex);
+		OutPose[CPHipIndex].SetTranslation(T.GetTranslation());
+		
 		RightFootGroundingPrevFrame = RightFootGrounding;
 		LeftFootGroundingPrevFrame = LeftFootGrounding;
+		TrustFootPrev = TrustFoot;
 	}
 }
 

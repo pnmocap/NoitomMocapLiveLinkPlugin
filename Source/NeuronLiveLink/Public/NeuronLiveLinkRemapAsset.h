@@ -25,7 +25,13 @@ struct FRootMotionConfig
 		FName LockLeftFootBoneName;
 
 	UPROPERTY(EditAnywhere, Category = "RootMotionConfig")
+		float RootMotionScale = 1.0f;
+
+	UPROPERTY(EditAnywhere, Category = "RootMotionConfig")
 		float RootMotionGroundingLerpAlpha = 0.1f;
+
+	UPROPERTY(EditAnywhere, Category = "RootMotionConfig")
+		float SlideThreshold = 2.0f;
 
 	//UPROPERTY(EditAnywhere, Category = "RootMotionConfig")
 	//	float RootMotionFloatingLerpAlpha = 0.1f;
@@ -200,11 +206,13 @@ protected:
 	bool LeftFootGroundingPrevFrame;
 	FVector RightFootLockLoc;
 	FVector RightFootLocPrev;
-	FVector RightGroundOff;
+	FVector RightFootLocRawPrev;
+	//FVector RightGroundOff;
 	FVector LeftFootLockLoc;
 	FVector LeftFootLocPrev;
-	FVector LeftGroundOff;
+	FVector LeftFootLocRawPrev;
+	//FVector LeftGroundOff;
 	FVector CSHipLoc;
 	int32 TrustFootPrev;
-	int32 TrustFootNext;
+	//int32 TrustFootNext;
 };
