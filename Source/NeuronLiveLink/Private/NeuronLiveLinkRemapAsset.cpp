@@ -524,6 +524,17 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 		FVector DeltaRightFoot = (RightFootLoc - RightFootLocRawPrev) * DeltaScaleV;
 		FVector DeltaLeftFoot = (LeftFootLoc - LeftFootLocRawPrev) * DeltaScaleV;
 
+		float TeleportThreshold = 100.f;
+		bool Teleport = (DeltaRightFoot.SizeSquared() > TeleportThreshold) && (DeltaLeftFoot.SizeSquared() > TeleportThreshold);
+
+		if (Teleport)
+		{
+			DeltaRightFoot = RightFootLoc - RightFootLocPrev;
+			DeltaLeftFoot = LeftFootLoc - LeftFootLocPrev;
+			RightFootGroundingPrevFrame = LeftFootGroundingPrevFrame = false;
+			TrustFootPrev = 0;
+		}
+
 		// save raw previous frame location
 		RightFootLocRawPrev = RightFootLoc;
 		LeftFootLocRawPrev = LeftFootLoc;
