@@ -542,7 +542,7 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 		RightFootLoc = RightFootLocPrev + DeltaRightFoot;
 		LeftFootLoc = LeftFootLocPrev + DeltaLeftFoot;
 
-		bool UseLockedFootPose =  (RightFootGrounding || LeftFootGrounding);
+		bool UseLockedFootPose = (RightFootGrounding || LeftFootGrounding);
 		//bool IsFloating = !UseLockedFootPose;
 		if (TrustFootPrev == 0)
 		{
@@ -642,7 +642,7 @@ void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, con
 			}
 		}
 
-		AN_LOG(Log, TEXT("Foot %d P%d L%d R%d %d H %f - %f %f | %f %f"), TrustFoot, TrustFootPrev, LeftFootGrounding?1:0, RightFootGrounding?1:0, UseLockedFootPose?1:0, CSHipLoc.Z, LeftFootLocRawPrev.Z, RightFootLocRawPrev.Z, DstLeftHip.Z, DstRightHip.Z);
+		AN_LOG(Log, TEXT("Foot %d P%d L%d R%d %d H %f - %f %f | %f %f | %s"), TrustFoot, TrustFootPrev, LeftFootGrounding?1:0, RightFootGrounding?1:0, UseLockedFootPose?1:0, CSHipLoc.Z, LeftFootLoc.Z, RightFootLoc.Z, LeftFootLocPrev.Z, RightFootLocPrev.Z, * RightFootLoc.ToString());
 
 		FVector FinalVal = CSHipLoc;
 		FTransform T = CSPose.GetComponentSpaceTransform(CPHipIndex);
