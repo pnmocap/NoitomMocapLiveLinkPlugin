@@ -802,15 +802,17 @@ bool UMocapApp::HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle, int ReservedD
     rigid.Name = FName(RigidName);
 
     RigidBodyMgr->GetRigidBodyPosition(&PosX, &PosY, &PosZ, RigidBodyHandle);
-    rigid.Position.X = PosX;
-    rigid.Position.Y = PosZ;
-    rigid.Position.Z = PosY;
+    //rigid.Position.X = PosX;
+    //rigid.Position.Y = PosZ;
+    //rigid.Position.Z = PosY;
+    rigid.Position = FVector(PosX, PosY, PosZ);
 
     RigidBodyMgr->GetRigidBodyRotation(&RotX, &RotY, &RotZ, &RotW, RigidBodyHandle);
-    rigid.Rotation.X = RotX;
-    rigid.Rotation.Y = RotZ;
-    rigid.Rotation.Z = RotY;
-    rigid.Rotation.W = -RotW;
+    //rigid.Rotation.X = RotX;
+    //rigid.Rotation.Y = RotZ;
+    //rigid.Rotation.Z = RotY;
+    //rigid.Rotation.W = -RotW;
+    rigid.Rotation = FQuat(RotX, RotY, RotZ, RotW);
     RigidBodyMgr->GetRigidBodyStatus(&rigid.Status, RigidBodyHandle);
     MocapApi::EMCPJointTag Tag;
     RigidBodyMgr->GetRigidBodyJointTag(&Tag, RigidBodyHandle);
