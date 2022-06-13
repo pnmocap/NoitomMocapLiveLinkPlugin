@@ -26,9 +26,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = SourceData, meta = (PinShownByDefault))
 	FLiveLinkSubjectName LiveLinkSubjectName;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = SourceData, meta = (NeverAsPin))
-	FName BoneFilterName;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, NoClear, Category = Retarget, meta = (NeverAsPin))
 	TSubclassOf<UNeuronLiveLinkRemapAsset> RetargetAsset;
 

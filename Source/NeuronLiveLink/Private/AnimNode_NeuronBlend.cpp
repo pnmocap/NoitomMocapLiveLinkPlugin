@@ -15,7 +15,7 @@
 #include "Animation/AnimTrace.h"
 
 #define DEFAULT_SOURCEINDEX 0xFF
-static FName DefaultNeuronBoneFilter(TEXT("Default"));
+static FName DefaultNeuronBoneFilterName(TEXT("Spine"));
 
 FAnimNode_NeuronBlend::FAnimNode_NeuronBlend()
 	: RetargetAsset(UNeuronLiveLinkRemapAsset::StaticClass())
@@ -30,12 +30,13 @@ FAnimNode_NeuronBlend::FAnimNode_NeuronBlend()
 	, bHasRelevantPoses(false)
 	, LODThreshold(INDEX_NONE)
 {
-	BoneFilterName = DefaultNeuronBoneFilter;
 	//BlendNode.AddPose();
 	BlendWeights.Empty();
 	BlendWeights.Add(1.f);
 	new (LayerSetup) FInputBlendPose();
 	FBranchFilter F;
+	F.BoneName = DefaultNeuronBoneFilterName;
+	F.BlendDepth = 0;
 	LayerSetup[0].BranchFilters.Add(F);
 }
 
@@ -166,14 +167,6 @@ void FAnimNode_NeuronBlend::PreUpdate(const UAnimInstance* InAnimInstance)
 		CurrentRetargetAssetWithDisp->bUseDisplacementData = true;
 		CurrentRetargetAssetWithDisp->Initialize();
 	}
-	
-	FBranchFilter& Filter = LayerSetup[0].BranchFilters[0];
-	Filter.BoneName = BoneFilterName;
-	if (BoneFilterName == DefaultNeuronBoneFilter && CurrentRetargetAsset)
-	{
-		Filter.BoneName = CurrentRetargetAsset->GetRemappedBoneName(FName("Spine1"));
-	}
-	Filter.BlendDepth = 1.0;
 
 	//BlendNode.PreUpdate(InAnimInstance);
 }
@@ -185,6 +178,76 @@ void FAnimNode_NeuronBlend::Update_AnyThread(const FAnimationUpdateContext& Cont
 	InputPose.Update(Context);
 
 	GetEvaluateGraphExposedInputs().Execute(Context);
+
+	bHasRelevantPoses = false;
+	int32 RootMotionBlendPose = -1;
+	float RootMotionWeight = 0.f;
+	const float RootMotionClearWeight = bBlendRootMotionBasedOnRootBone ? 0.f : 1.f;
+
+	if (IsLODEnabled(Context.AnimInstanceProxy))
+	{
+		GetEvaluateGraphExposedInputs().Execute(Context);
+
+		for (int32 ChildIndex = 0; ChildIndex < 1/*BlendPoses.Num()*/; ++ChildIndex)
+		{
+			const float ChildWeight = BlendWeights[ChildIndex];
+			if (FAnimWeight::IsRelevant(ChildWeight))
+			{
+				if (bHasRelevantPoses == false)
+				{
+					// If our cache is invalid, attempt to update it.
+					if (IsCacheInvalid(Context.AnimInstanceProxy->GetSkeleton()))
+					{
+						ReinitializeBoneBlendWeights(Context.AnimInstanceProxy->GetRequiredBones(), Context.AnimInstanceProxy->GetSkeleton());
+
+						// If Cache is still invalid, we don't have correct DesiredBoneBlendWeights, so abort.
+						// bHasRelevantPoses == false, will passthrough in evaluate.
+						if (!ensure(IsCacheInvalid(Context.AnimInstanceProxy->GetSkeleton())))
+						{
+							break;
+						}
+					}
+					else
+					{
+						FAnimationRuntime::UpdateDesiredBoneWeight(DesiredBoneBlendWeights, CurrentBoneBlendWeights, BlendWeights);
+					}
+
+					bHasRelevantPoses = true;
+
+					if (bBlendRootMotionBasedOnRootBone)
+					{
+						const float NewRootMotionWeight = CurrentBoneBlendWeights[0].BlendWeight;
+						if (NewRootMotionWeight > ZERO_ANIMWEIGHT_THRESH)
+						{
+							RootMotionWeight = NewRootMotionWeight;
+							RootMotionBlendPose = CurrentBoneBlendWeights[0].SourceIndex;
+						}
+					}
+				}
+
+				//const float ThisPoseRootMotionWeight = (ChildIndex == RootMotionBlendPose) ? RootMotionWeight : RootMotionClearWeight;
+				//BlendPoses[ChildIndex].Update(Context.FractionalWeightAndRootMotion(ChildWeight, ThisPoseRootMotionWeight));
+			}
+		}
+	}
+	else
+	{
+		// Clear BlendWeights if disabled by LODThreshold.
+		BlendWeights.Init(0.f, BlendWeights.Num());
+	}
+
+	// initialize children
+	//const float BaseRootMotionWeight = 1.f - RootMotionWeight;
+
+	//if (BaseRootMotionWeight < ZERO_ANIMWEIGHT_THRESH)
+	//{
+	//	BasePose.Update(Context.FractionalWeightAndRootMotion(1.f, BaseRootMotionWeight));
+	//}
+	//else
+	//{
+	//	BasePose.Update(Context);
+	//}
+
 	
 	// Accumulate Delta time from update
 	CachedDeltaTime += Context.GetDeltaTime();
@@ -203,32 +266,7 @@ void FAnimNode_NeuronBlend::Evaluate_AnyThread(FPoseContext& Output)
 	//FPoseContext OutputBlend = (Output);
 
 	InputPose.Evaluate(OutputBase);
-	//InputPose.Evaluate(OutputBlend);
-
-	//const int NumPoses = 1;
-	//TArray<FCompactPose> TargetBlendPoses;
-	//TargetBlendPoses.SetNum(NumPoses);
-
-	//TArray<FBlendedCurve> TargetBlendCurves;
-	//TargetBlendCurves.SetNum(NumPoses);
-
-	//FPoseContext& BasePoseContext = OutputBase;
-
-	//for (int32 ChildIndex = 0; ChildIndex < NumPoses; ++ChildIndex)
-	//{
-	//	if (FAnimWeight::IsRelevant(BlendWeights[ChildIndex]))
-	//	{
-	//		FPoseContext CurrentPoseContext(Output);
-
-	//		TargetBlendPoses[ChildIndex].MoveBonesFrom(CurrentPoseContext.Pose);
-	//		TargetBlendCurves[ChildIndex].MoveFrom(CurrentPoseContext.Curve);
-	//	}
-	//	else
-	//	{
-	//		TargetBlendPoses[ChildIndex].ResetToRefPose(BasePoseContext.Pose.GetBoneContainer());
-	//		TargetBlendCurves[ChildIndex].InitFrom(Output.Curve);
-	//	}
-	//}
+	InputPose.Evaluate(OutputBlend);
 
 	if (!LiveLinkClient_AnyThread || !CurrentRetargetAsset || !CurrentRetargetAssetWithDisp)
 	{
@@ -278,66 +316,76 @@ void FAnimNode_NeuronBlend::Evaluate_AnyThread(FPoseContext& Output)
 		}
 
 		{
-			//for (int32 ChildIndex = 0; ChildIndex < NumPoses; ++ChildIndex)
-			//{
-			//	if (FAnimWeight::IsRelevant(BlendWeights[ChildIndex]))
-			//	{
-			//		FPoseContext& CurrentPoseContext = (OutputBlend);
-			//		//BlendPoses[ChildIndex].Evaluate(CurrentPoseContext);
+			int NumPoses = 1;
+			FPoseContext& BasePoseContext = (OutputBase);
 
-			//		TargetBlendPoses[ChildIndex].MoveBonesFrom(CurrentPoseContext.Pose);
-			//		TargetBlendCurves[ChildIndex].MoveFrom(CurrentPoseContext.Curve);
-			//	}
-			//	else
-			//	{
-			//		TargetBlendPoses[ChildIndex].ResetToRefPose(BasePoseContext.Pose.GetBoneContainer());
-			//		TargetBlendCurves[ChildIndex].InitFrom(Output.Curve);
-			//	}
-			//}
+			TArray<FCompactPose> TargetBlendPoses;
+			TargetBlendPoses.SetNum(NumPoses);
 
-			//// filter to make sure it only includes curves that is linked to the correct bone filter
-			//TArray<uint16> const* CurveUIDFinder = Output.Curve.UIDToArrayIndexLUT;
-			//const int32 TotalCount = Output.Curve.NumValidCurveCount;
-			//// now go through point to correct source indices. Curve only picks one source index
-			//for (int32 UIDIndex = 0; UIDIndex < CurveUIDFinder->Num(); ++UIDIndex)
-			//{
-			//	int32 CurvePoseIndex = Output.Curve.GetArrayIndexByUID(UIDIndex);
-			//	if (CurvePoseSourceIndices.IsValidIndex(CurvePoseIndex))
-			//	{
-			//		int32 SourceIndex = CurvePoseSourceIndices[CurvePoseIndex];
-			//		if (SourceIndex != DEFAULT_SOURCEINDEX)
-			//		{
-			//			// if source index is set, clear base pose curve value
-			//			BasePoseContext.Curve.Set(UIDIndex, 0.f);
-			//			for (int32 ChildIndex = 0; ChildIndex < NumPoses; ++ChildIndex)
-			//			{
-			//				if (SourceIndex != ChildIndex)
-			//				{
-			//					// if not source, clear it
-			//					TargetBlendCurves[ChildIndex].Set(UIDIndex, 0.f);
-			//				}
-			//			}
-			//		}
-			//	}
-			//}
+			TArray<FBlendedCurve> TargetBlendCurves;
+			TargetBlendCurves.SetNum(NumPoses);
 
-			//FAnimationRuntime::EBlendPosesPerBoneFilterFlags BlendFlags = FAnimationRuntime::EBlendPosesPerBoneFilterFlags::None;
-			//if (bMeshSpaceRotationBlend)
-			//{
-			//	BlendFlags |= FAnimationRuntime::EBlendPosesPerBoneFilterFlags::MeshSpaceRotation;
-			//}
-			//if (bMeshSpaceScaleBlend)
-			//{
-			//	BlendFlags |= FAnimationRuntime::EBlendPosesPerBoneFilterFlags::MeshSpaceScale;
-			//}
-			//FAnimationRuntime::BlendPosesPerBoneFilter(BasePoseContext.Pose, TargetBlendPoses, BasePoseContext.Curve, TargetBlendCurves, Output.Pose, Output.Curve, CurrentBoneBlendWeights, BlendFlags, CurveBlendOption);
-			//Output.Pose.NormalizeRotations();
-			TArray<float> WeightsOfSource2;
-			WeightsOfSource2.Init(0, Output.Pose.GetNumBones());
-			FName DstBoneName = CurrentRetargetAsset->GetRemappedBoneName(FName("Spine1"));
-			int32 BoneIndex = Output.Pose.GetBoneContainer().GetPoseBoneIndexForBoneName(DstBoneName);
-			WeightsOfSource2[BoneIndex] = 1.f;
-			FAnimationRuntime::BlendTwoPosesTogetherPerBone(OutputBase.Pose, OutputBlend.Pose, OutputBase.Curve, OutputBlend.Curve, WeightsOfSource2, Output.Pose, Output.Curve);
+			for (int32 ChildIndex = 0; ChildIndex < NumPoses; ++ChildIndex)
+			{
+				if (FAnimWeight::IsRelevant(BlendWeights[ChildIndex]))
+				{
+					//FPoseContext& CurrentPoseContext = (OutputBlend);
+					//BlendPoses[ChildIndex].Evaluate(CurrentPoseContext);
+
+					TargetBlendPoses[ChildIndex].MoveBonesFrom(OutputBlend.Pose);
+					TargetBlendCurves[ChildIndex].MoveFrom(OutputBlend.Curve);
+				}
+				else
+				{
+					TargetBlendPoses[ChildIndex].ResetToRefPose(BasePoseContext.Pose.GetBoneContainer());
+					TargetBlendCurves[ChildIndex].InitFrom(Output.Curve);
+				}
+			}
+
+			// filter to make sure it only includes curves that is linked to the correct bone filter
+			TArray<uint16> const* CurveUIDFinder = Output.Curve.UIDToArrayIndexLUT;
+			const int32 TotalCount = Output.Curve.NumValidCurveCount;
+			// now go through point to correct source indices. Curve only picks one source index
+			for (int32 UIDIndex = 0; UIDIndex < CurveUIDFinder->Num(); ++UIDIndex)
+			{
+				int32 CurvePoseIndex = Output.Curve.GetArrayIndexByUID(UIDIndex);
+				if (CurvePoseSourceIndices.IsValidIndex(CurvePoseIndex))
+				{
+					int32 SourceIndex = CurvePoseSourceIndices[CurvePoseIndex];
+					if (SourceIndex != DEFAULT_SOURCEINDEX)
+					{
+						// if source index is set, clear base pose curve value
+						BasePoseContext.Curve.Set(UIDIndex, 0.f);
+						for (int32 ChildIndex = 0; ChildIndex < NumPoses; ++ChildIndex)
+						{
+							if (SourceIndex != ChildIndex)
+							{
+								// if not source, clear it
+								TargetBlendCurves[ChildIndex].Set(UIDIndex, 0.f);
+							}
+						}
+					}
+				}
+			}
+
+			FAnimationRuntime::EBlendPosesPerBoneFilterFlags BlendFlags = FAnimationRuntime::EBlendPosesPerBoneFilterFlags::None;
+			if (bMeshSpaceRotationBlend)
+			{
+				BlendFlags |= FAnimationRuntime::EBlendPosesPerBoneFilterFlags::MeshSpaceRotation;
+			}
+			if (bMeshSpaceScaleBlend)
+			{
+				BlendFlags |= FAnimationRuntime::EBlendPosesPerBoneFilterFlags::MeshSpaceScale;
+			}
+			FAnimationRuntime::BlendPosesPerBoneFilter(BasePoseContext.Pose, TargetBlendPoses, BasePoseContext.Curve, TargetBlendCurves, Output.Pose, Output.Curve, CurrentBoneBlendWeights, BlendFlags, CurveBlendOption);
+			Output.Pose.NormalizeRotations();
+			
+			//TArray<float> WeightsOfSource2;
+			//WeightsOfSource2.Init(0, Output.Pose.GetNumBones());
+			//FName DstBoneName = FName("Spine");// CurrentRetargetAsset->GetRemappedBoneName(FName("Spine1"));
+			//int32 BoneIndex = Output.Pose.GetBoneContainer().GetPoseBoneIndexForBoneName(DstBoneName);
+			//WeightsOfSource2[BoneIndex] = 1.f;
+			//FAnimationRuntime::BlendTwoPosesTogetherPerBone(OutputBase.Pose, OutputBlend.Pose, OutputBase.Curve, OutputBlend.Curve, WeightsOfSource2, Output.Pose, Output.Curve);
 		}
 	}
 	else
