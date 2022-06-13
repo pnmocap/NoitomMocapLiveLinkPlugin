@@ -33,6 +33,7 @@ FAnimNode_NeuronBlend::FAnimNode_NeuronBlend()
 	//BlendNode.AddPose();
 	BlendWeights.Empty();
 	BlendWeights.Add(1.f);
+	BlendPoseBoneName = TEXT("Default");
 	new (LayerSetup) FInputBlendPose();
 	FBranchFilter F;
 	F.BoneName = DefaultNeuronBoneFilterName;
@@ -142,6 +143,28 @@ void FAnimNode_NeuronBlend::ReinitializeBoneBlendWeights(const FBoneContainer& R
 	}
 }
 
+static FName FindParentUnderHip(const FReferenceSkeleton& InSkeleton, FName BoneName, FName HipsName)
+{
+	//if (InSkeleton)
+	{
+		int StartIdx = InSkeleton.FindBoneIndex(BoneName);
+		int EndIdx = InSkeleton.FindBoneIndex(HipsName);
+		int Idx = StartIdx;
+		int ParentIdx = StartIdx;
+		while (Idx != INDEX_NONE)
+		{
+			ParentIdx = InSkeleton.GetParentIndex(Idx);
+			if (ParentIdx == EndIdx)
+			{
+				return InSkeleton.GetBoneName(Idx);
+			}
+			Idx = ParentIdx;
+		}
+	}
+
+	return DefaultNeuronBoneFilterName;
+}
+
 void FAnimNode_NeuronBlend::PreUpdate(const UAnimInstance* InAnimInstance)
 {
 	LiveLinkClient_AnyThread = LiveLinkClient_GameThread.GetClient();
@@ -169,6 +192,21 @@ void FAnimNode_NeuronBlend::PreUpdate(const UAnimInstance* InAnimInstance)
 	}
 
 	//BlendNode.PreUpdate(InAnimInstance);
+	
+	FName SpineName = DefaultNeuronBoneFilterName;
+	if (BlendPoseBoneName != TEXT("Default"))
+	{
+		SpineName = BlendPoseBoneName;
+	}
+	else if (InAnimInstance->CurrentSkeleton)
+	{
+		const FReferenceSkeleton& Skeleton = InAnimInstance->CurrentSkeleton->GetReferenceSkeleton();
+		FName HipsName = CurrentRetargetAsset->GetRemappedBoneName(FName("Hips"));
+		FName HeadName = CurrentRetargetAsset->GetRemappedBoneName(FName("Head"));
+		SpineName = FindParentUnderHip(Skeleton, HeadName, HipsName);
+	}
+	LayerSetup[0].BranchFilters[0].BoneName = SpineName;
+	RebuildCacheData(InAnimInstance->CurrentSkeleton);
 }
 
 void FAnimNode_NeuronBlend::Update_AnyThread(const FAnimationUpdateContext& Context)

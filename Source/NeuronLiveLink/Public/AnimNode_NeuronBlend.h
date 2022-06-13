@@ -63,11 +63,14 @@ private:
 
 	// layered bone blend
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Config)
+		FName BlendPoseBoneName;
 	/**
 	 * Configuration for the parts of the skeleton to blend for each layer. Allows
 	 * certain parts of the tree to be blended out or omitted from the pose.
 	 */
-	UPROPERTY(EditAnywhere, editfixedsize, Category = Config)
+	//UPROPERTY(EditAnywhere, editfixedsize, Category = Config)
+	UPROPERTY()
 		TArray<FInputBlendPose> LayerSetup;
 
 	/** The weights of each layer */
@@ -75,19 +78,23 @@ public:
 		TArray<float> BlendWeights;
 
 	/** Whether to blend bone rotations in mesh space or in local space */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Config)
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Config)
+	UPROPERTY()
 		bool bMeshSpaceRotationBlend;
 
 	/** Whether to blend bone scales in mesh space or in local space */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Config)
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Config)
+	UPROPERTY()
 		bool bMeshSpaceScaleBlend;
 
 	/** How to blend the layers together */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Config)
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Config)
+	UPROPERTY()
 		TEnumAsByte<enum ECurveBlendOption::Type>	CurveBlendOption;
 
 	/** Whether to incorporate the per-bone blend weight of the root bone when lending root motion */
-	UPROPERTY(EditAnywhere, Category = Config)
+	//UPROPERTY(EditAnywhere, Category = Config)
+	UPROPERTY()
 		bool bBlendRootMotionBasedOnRootBone;
 
 	bool bHasRelevantPoses;
@@ -98,7 +105,8 @@ public:
 	 * when the component LOD becomes 3, it will stop update/evaluate
 	 * currently transition would be issue and that has to be re-visited
 	 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Performance, meta = (DisplayName = "LOD Threshold"))
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Performance, meta = (DisplayName = "LOD Threshold"))
+	UPROPERTY()
 		int32 LODThreshold;
 
 protected:
