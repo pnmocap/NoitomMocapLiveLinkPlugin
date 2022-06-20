@@ -636,6 +636,11 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
             q = FQuat(RotX, RotY, RotZ, RotW);
         }
     }
+
+    uint32 PostureIndex = 0;
+    mcpError = avatarMgr->GetAvatarPostureIndex(&PostureIndex, Avatarhandle);
+    ReturnFalseIFError();
+    avatar.PostureIndex = PostureIndex;
     
     //CheckAvatarJoint(Avatarhandle, RootJoint, avatar);
     FMocapAppManager::GetInstance().OnRecieveMocapData(avatar.Name, this);

@@ -253,6 +253,9 @@ struct FMocapAvatar
 
     UPROPERTY()
     TArray<FQuat> LocalRotation;
+
+    UPROPERTY()
+    uint32 PostureIndex;
 };
 
 /**
