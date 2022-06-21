@@ -82,7 +82,10 @@ public:
 #else
 		TSharedPtr<class SDockTab> Tab = FGlobalTabmanager::Get()->TryInvokeTab(NeuronEditorWindowTabName);
 #endif
+
+#if !UE_ENGINE_VER_LESS_THAN(5, 0)
 		if (Tab.IsValid())
+#endif
 		{
 			TSharedPtr<SWindow> ParentWindowPtr = Tab->GetParentWindow();
 			if ((Tab->GetTabRole() == ETabRole::MajorTab || Tab->GetTabRole() == ETabRole::NomadTab) && ParentWindowPtr.IsValid() && ParentWindowPtr != FGlobalTabmanager::Get()->GetRootWindow())
