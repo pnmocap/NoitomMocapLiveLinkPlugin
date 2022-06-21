@@ -12,6 +12,7 @@
 #include "Blueprint/WidgetBlueprintGeneratedClass.h"
 #include "BaseWidgetBlueprint.h"
 #include "Kismet/GameplayStatics.h"
+#include "EngineVersionCompare.h"
 
 static const FName NeuronEditorWindowTabName("NeuronEditorWindow");
 
@@ -76,11 +77,18 @@ public:
     /** This function will be bound to Command (by default it will bring up plugin window) */
     void PluginButtonClicked()
     {
+#if UE_ENGINE_VER_LESS_THAN(5, 0)
 		TSharedRef<class SDockTab> Tab = FGlobalTabmanager::Get()->InvokeTab(NeuronEditorWindowTabName);
-		TSharedPtr<SWindow> ParentWindowPtr =Tab->GetParentWindow();
-		if ((Tab->GetTabRole() == ETabRole::MajorTab || Tab->GetTabRole() == ETabRole::NomadTab) && ParentWindowPtr.IsValid() && ParentWindowPtr != FGlobalTabmanager::Get()->GetRootWindow())
+#else
+		TSharedPtr<class SDockTab> Tab = FGlobalTabmanager::Get()->TryInvokeTab(NeuronEditorWindowTabName);
+#endif
+		if (Tab.IsValid())
 		{
-			ParentWindowPtr->Resize(FVector2D(402,126));
+			TSharedPtr<SWindow> ParentWindowPtr = Tab->GetParentWindow();
+			if ((Tab->GetTabRole() == ETabRole::MajorTab || Tab->GetTabRole() == ETabRole::NomadTab) && ParentWindowPtr.IsValid() && ParentWindowPtr != FGlobalTabmanager::Get()->GetRootWindow())
+			{
+				ParentWindowPtr->Resize(FVector2D(402, 126));
+			}
 		}
     }
 
