@@ -1,0 +1,9 @@
+{
+	"BuildId": "17155196",
+	"Modules": 
+	{
+		"NeuronGraphNode": "UE4Editor-NeuronGraphNode.dll",
+		"NeuronLiveLink": "UE4Editor-NeuronLiveLink.dll",
+		"NeuronLiveLinkEditor": "UE4Editor-NeuronLiveLinkEditor.dll"
+	}
+}
