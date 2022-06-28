@@ -283,6 +283,7 @@ bool UMocapApp::PollEvents()
     }
     if (hasUnhandledEvents) {
         FScopeLock Lock(&CriticalSection);
+
         for (const auto & e : events) {
             if (e.eventType == MocapApi::MCPEvent_AvatarUpdated) {
                 // handle received acvatar data
@@ -326,6 +327,9 @@ bool UMocapApp::PollEvents()
             IsReady = true;
         }
     }
+    
+    HandleMocapCommandsTimeout();
+
     return hasUnhandledEvents;
 }
 
@@ -846,6 +850,7 @@ bool UMocapApp::HandleCommandReplyEvent(uint64 CommandHandle, int replay)
         if (QueuedCommands[0].CommandHandle == CommandHandle)
         {
             Cmd = &QueuedCommands[0];
+            Cmd->ResponseTime = FDateTime::UtcNow().GetTicks();
         }
     }
 
@@ -974,10 +979,35 @@ void UMocapApp::PrepareAndSendMocapCommand(MocapApi::IMCPApplication* mcpApplica
                 ReturnIFError();
             }
             MocapApi::MCPApplicationHandle_t appcliation = AppHandle;
-            mcpApplication->QueuedServerCommand(command, appcliation);
+            mcpError = mcpApplication->QueuedServerCommand(command, appcliation);
             ReturnIFError();
             Cmd.CommandHandle = command;
             Cmd.SendTime = FDateTime::UtcNow().GetTicks();
+            Cmd.ResponseTime = Cmd.SendTime;
+        }
+    }
+}
+
+void UMocapApp::HandleMocapCommandsTimeout()
+{
+    if (QueuedCommands.Num() > 0)
+    {
+        FMocapServerCommand& Cmd = QueuedCommands[0];
+        if (Cmd.CommandHandle != 0)
+        {
+            // has command and already send to axis
+            // timeout duratiuon default 30 seconds
+            int64 TimeoutDur = FTimespan(0, 0, 20).GetTicks();
+            int64 Delta = FDateTime::UtcNow().GetTicks() - Cmd.ResponseTime;
+            if (Delta > TimeoutDur)
+            {
+                FString MsgStr = TEXT("Timeout");
+                uint32 code = 999;// fake timeout error code
+                Cmd.Result = FString::Printf(TEXT("Code %d\nMsg: %s"), code, *MsgStr);
+                Cmd.OnResult.Broadcast(code, MsgStr);
+                PushCommandToHistory(Cmd);
+                QueuedCommands.RemoveAt(0);
+            }
         }
     }
 }

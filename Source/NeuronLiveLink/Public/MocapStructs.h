@@ -326,6 +326,8 @@ struct FMocapServerCommand
     uint64 ProgressHandle;
 
     int64 SendTime;
+
+    int64 ResponseTime;
 };
 
 namespace MocapApi
@@ -461,6 +463,7 @@ private:
     bool HandleCommandReplyEvent(uint64 CommandHandle, int replay);
 
     void PrepareAndSendMocapCommand(MocapApi::IMCPApplication* mcpApplication);
+    void HandleMocapCommandsTimeout();
 
     void PushCommandToHistory(const FMocapServerCommand& Cmd);
 
