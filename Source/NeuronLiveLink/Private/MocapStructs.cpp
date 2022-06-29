@@ -980,6 +980,16 @@ void UMocapApp::PrepareAndSendMocapCommand(MocapApi::IMCPApplication* mcpApplica
             }
             MocapApi::MCPApplicationHandle_t appcliation = AppHandle;
             mcpError = mcpApplication->QueuedServerCommand(command, appcliation);
+            
+            UEnum* EMCCommandTypeEnum = StaticEnum<EMCCommandType>();
+            FString CmdName = EMCCommandTypeEnum->GetValueAsString(Cmd.Cmd);
+            UE_LOG(LogMocapApi, Log, TEXT("QueuedServerCommand app: %s[%lld] Cmd %s[%lld] result %d"),
+                *AppName,
+                appcliation,
+                *CmdName,
+                command,
+                mcpError
+            );
             ReturnIFError();
             Cmd.CommandHandle = command;
             Cmd.SendTime = FDateTime::UtcNow().GetTicks();
