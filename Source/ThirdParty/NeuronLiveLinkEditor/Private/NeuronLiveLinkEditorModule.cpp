@@ -111,7 +111,11 @@ private:
 		}
 
 		{
+#if UE_ENGINE_VER_LESS_THAN(5, 0)
 			UToolMenu* ToolbarMenu = UToolMenus::Get()->ExtendMenu("LevelEditor.LevelEditorToolBar");
+#else
+			UToolMenu* ToolbarMenu = UToolMenus::Get()->ExtendMenu("LevelEditor.LevelEditorToolBar.PlayToolBar");
+#endif
 			{
 				FToolMenuSection& Section = ToolbarMenu->FindOrAddSection("Neuron");
 				{
