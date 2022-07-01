@@ -47,6 +47,10 @@ public:
 		FGlobalTabmanager::Get()->RegisterNomadTabSpawner(NeuronEditorWindowTabName, FOnSpawnTab::CreateRaw(this, &FNeuronLiveLinkEditorModule::OnSpawnPluginTab))
 			.SetDisplayName(LOCTEXT("FNeuronEditorWindowTabTitle", "Neuron"))
 			.SetMenuType(ETabSpawnerMenuType::Hidden);
+
+		// Close tab when open a new level
+		FLevelEditorModule& LevelEditor = FModuleManager::GetModuleChecked<FLevelEditorModule>("LevelEditor");
+		MapChangedHandler = LevelEditor.OnMapChanged().AddRaw(this, &FNeuronLiveLinkEditorModule::OnLevelMapChanged);
 	}
 	
 	virtual void ShutdownModule() override
@@ -67,6 +71,14 @@ public:
 		FNeuronEditorWindowStyle::Shutdown();
 		FNeuronEditorWindowCommands::Unregister();
 		FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(NeuronEditorWindowTabName);
+
+		// Close tab when open a new level
+		if (MapChangedHandler.IsValid())
+		{
+			FLevelEditorModule& LevelEditor = FModuleManager::GetModuleChecked<FLevelEditorModule>("LevelEditor");
+			// Notify level editors of the map change
+			LevelEditor.OnMapChanged().Remove(MapChangedHandler);
+		}
 	}
 
 	virtual bool SupportsDynamicReloading() override
@@ -87,6 +99,7 @@ public:
 		if (Tab.IsValid())
 #endif
 		{
+			NeuronCommandTab = Tab;
 			TSharedPtr<SWindow> ParentWindowPtr = Tab->GetParentWindow();
 			if ((Tab->GetTabRole() == ETabRole::MajorTab || Tab->GetTabRole() == ETabRole::NomadTab) && ParentWindowPtr.IsValid() && ParentWindowPtr != FGlobalTabmanager::Get()->GetRootWindow())
 			{
@@ -137,11 +150,12 @@ private:
         );
 		TSubclassOf<UUserWidget> WidgetClass = StaticLoadClass(UUserWidget::StaticClass(), nullptr, *WidgetClassName);
 		TSharedRef<SWidget> ContentWidget = SNullWidget::NullWidget;
-		UWorld* World = GEditor->GetEditorWorldContext().World();
+		UWorld* OwningObject = GEditor->GetEditorWorldContext().World();
 		UUserWidget* Widget = nullptr;
-		if (World)
+		
+		if (OwningObject)
 		{
-			Widget = CreateWidget<UUserWidget>(World, WidgetClass);
+			Widget = CreateWidget<UUserWidget>(OwningObject, WidgetClass);
 		}
 		if (Widget)
 		{
@@ -175,8 +189,19 @@ private:
             ];
     }
 
+	void OnLevelMapChanged(UWorld* World, EMapChangeType Type)
+	{
+		bool NeedCloseTab = Type == EMapChangeType::TearDownWorld;
+		if (NeedCloseTab && NeuronCommandTab.IsValid())
+		{
+			NeuronCommandTab.Pin()->RequestCloseTab();
+		}
+	}
+
 private:
     TSharedPtr<class FUICommandList> PluginCommands;
+	FDelegateHandle MapChangedHandler;
+	TWeakPtr<class SDockTab> NeuronCommandTab;
 };
 
 IMPLEMENT_MODULE(FNeuronLiveLinkEditorModule, NeuronLiveLinkEditor);
