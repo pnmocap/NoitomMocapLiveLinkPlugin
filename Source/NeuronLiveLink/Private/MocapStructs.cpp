@@ -304,7 +304,7 @@ bool UMocapApp::PollEvents()
                 // handle error, just output the error, so use can see it
                 LastError = e.eventData.systemError.error;
                 ExtraErrorMsg = FString();
-                UE_LOG(LogMocapApi, Warning, TEXT("Got Error Event %d: %s"), LastError, *GetLastErrorMessage());
+                UE_LOG(LogMocapApi, Warning, TEXT("Got Error Event (app:%lld) %d: %s"), AppHandle, LastError, *GetLastErrorMessage());
                 //LastError = MocapApi::Error_None;-
                 IsReady = !((LastError == MocapApi::Error_ServerNotReady) || (LastError == MocapApi::Error_ClientNotReady) || (LastError == MocapApi::Error_AddressInUse));
             }
