@@ -103,7 +103,7 @@ public:
 			TSharedPtr<SWindow> ParentWindowPtr = Tab->GetParentWindow();
 			if ((Tab->GetTabRole() == ETabRole::MajorTab || Tab->GetTabRole() == ETabRole::NomadTab) && ParentWindowPtr.IsValid() && ParentWindowPtr != FGlobalTabmanager::Get()->GetRootWindow())
 			{
-				ParentWindowPtr->Resize(FVector2D(402, 126));
+				ParentWindowPtr->Resize(FVector2D(402, 158));
 			}
 		}
     }

@@ -82,23 +82,54 @@ void UNeuronLiveLinkBPLibrary::GetMocapAppNames(TArray<FName>& AppNames)
 	}
 }
 
-void UNeuronLiveLinkBPLibrary::RemoveAllMocapLivelinkSource()
+void UNeuronLiveLinkBPLibrary::RemoveMocapAppByName(FName AppName)
 {
 	FLiveLinkClientReference ClientRef;
 	ILiveLinkClient* Client = ClientRef.GetClient();
-	TArray<FGuid> Sources = Client->GetSources();
-	for (FGuid Src : Sources)
+	MocapAppDataVisitor Visitor;
+	FMocapAppManager::GetInstance().EachRunningApp(Visitor);
+	for (UMocapApp* App : Visitor.Apps)
 	{
-		FText Tp = Client->GetSourceType(Src);
-		if (Tp.ToString().Contains(FNeuronLiveLinkSource::SourceType.ToString()))
+		if (App->AppName.Equals(AppName.ToString()))
 		{
-			ULiveLinkSourceSettings* Sett = Client->GetSourceSettings(Src);
-			FString Conn;
-			if (Sett)
+			FGuid Src = App->GetBindingLiveLinkSource();
+			if (Src.IsValid())
 			{
-				Conn = Sett->ConnectionString;
+				Client->RemoveSource(Src);
 			}
-			UE_LOG(LogMocapApi, Warning, TEXT("Remove MocapSource Guid %s SourceType [%s] ConnectionString [%s] "), *Src.ToString(), *Tp.ToString(), *Conn);
+		}
+	}
+}
+
+void UNeuronLiveLinkBPLibrary::RemoveAllMocapLivelinkSource()
+{
+	//FLiveLinkClientReference ClientRef;
+	//ILiveLinkClient* Client = ClientRef.GetClient();
+	//TArray<FGuid> Sources = Client->GetSources();
+	//for (FGuid Src : Sources)
+	//{
+	//	FText Tp = Client->GetSourceType(Src);
+	//	if (Tp.ToString().Contains(FNeuronLiveLinkSource::SourceType.ToString()))
+	//	{
+	//		ULiveLinkSourceSettings* Sett = Client->GetSourceSettings(Src);
+	//		FString Conn;
+	//		if (Sett)
+	//		{
+	//			Conn = Sett->ConnectionString;
+	//		}
+	//		UE_LOG(LogMocapApi, Warning, TEXT("Remove MocapSource Guid %s SourceType [%s] ConnectionString [%s] "), *Src.ToString(), *Tp.ToString(), *Conn);
+	//		Client->RemoveSource(Src);
+	//	}
+	//}
+	FLiveLinkClientReference ClientRef;
+	ILiveLinkClient* Client = ClientRef.GetClient();
+	MocapAppDataVisitor Visitor;
+	FMocapAppManager::GetInstance().EachRunningApp(Visitor);
+	for (UMocapApp* App : Visitor.Apps)
+	{
+		FGuid Src = App->GetBindingLiveLinkSource();
+		if (Src.IsValid())
+		{
 			Client->RemoveSource(Src);
 		}
 	}

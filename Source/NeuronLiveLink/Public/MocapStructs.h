@@ -442,6 +442,9 @@ public:
 
     // dump app date for debug use
     void DumpData();
+
+    void SetBindingLiveLinkSource(FGuid SourceID) { BindingLiveLinkSource = SourceID;  }
+    FGuid GetBindingLiveLinkSource() { return BindingLiveLinkSource; }
 private:
     bool IsConnecting = false;
     bool IsReady = true;
@@ -452,6 +455,7 @@ private:
     FString AppHandleInternal;// store handler use string because uint64 cannot expose to blueprint
 
     uint64 AppHandle; // MocapApi::MCPApplicationHandle_t used for MocapApi
+    FGuid BindingLiveLinkSource;
 
     bool HandleAvatarUpdateEvent(uint64 Avatarhandle);
     void CheckAvatarJoint(uint64 Avatarhandle, uint64 JointHandle, const FMocapAvatar& avatar);

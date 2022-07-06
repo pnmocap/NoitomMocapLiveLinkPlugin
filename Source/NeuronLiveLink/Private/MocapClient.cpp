@@ -59,6 +59,10 @@ FMocapAppClient::~FMocapAppClient()
 void FMocapAppClient::SetSource(TSharedPtr<FNeuronLiveLinkSource> Source)
 {
     mSource = Source;
+    if (App)
+    {
+        App->SetBindingLiveLinkSource(Source->GetSourceGuid());
+    }
 }
 
 //~ Begin FRunnable interface
@@ -114,6 +118,7 @@ void FMocapAppClient::DestroyApplication()
 {
     if (App)
     {
+        App->SetBindingLiveLinkSource(FGuid());
         App->RemoveFromRoot();
         App->Disconnect();
     }
