@@ -25,8 +25,7 @@ Axis studio作为网络中的服务端向客户端电脑上的应用发送动捕
 ## 1.3 关于
 
 1. 支持开发平台: Win64
-2. 支持虚幻引擎版本: 4.25 4.26 4.27
-3. 文中的图片是基于英文版本的截图，中文版本不再使用新的截图而是在英文截图基础上进行简单说明
+2. 文中的图片是基于英文版本的截图，中文版本不再使用新的截图而是在英文截图基础上进行简单说明
 
 # 2. 安装
 
@@ -622,7 +621,8 @@ Spine3,
   ![OpenAxisCommandbarInEditor](OpenAxisCommandbarInEditor.png)
   打开的窗口如下
   ![AxisCommandBarInEditor](AxisCommandBarInEditor.png)
-* 在实时链接窗口, 添加Axis Neuron Live源
+* 在实时链接窗口, 添加Axis Neuron源
+* 窗口会自动选择连接的Axis Neuron源，但若存在多个源时需要选择要进行指令发送的源
 * Neuron指令发送窗口中Connection Status为Online时就可以通过窗口中的按钮向Axis发送指令
 
 ## 9.3 在运行时使用

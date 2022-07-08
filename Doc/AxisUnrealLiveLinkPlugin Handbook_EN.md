@@ -25,7 +25,6 @@ Axis studio act as a server on a network and stream motion capture data live to 
 ## 1.3 About
 
 1. Supported Development Platforms: Win64
-2. Supported UE4 Version: 4.25 4.26 4.27
 
 # 2. Installation
 
@@ -307,6 +306,7 @@ After version 1.2.06, you can send some control commands to AxisStudio in both e
   the windiow is like
   ![AxisCommandBarInEditor](AxisCommandBarInEditor.png)
 * In Live Link Window, Add Axis Neuron Live Source
+* It could automatically select one axisneuron live link source when connected and you should select the correct one you want to send commands if there is more than one source.
 * When "Connection Status" is "Online" in Neuron Command Send window, you can send commands to Axis Studio by pressing buttons in the window
 
 ## 9.3 How to use at runtime
