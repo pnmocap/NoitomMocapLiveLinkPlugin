@@ -105,7 +105,7 @@ void SNeuronLiveLinkSourceFactory::Construct( const FArguments& Args )
 	ChildSlot
 		[
 			SNew( SBox )
-				.WidthOverride( 250 )
+				.WidthOverride( 300 )
 				[
 					SNew( SVerticalBox )
 					+ SVerticalBox::Slot( )
