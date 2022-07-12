@@ -10,6 +10,8 @@ Axis Studio不仅可以导出动捕数据还可以输出实时动捕数据到第
 
 Axis studio作为网络中的服务端向客户端电脑上的应用发送动捕数据，本文主要是关于如何在虚幻引擎4中使用 NeuronLiveLink 插件进行驱动动捕数据
 
+![NeuronVersion](NeuronVersion.png)
+
 ## 1.1 插件特点
 
 * 支持虚幻引擎版本4.26 4.27 5.0
