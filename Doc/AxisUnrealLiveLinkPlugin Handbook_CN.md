@@ -31,7 +31,7 @@ Axis studio作为网络中的服务端向客户端电脑上的应用发送动捕
 
 # 2. 安装
 
-1. 在虚幻引擎工程目录创建Plugins文件夹(如果文件夹不存在的)
+1. 在虚幻引擎工程目录创建Plugins文件夹(如果文件夹不存在)
 
 2. 解压**NeuronLiveLink** 插件压缩包到Plugins目录
    
@@ -621,24 +621,55 @@ Spine3,
 
 * 在关卡编辑器工具栏中点击Neuron按钮（下图中1所示）或者窗口菜单栏中的Neuron菜单项(下图中2所示)调出Neuron指令发送窗口
   ![OpenAxisCommandbarInEditor](OpenAxisCommandbarInEditor.png)
+  
   打开的窗口如下
-  ![AxisCommandBarInEditor](AxisCommandBarInEditor.png)
+  
+  <img title="" src="AxisCommandBarInEditor.png" alt="AxisCommandBarInEditor" data-align="center">
+
 * 在实时链接窗口, 添加Axis Neuron源
+
 * 窗口会自动选择连接的Axis Neuron源，但若存在多个源时需要选择要进行指令发送的源
+
+* Neuron指令发送窗口中Connection Status为Online时就可以通过窗口中的按钮向Axis发送指令
+
+* 在关卡编辑器工具栏中点击Neuron按钮（下图中1所示）或者窗口菜单栏中的Neuron菜单项(下图中2所示)调出Neuron指令发送窗口
+  ![OpenAxisCommandbarInEditor](OpenAxisCommandbarInEditor.png)
+  
+  打开的窗口如下
+  
+  ![AxisCommandBarInEditor](AxisCommandBarInEditor.png)
+
+* 在实时链接窗口, 添加Axis Neuron源
+
+* 窗口会自动选择连接的Axis Neuron源，但若存在多个源时需要选择要进行指令发送的源
+
+* Neuron指令发送窗口中Connection Status为Online时就可以通过窗口中的按钮向Axis发送指令
+
+* 在关卡编辑器工具栏中点击Neuron按钮（下图中1所示）或者窗口菜单栏中的Neuron菜单项(下图中2所示)调出Neuron指令发送窗口
+  ![OpenAxisCommandbarInEditor](OpenAxisCommandbarInEditor.png)
+  
+  打开的窗口如下
+  
+  ![AxisCommandBarInEditor](AxisCommandBarInEditor.png)
+
+* 在实时链接窗口, 添加Axis Neuron源
+
+* 窗口会自动选择连接的Axis Neuron源，但若存在多个源时需要选择要进行指令发送的源
+
 * Neuron指令发送窗口中Connection Status为Online时就可以通过窗口中的按钮向Axis发送指令
 
 ## 9.3 在运行时使用
 
  如果想在运行时或者打包后向AxisStudio发送指令，可以将插件中的WBP_AxisStudioUIColtroller蓝图Acto到关卡中，这个Actor在启动会自动创建指令发送的UI
 
-![](AxisCommandWidgetActor.png)
+![AxisCommandWidgetActor](AxisCommandWidgetActor.png)
 
 无论是编辑器还是运行时，插件使用WBP_AxisStudio控件蓝图向Axis Studio发送指令
-![]AxisCommandWidget](AxisCommandWidget.png)
+![AxisCommandWidget](AxisCommandWidget.png)
 
 在运行时额外添加了连接和断开连接功能用于创建Axis Neuron Live源，
 
-![](AxisCommandBarPIE.png)
+![AxisCommandBarPIE](AxisCommandBarPIE.png)
 
 玩家也可以参考控件中按钮的实现自己实现UI向AxisStudio发送指令
 
@@ -851,4 +882,8 @@ Spine3,
 # 12 常见问题
 
 * 当我重新编译(rebuild)我的工程时遇到编译错误
-    我们的插件使用的是预编译的目标文件文件，虚幻引擎在重新编译时会删除这些预编译文件从而导致我无法编译成功，这是虚幻引擎编译系统的缺陷，现行解决方案是重新下载插件并将工程中插件的Intermediate目录使用新下载的文件进行替换，然后运行构建(Build)操作进行构建
+    我们的插件使用的是预编译的目标文件文件，虚幻引擎在重新编译时会删除这些预编译文件从而导致我无法编译成功，这是虚幻引擎编译系统的缺陷，现行解决方案是重新下载插件并将工程中插件的Intermediate目录使用新下载的文件进行替换，然后运行构建(Build)操作进行构建或者从github下载源码版插件使用
+
+* 插件放UE5引擎目录打包失败
+  
+   请从Marketplace下载插件使用或者将插件放到Engine\Plugins\Marketplace目录使用，测试发现UE5引擎放到其他目录会打包失败

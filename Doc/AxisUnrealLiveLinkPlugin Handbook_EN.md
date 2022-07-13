@@ -305,17 +305,21 @@ After version 1.2.06, you can send some control commands to AxisStudio in both e
 
 * Open Neuron Command Send window by Pressing "Neuron" button in the tool bar of Level Editor(like 1 in the following picture) or by pressing Neuron item in Window menu(like 2 in the following picture)
   ![OpenAxisCommandbarInEditor](OpenAxisCommandbarInEditor.png)
+  
   the windiow is like
-  ![AxisCommandBarInEditor](AxisCommandBarInEditor.png)
+  <img src="AxisCommandBarInEditor.png" title="" alt="AxisCommandBarInEditor" data-align="center">
+
 * In Live Link Window, Add Axis Neuron Live Source
+
 * It could automatically select one axisneuron live link source when connected and you should select the correct one you want to send commands if there is more than one source.
+
 * When "Connection Status" is "Online" in Neuron Command Send window, you can send commands to Axis Studio by pressing buttons in the window
 
 ## 9.3 How to use at runtime
 
 You can add the actor blueprint WBP_AxisStudioUIColtroller to your map to summon Neuron Command Send window when playing in editor or in a packaged version
 
-![](AxisCommandWidgetActor.png)
+![AxisCommandWidgetActor](AxisCommandWidgetActor.png)
 
 The plugin use widget blueprint WBP_AxisStudio to send commands both in editor and at runtime.
 ![AxisCommandWidget](AxisCommandWidget.png)
