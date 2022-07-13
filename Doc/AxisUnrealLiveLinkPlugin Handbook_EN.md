@@ -287,11 +287,11 @@ If you are an advance player, you want to do more about retargeting, you can inh
 
 This is basic use of Live Link，You can refer to Unreal documents Using Live Link Data part from https://docs.unrealengine.com/4.27/en-US/AnimatingObjects/SkeletalMeshAnimation/LiveLinkPlugin/LiveLinkBlueprintComponent/. If the plugin receives Transform role data, you can use it to dirve your props.
 
-# 9. 向Axis Studio发送控制指令
+# 9. Send commands to control Axis Studio
 
 After version 1.2.06, you can send some control commands to AxisStudio in both editor and the package builds.
 
-## 9.1 支持的指令
+## 9.1 Supported Commands
 
 * Start/Stop Recording
 
@@ -313,14 +313,20 @@ After version 1.2.06, you can send some control commands to AxisStudio in both e
 
 ## 9.3 How to use at runtime
 
-  You can use widget blueprint WBP_AxisStudio to send commands at runtime，Actually we use the same widget in editor
+You can add the actor blueprint WBP_AxisStudioUIColtroller to your map to summon Neuron Command Send window when playing in editor or in a packaged version
+
+![](AxisCommandWidgetActor.png)
+
+The plugin use widget blueprint WBP_AxisStudio to send commands both in editor and at runtime.
 ![AxisCommandWidget](AxisCommandWidget.png)
 
 You can see Connect and Disconnect button in runtime for add/remove Axis Neuron Live source
 
 ![AxisCommandBarPIE](AxisCommandBarPIE.png)
 
-You can alse create you owning widget to send commands to Axis Studio. you can refer to WBP_AxisStudio for how to send commands。
+You can alse create you owning widget to send commands to Axis Studio. you can refer to WBP_AxisStudio for how to send commands.
+
+> When Neuron Command Send window is opened in Editor, It will prompt you and close the window automatically if you open a new map or play in editor
 
 # 10. Projects Packaging
 

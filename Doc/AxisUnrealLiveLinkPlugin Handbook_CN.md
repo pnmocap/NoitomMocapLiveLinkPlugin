@@ -629,7 +629,11 @@ Spine3,
 
 ## 9.3 在运行时使用
 
-  插件中提供了WBP_AxisStudio控件蓝图供玩家在运行时使用，实际上编辑器使用的是相同的控件，玩家可以在需要时创建控件用于向Axis Studio发送指令
+ 如果想在运行时或者打包后向AxisStudio发送指令，可以将插件中的WBP_AxisStudioUIColtroller蓝图Acto到关卡中，这个Actor在启动会自动创建指令发送的UI
+
+![](AxisCommandWidgetActor.png)
+
+无论是编辑器还是运行时，插件使用WBP_AxisStudio控件蓝图向Axis Studio发送指令
 ![]AxisCommandWidget](AxisCommandWidget.png)
 
 在运行时额外添加了连接和断开连接功能用于创建Axis Neuron Live源，
@@ -637,6 +641,8 @@ Spine3,
 ![](AxisCommandBarPIE.png)
 
 玩家也可以参考控件中按钮的实现自己实现UI向AxisStudio发送指令
+
+> 当在编辑器里Neuron指令发送窗口打开时，运行游戏关卡或者打开新的关卡进行编辑，都会提示并自动关闭Neuron指令发送窗口.
 
 # 10. 工程打包
 
