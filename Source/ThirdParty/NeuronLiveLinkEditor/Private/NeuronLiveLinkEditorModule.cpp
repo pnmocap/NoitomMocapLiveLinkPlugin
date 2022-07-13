@@ -51,6 +51,8 @@ public:
 		// Close tab when open a new level
 		FLevelEditorModule& LevelEditor = FModuleManager::GetModuleChecked<FLevelEditorModule>("LevelEditor");
 		MapChangedHandler = LevelEditor.OnMapChanged().AddRaw(this, &FNeuronLiveLinkEditorModule::OnLevelMapChanged);
+
+		RefreshLevelScriptActionsDelegateHandle = FWorldDelegates::RefreshLevelScriptActions.AddRaw(this, &FNeuronLiveLinkEditorModule::OnRefreshLevelScriptActions);
 	}
 	
 	virtual void ShutdownModule() override
@@ -78,6 +80,11 @@ public:
 			FLevelEditorModule& LevelEditor = FModuleManager::GetModuleChecked<FLevelEditorModule>("LevelEditor");
 			// Notify level editors of the map change
 			LevelEditor.OnMapChanged().Remove(MapChangedHandler);
+		}
+
+		if (RefreshLevelScriptActionsDelegateHandle.IsValid())
+		{
+			FWorldDelegates::RefreshLevelScriptActions.Remove(RefreshLevelScriptActionsDelegateHandle);
 		}
 	}
 
@@ -143,7 +150,7 @@ private:
     {
 		FString WidgetClassName(TEXT("WidgetBlueprintGeneratedClass'/NeuronLiveLink/MocapCommandUI/WBP_AxisStudio.WBP_AxisStudio_C'"));
 		FText WidgetText = FText::Format(
-            LOCTEXT("WindowWidgetText", "Failed to generate WBP_AxisStudio widget @ {0} in {1}\nPlease check Asset {2}"),
+            LOCTEXT("WindowWidgetText", "Failed to generate WBP_AxisStudio widget \n@ {0}\nin {1}\nPlease check Asset {2}"),
             FText::FromString(TEXT("FNeuronLiveLinkEditorModule::OnSpawnPluginTab")),
             FText::FromString(TEXT("NeuronLiveLinkEditorModule.cpp")),
 			FText::FromString(WidgetClassName)
@@ -151,11 +158,23 @@ private:
 		TSubclassOf<UUserWidget> WidgetClass = StaticLoadClass(UUserWidget::StaticClass(), nullptr, *WidgetClassName);
 		TSharedRef<SWidget> ContentWidget = SNullWidget::NullWidget;
 		UWorld* OwningObject = GEditor->GetEditorWorldContext().World();
+		FWorldContext* PIEWorld = GEditor->GetPIEWorldContext();
 		UUserWidget* Widget = nullptr;
 		
 		if (OwningObject)
 		{
-			Widget = CreateWidget<UUserWidget>(OwningObject, WidgetClass);
+			if (PIEWorld == nullptr)
+			{
+				Widget = CreateWidget<UUserWidget>(OwningObject, WidgetClass);
+			}
+			else
+			{
+				WidgetText = FText::Format(
+					LOCTEXT("WindowWidgetTextPIE", "Can't summon WBP_AxisStudio widget\n@ {0}\nin {1} when playing in editor."),
+					FText::FromString(TEXT("FNeuronLiveLinkEditorModule::OnSpawnPluginTab")),
+					FText::FromString(TEXT("NeuronLiveLinkEditorModule.cpp"))
+				);
+			}
 		}
 		if (Widget)
 		{
@@ -194,13 +213,29 @@ private:
 		bool NeedCloseTab = Type == EMapChangeType::TearDownWorld;
 		if (NeedCloseTab && NeuronCommandTab.IsValid())
 		{
-			NeuronCommandTab.Pin()->RequestCloseTab();
+			if (EAppReturnType::Ok == FMessageDialog::Open(EAppMsgType::Ok, EAppReturnType::Ok, LOCTEXT("WindowWidgetTextPromptMapChanged", "This action will close NeuronEditorWindow.")))
+			{
+				NeuronCommandTab.Pin()->RequestCloseTab();
+			}
+		}
+	}
+
+	void OnRefreshLevelScriptActions(UWorld* World)
+	{
+		bool NeedCloseTab = (GEditor->GetPIEWorldContext() != nullptr);
+		if (NeedCloseTab && NeuronCommandTab.IsValid())
+		{
+			if (EAppReturnType::Ok == FMessageDialog::Open(EAppMsgType::Ok, EAppReturnType::Ok, LOCTEXT("WindowWidgetTextPromptMapChanged", "This action will close NeuronEditorWindow.")))
+			{
+				NeuronCommandTab.Pin()->RequestCloseTab();
+			}
 		}
 	}
 
 private:
     TSharedPtr<class FUICommandList> PluginCommands;
 	FDelegateHandle MapChangedHandler;
+	FDelegateHandle RefreshLevelScriptActionsDelegateHandle;
 	TWeakPtr<class SDockTab> NeuronCommandTab;
 };
 
