@@ -626,7 +626,13 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
             avatar.BoneParents[jointTag] = parentJointTag;
 
             FVector& d = avatar.DefaultLocalPositions[jointTag];
+#if 0
             mcpJoint->GetJointDefaultLocalPosition(&PosX, &PosY, &PosZ, handle);
+#else
+            PosX = 0;
+            PosY = 0;
+            PosZ = 0;
+#endif
             d = FVector(PosX, PosY, PosZ);
 
             FVector& p = avatar.LocalPositions[jointTag];

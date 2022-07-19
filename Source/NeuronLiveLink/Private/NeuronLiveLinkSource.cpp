@@ -29,7 +29,11 @@ FNeuronLiveLinkSource::FNeuronLiveLinkSource( EForceInit )
 
 FNeuronLiveLinkSource::~FNeuronLiveLinkSource ()
 {
-
+    if (mocapClient)
+    {
+        delete mocapClient;
+        mocapClient = nullptr;
+    }
 }
 
 void FNeuronLiveLinkSource::Init( FIPv4Endpoint InLocalEndpoint, bool InIsUDP, FIPv4Endpoint InRemoteEndpoint, const FString& InOrder, int InUDPRecvPoint)
@@ -91,8 +95,6 @@ bool FNeuronLiveLinkSource::RequestSourceShutdown ()
     if (mocapClient)
     {
         mocapClient->Exit();
-        delete mocapClient;
-        mocapClient = nullptr;
     }
 	AN_LOG(Log, TEXT("RequestSourceShutdown"));
 	return true;
