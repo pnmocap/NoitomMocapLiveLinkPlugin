@@ -47,7 +47,6 @@ FMocapAppClient::FMocapAppClient(bool IsUDP, const FString& RemoteIP, int Port, 
 
 FMocapAppClient::~FMocapAppClient()
 {
-    DestroyApplication();
     if (Thread)
     {
         Thread->Kill(true);
@@ -96,6 +95,7 @@ void FMocapAppClient::Exit()
     if (App)
     {
         App->SetBindingLiveLinkSource(FGuid());
+        DestroyApplication();
     }
     mSource.Reset();
 }

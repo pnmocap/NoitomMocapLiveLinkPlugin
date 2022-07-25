@@ -660,7 +660,7 @@ Spine3,
 
 ## 9.3 在运行时使用
 
- 如果想在运行时或者打包后向AxisStudio发送指令，可以将插件中的WBP_AxisStudioUIColtroller蓝图Acto到关卡中，这个Actor在启动会自动创建指令发送的UI
+ 如果想在运行时或者打包后向AxisStudio发送指令，可以将插件中的WBP_AxisStudioUIController蓝图Acto到关卡中，这个Actor在启动会自动创建指令发送的UI
 
 ![AxisCommandWidgetActor](AxisCommandWidgetActor.png)
 
@@ -674,6 +674,12 @@ Spine3,
 玩家也可以参考控件中按钮的实现自己实现UI向AxisStudio发送指令
 
 > 当在编辑器里Neuron指令发送窗口打开时，运行游戏关卡或者打开新的关卡进行编辑，都会提示并自动关闭Neuron指令发送窗口.
+
+## 9.4 同时连接多个源进行使用
+
+编辑器编辑状态下目前暂不支持同时连接多个源执行指令通信。运行状态或者打包程序一个户可以通过在关卡中添加多个WBP_AxisStudioUIController连接不同的源进行控制。此时可以通过修改Actor的WidgetScreenPosition设置界面在屏幕的位置
+
+![AxisCommandBarPos](AxisCommandBarPos.png)
 
 # 10. 工程打包
 

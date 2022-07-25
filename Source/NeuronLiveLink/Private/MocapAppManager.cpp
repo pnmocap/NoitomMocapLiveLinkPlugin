@@ -26,6 +26,7 @@ bool FMocapAppManager::AddMocapApp(UMocapApp* App)
         }
         else
         {
+            //(*OldApp)->Disconnect();
             RemoveMocapApp(*OldApp);
             RunningApps.Add(AppName, App);
             return true;

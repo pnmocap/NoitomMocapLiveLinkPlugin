@@ -307,6 +307,7 @@ After version 1.2.06, you can send some control commands to AxisStudio in both e
   ![OpenAxisCommandbarInEditor](OpenAxisCommandbarInEditor.png)
   
   the windiow is like
+  
   <img src="AxisCommandBarInEditor.png" title="" alt="AxisCommandBarInEditor" data-align="center">
 
 * In Live Link Window, Add Axis Neuron Live Source
@@ -317,7 +318,7 @@ After version 1.2.06, you can send some control commands to AxisStudio in both e
 
 ## 9.3 How to use at runtime
 
-You can add the actor blueprint WBP_AxisStudioUIColtroller to your map to summon Neuron Command Send window when playing in editor or in a packaged version
+You can add the actor blueprint WBP_AxisStudioUIController to your map to summon Neuron Command Send window when playing in editor or in a packaged version
 
 ![AxisCommandWidgetActor](AxisCommandWidgetActor.png)
 
@@ -331,6 +332,12 @@ You can see Connect and Disconnect button in runtime for add/remove Axis Neuron 
 You can alse create you owning widget to send commands to Axis Studio. you can refer to WBP_AxisStudio for how to send commands.
 
 > When Neuron Command Send window is opened in Editor, It will prompt you and close the window automatically if you open a new map or play in editor
+
+## 9.4 Send commands to multi AxisStudio servers
+
+Do not support sent command to multi servers in edit mode. But you can add more than one WBP_AxisStudioUIController actor to the map ands use it in PIE mode or your packaged application. Remember to set a different WidgetScreenPosition property in the actor detail panel for you WBP_AxisStudioUIController to make sure they do not show in the same position.
+
+![AxisCommandBarPos](AxisCommandBarPos.png)
 
 # 10. Projects Packaging
 

@@ -3,6 +3,7 @@
 #include "NeuronLiveLinkBPLibrary.h"
 #include "NeuronLiveLinkSourceFactory.h"
 #include "ILiveLinkClient.h"
+#include "LiveLinkClient.h"
 #include "LiveLinkClientReference.h"
 #include "MocapAppManager.h"
 #include "MocapStructs.h"
@@ -84,8 +85,9 @@ void UNeuronLiveLinkBPLibrary::GetMocapAppNames(TArray<FName>& AppNames)
 
 void UNeuronLiveLinkBPLibrary::RemoveMocapAppByName(FName AppName)
 {
-	FLiveLinkClientReference ClientRef;
-	ILiveLinkClient* Client = ClientRef.GetClient();
+	//FLiveLinkClientReference ClientRef;
+	//ILiveLinkClient* Client = ClientRef.GetClient();
+	FLiveLinkClient* Client = &IModularFeatures::Get().GetModularFeature<FLiveLinkClient>(FLiveLinkClient::ModularFeatureName);
 	MocapAppDataVisitor Visitor;
 	FMocapAppManager::GetInstance().EachRunningApp(Visitor);
 	for (UMocapApp* App : Visitor.Apps)
