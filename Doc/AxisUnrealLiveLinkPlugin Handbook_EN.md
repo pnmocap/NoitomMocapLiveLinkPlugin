@@ -300,6 +300,8 @@ After version 1.2.06, you can send some control commands to AxisStudio in both e
 * Calibratiuon for all
 
 * Resume original posture
+  
+  > Do not suggest switch to another neuron livel link source and send commands to that source for the plugin do not know whether Axis studio is start recording data.
 
 ## 9.2 How to use in editor
 
