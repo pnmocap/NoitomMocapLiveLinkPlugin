@@ -63,8 +63,8 @@ private:
 
 	// layered bone blend
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Config)
-		FName BlendPoseBoneName;
+// 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Config)
+// 		FName BlendPoseBoneName;
 	/**
 	 * Configuration for the parts of the skeleton to blend for each layer. Allows
 	 * certain parts of the tree to be blended out or omitted from the pose.
