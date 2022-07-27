@@ -200,37 +200,15 @@ void FAnimNode_NeuronBlend::PreUpdate(const UAnimInstance* InAnimInstance)
 		CurrentRetargetAssetWithDisp->Initialize();
 	}
 
-	//BlendNode.PreUpdate(InAnimInstance);
-	
-// 	FName SpineName = DefaultNeuronBoneFilterName;
-// 	if (BlendPoseBoneName != TEXT("Default"))
-// 	{
-// 		SpineName = BlendPoseBoneName;
-// 	}
-// 	else if (InAnimInstance->CurrentSkeleton)
-// 	{
-// 		const FReferenceSkeleton& Skeleton = InAnimInstance->CurrentSkeleton->GetReferenceSkeleton();
-// 		FName HipsName = CurrentRetargetAsset->GetRemappedBoneName(FName("Hips"));
-// 		FName HeadName = CurrentRetargetAsset->GetRemappedBoneName(FName("Head"));
-// 		SpineName = FindParentUnderHip(Skeleton, HeadName, HipsName);
-// 	}
-// 	LayerSetup[0].BranchFilters[0].BoneName = SpineName;
-// 	RebuildCacheData(InAnimInstance->CurrentSkeleton);
-
-
-	const FReferenceSkeleton& Skeleton = InAnimInstance->CurrentSkeleton->GetReferenceSkeleton();	
-// 	FName LeftUpLeg = CurrentRetargetAsset->GetRemappedBoneName(FName("LeftUpLeg"));
-// 	FName LeftFootName = CurrentRetargetAsset->GetRemappedBoneName(FName("LeftFoot"));
-///	FName LeftLeg = FindParentUnderHip(Skeleton, LeftFootName, LeftUpLeg);
-	LayerSetup[0].BranchFilters[0].BoneName = CurrentRetargetAsset->GetRemappedBoneName(FName("LeftLeg"));
-	LayerSetup[0].BranchFilters[0].BlendDepth = 0;
-
-// 	FName RightUpLeg = CurrentRetargetAsset->GetRemappedBoneName(FName("RightUpLeg"));
-// 	FName RightFootName = CurrentRetargetAsset->GetRemappedBoneName(FName("RightFoot"));
-// 	FName RightLeg = FindParentUnderHip(Skeleton, RightFootName, RightUpLeg);
-	LayerSetup[0].BranchFilters[1].BoneName = CurrentRetargetAsset->GetRemappedBoneName(FName("RightLeg"));
-	LayerSetup[0].BranchFilters[1].BlendDepth = 0;
-	RebuildCacheData(InAnimInstance->CurrentSkeleton);
+	const FReferenceSkeleton& Skeleton = InAnimInstance->CurrentSkeleton->GetReferenceSkeleton();
+	if (LayerSetup[0].BranchFilters.Num() == 2)
+	{
+		LayerSetup[0].BranchFilters[0].BoneName = CurrentRetargetAsset->GetRemappedBoneName(FName("LeftLeg"));
+		LayerSetup[0].BranchFilters[0].BlendDepth = 0;
+		LayerSetup[0].BranchFilters[1].BoneName = CurrentRetargetAsset->GetRemappedBoneName(FName("RightLeg"));
+		LayerSetup[0].BranchFilters[1].BlendDepth = 0;
+		RebuildCacheData(InAnimInstance->CurrentSkeleton);
+	}
 }
 
 void FAnimNode_NeuronBlend::Update_AnyThread(const FAnimationUpdateContext& Context)
@@ -310,7 +288,7 @@ void FAnimNode_NeuronBlend::Update_AnyThread(const FAnimationUpdateContext& Cont
 	//	BasePose.Update(Context);
 	//}
 
-	
+
 	// Accumulate Delta time from update
 	CachedDeltaTime += Context.GetDeltaTime();
 
@@ -353,7 +331,7 @@ void FAnimNode_NeuronBlend::Evaluate_AnyThread(FPoseContext& Output)
 
 				CurrentRetargetAsset->BuildPoseFromAnimationData(CachedDeltaTime, SkeletonData, FrameData, OutputBlend.Pose);
 				CurrentRetargetAsset->BuildPoseAndCurveFromBaseData(CachedDeltaTime, SkeletonData, FrameData, OutputBlend.Pose, OutputBlend.Curve);
-				
+
 				CurrentRetargetAssetWithDisp->BuildPoseFromAnimationData(CachedDeltaTime, SkeletonData, FrameData, OutputBase.Pose);
 				CurrentRetargetAssetWithDisp->BuildPoseAndCurveFromBaseData(CachedDeltaTime, SkeletonData, FrameData, OutputBase.Pose, OutputBase.Curve);
 
@@ -441,7 +419,7 @@ void FAnimNode_NeuronBlend::Evaluate_AnyThread(FPoseContext& Output)
 			}
 			FAnimationRuntime::BlendPosesPerBoneFilter(BasePoseContext.Pose, TargetBlendPoses, BasePoseContext.Curve, TargetBlendCurves, Output.Pose, Output.Curve, CurrentBoneBlendWeights, BlendFlags, CurveBlendOption);
 			Output.Pose.NormalizeRotations();
-			
+
 			//TArray<float> WeightsOfSource2;
 			//WeightsOfSource2.Init(0, Output.Pose.GetNumBones());
 			//FName DstBoneName = FName("Spine");// CurrentRetargetAsset->GetRemappedBoneName(FName("Spine1"));
@@ -462,7 +440,7 @@ void FAnimNode_NeuronBlend::CacheBones_AnyThread(const FAnimationCacheBonesConte
 
 	InputPose.CacheBones(Context);
 	//BlendNode.CacheBones_AnyThread(Context);
-	
+
 	ReinitializeBoneBlendWeights(Context.AnimInstanceProxy->GetRequiredBones(), Context.AnimInstanceProxy->GetSkeleton());
 }
 
