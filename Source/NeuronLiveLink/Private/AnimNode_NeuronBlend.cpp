@@ -15,7 +15,7 @@
 #include "Animation/AnimTrace.h"
 
 #define DEFAULT_SOURCEINDEX 0xFF
-static FName DefaultNeuronBoneFilterName(TEXT("Spine"));
+//static FName DefaultNeuronBoneFilterName(TEXT("Spine"));
 
 FAnimNode_NeuronBlend::FAnimNode_NeuronBlend()
 	: RetargetAsset(UNeuronLiveLinkRemapAsset::StaticClass())
@@ -33,12 +33,21 @@ FAnimNode_NeuronBlend::FAnimNode_NeuronBlend()
 	//BlendNode.AddPose();
 	BlendWeights.Empty();
 	BlendWeights.Add(1.f);
-	BlendPoseBoneName = TEXT("Default");
+	//BlendPoseBoneName = TEXT("Default");
 	new (LayerSetup) FInputBlendPose();
-	FBranchFilter F;
-	F.BoneName = DefaultNeuronBoneFilterName;
-	F.BlendDepth = 0;
-	LayerSetup[0].BranchFilters.Add(F);
+
+	{
+		FBranchFilter F;
+		F.BoneName = TEXT("Default");
+		F.BlendDepth = 0;
+		LayerSetup[0].BranchFilters.Add(F);
+	}
+	{
+		FBranchFilter F;
+		F.BoneName = TEXT("Default");
+		F.BlendDepth = 0;
+		LayerSetup[0].BranchFilters.Add(F);
+	}
 }
 
 void FAnimNode_NeuronBlend::OnInitializeAnimInstance(const FAnimInstanceProxy* InProxy, const UAnimInstance* InAnimInstance)
@@ -162,7 +171,7 @@ static FName FindParentUnderHip(const FReferenceSkeleton& InSkeleton, FName Bone
 		}
 	}
 
-	return DefaultNeuronBoneFilterName;
+	return TEXT("Default");
 }
 
 void FAnimNode_NeuronBlend::PreUpdate(const UAnimInstance* InAnimInstance)
@@ -180,32 +189,47 @@ void FAnimNode_NeuronBlend::PreUpdate(const UAnimInstance* InAnimInstance)
 	if (!CurrentRetargetAsset || RetargetAssetPtr != CurrentRetargetAsset->GetClass())
 	{
 		CurrentRetargetAsset = NewObject<UNeuronLiveLinkRemapAsset>(const_cast<UAnimInstance*>(InAnimInstance), RetargetAssetPtr);
-		CurrentRetargetAsset->bUseDisplacementData = false;
+		CurrentRetargetAsset->bUseDisplacementData = true/*false*/;
 		CurrentRetargetAsset->Initialize();
 	}
 
 	if (!CurrentRetargetAssetWithDisp || RetargetAssetPtr != CurrentRetargetAssetWithDisp->GetClass())
 	{
 		CurrentRetargetAssetWithDisp = NewObject<UNeuronLiveLinkRemapAsset>(const_cast<UAnimInstance*>(InAnimInstance), RetargetAssetPtr);
-		CurrentRetargetAssetWithDisp->bUseDisplacementData = true;
+		CurrentRetargetAssetWithDisp->bUseDisplacementData = false/*true*/;
 		CurrentRetargetAssetWithDisp->Initialize();
 	}
 
 	//BlendNode.PreUpdate(InAnimInstance);
 	
-	FName SpineName = DefaultNeuronBoneFilterName;
-	if (BlendPoseBoneName != TEXT("Default"))
-	{
-		SpineName = BlendPoseBoneName;
-	}
-	else if (InAnimInstance->CurrentSkeleton)
-	{
-		const FReferenceSkeleton& Skeleton = InAnimInstance->CurrentSkeleton->GetReferenceSkeleton();
-		FName HipsName = CurrentRetargetAsset->GetRemappedBoneName(FName("Hips"));
-		FName HeadName = CurrentRetargetAsset->GetRemappedBoneName(FName("Head"));
-		SpineName = FindParentUnderHip(Skeleton, HeadName, HipsName);
-	}
-	LayerSetup[0].BranchFilters[0].BoneName = SpineName;
+// 	FName SpineName = DefaultNeuronBoneFilterName;
+// 	if (BlendPoseBoneName != TEXT("Default"))
+// 	{
+// 		SpineName = BlendPoseBoneName;
+// 	}
+// 	else if (InAnimInstance->CurrentSkeleton)
+// 	{
+// 		const FReferenceSkeleton& Skeleton = InAnimInstance->CurrentSkeleton->GetReferenceSkeleton();
+// 		FName HipsName = CurrentRetargetAsset->GetRemappedBoneName(FName("Hips"));
+// 		FName HeadName = CurrentRetargetAsset->GetRemappedBoneName(FName("Head"));
+// 		SpineName = FindParentUnderHip(Skeleton, HeadName, HipsName);
+// 	}
+// 	LayerSetup[0].BranchFilters[0].BoneName = SpineName;
+// 	RebuildCacheData(InAnimInstance->CurrentSkeleton);
+
+
+	const FReferenceSkeleton& Skeleton = InAnimInstance->CurrentSkeleton->GetReferenceSkeleton();	
+// 	FName LeftUpLeg = CurrentRetargetAsset->GetRemappedBoneName(FName("LeftUpLeg"));
+// 	FName LeftFootName = CurrentRetargetAsset->GetRemappedBoneName(FName("LeftFoot"));
+///	FName LeftLeg = FindParentUnderHip(Skeleton, LeftFootName, LeftUpLeg);
+	LayerSetup[0].BranchFilters[0].BoneName = CurrentRetargetAsset->GetRemappedBoneName(FName("LeftLeg"));
+	LayerSetup[0].BranchFilters[0].BlendDepth = 0;
+
+// 	FName RightUpLeg = CurrentRetargetAsset->GetRemappedBoneName(FName("RightUpLeg"));
+// 	FName RightFootName = CurrentRetargetAsset->GetRemappedBoneName(FName("RightFoot"));
+// 	FName RightLeg = FindParentUnderHip(Skeleton, RightFootName, RightUpLeg);
+	LayerSetup[0].BranchFilters[1].BoneName = CurrentRetargetAsset->GetRemappedBoneName(FName("RightLeg"));
+	LayerSetup[0].BranchFilters[1].BlendDepth = 0;
 	RebuildCacheData(InAnimInstance->CurrentSkeleton);
 }
 
