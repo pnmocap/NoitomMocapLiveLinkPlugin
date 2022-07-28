@@ -227,6 +227,7 @@ void UMocapApp::Disconnect()
     mcpError = mcpApplication->CloseApplication(appcliation);
     ReturnIFError();
 
+    uint64 h = AppHandle;
     AppHandle = 0;
     AppHandleInternal = TEXT("0");
     IsConnecting = false;
@@ -238,8 +239,9 @@ void UMocapApp::Disconnect()
     LastCommandHistoryIndex = 0;
 
     FMocapAppManager::GetInstance().RemoveMocapApp(this);
-    UE_LOG(LogMocapApi, Log, TEXT("App %s Disconnect."),
-        *AppName
+    UE_LOG(LogMocapApi, Log, TEXT("App %s handle %llu Disconnect."),
+        *AppName,
+        h
     );
 }
 
