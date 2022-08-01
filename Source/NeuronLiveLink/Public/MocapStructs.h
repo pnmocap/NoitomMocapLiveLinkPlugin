@@ -445,9 +445,13 @@ public:
 
     void SetBindingLiveLinkSource(FGuid SourceID) { BindingLiveLinkSource = SourceID;  }
     FGuid GetBindingLiveLinkSource() { return BindingLiveLinkSource; }
+
+    void SetPendingToDestroy() { PendingDestroy = true; }
+    bool GetIsPendingToDestroy() { return PendingDestroy; }
 private:
     bool IsConnecting = false;
     bool IsReady = true;
+    bool PendingDestroy = false;
     int LastError = 0;
     FString ExtraErrorMsg;
 

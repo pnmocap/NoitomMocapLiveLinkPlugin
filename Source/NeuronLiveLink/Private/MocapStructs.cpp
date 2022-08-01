@@ -216,6 +216,8 @@ void UMocapApp::Disconnect()
     LastError = 0;
     ExtraErrorMsg = TEXT("");
 
+    PendingDestroy = true;
+
     MocapApi::MCPApplicationHandle_t appcliation;
     appcliation = AppHandle;
 

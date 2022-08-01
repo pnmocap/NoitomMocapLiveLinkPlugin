@@ -75,9 +75,22 @@ UMocapApp* FMocapAppManager::GetMocapAppByName(FName AppName)
 
 void FMocapAppManager::EachRunningApp(MocapAppVisitor& Visitor)
 {
+    //void
+    TArray<UMocapApp*> AppsNeedToDestroy;
     for (auto& It : RunningApps)
     {
-        Visitor.Visit(It.Value);
+        if (!It.Value->GetIsPendingToDestroy())
+        {
+            Visitor.Visit(It.Value);
+        }
+        else
+        {
+            AppsNeedToDestroy.Add(It.Value);
+        }
+    }
+    for (auto App : AppsNeedToDestroy)
+    {
+        App->Disconnect();
     }
 }
 

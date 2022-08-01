@@ -106,6 +106,10 @@ void FMocapAppClient::Exit()
     {
         Stop();
     }
+    if (App)
+    {
+        App->SetPendingToDestroy();
+    }
 }
 
 //~ End FRunnable interface
