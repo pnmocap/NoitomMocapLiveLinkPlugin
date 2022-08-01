@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "1.2.14",
+	"VersionName": "1.2.15",
 	"FriendlyName": "NeuronLiveLink",
 	"Description": "Axis to Unreal Plugin",
 	"Category": "Animation",
