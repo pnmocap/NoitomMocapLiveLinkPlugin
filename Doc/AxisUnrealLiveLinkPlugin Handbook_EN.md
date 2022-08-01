@@ -156,8 +156,7 @@ You can Import skeletal meshes from FBX file into Unreal engine. In this tutoria
   
   ```txt
   InputPose and RetargetAsset is the same as LiveLinkPose node
-  BlendPoseBoneName is bone to split the with displacement date and without displacement data, use the bone next to Hips and in the chain from Hips to Head
-  BlendWeights is the weight of layer without displacement data
+  BlendWeights is the weight
   ```
   
   > This node is  provided after version 1.2.06, displacement data should be send in AxisStudio
