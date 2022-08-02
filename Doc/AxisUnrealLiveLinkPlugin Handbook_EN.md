@@ -18,7 +18,7 @@ Axis studio act as a server on a network and stream motion capture data live to 
 * Support to receive and process the props (PWR-tracker) motion capture data (refer to our VPS project)
 * Support to drive a skeleton that is not using T-pose based model, such as A-pose based model.
 * Support to receive and process the displacement data from Axis Studio
-* Update Studio Robot in NeuronLinveLinkContent (Notiom sample FBX skeletal mesh and sample Animation Blueprint)
+* Send commands to control Axis Studio
 
 ## 1.2 Known Issues
 
@@ -98,9 +98,6 @@ Foe Axis Hybrid Manager Users, Please follow the steps to setup mocap data outpu
 
 * In Live Link Window, follow the steps to add Axis Neuron Live Source
     ![UEConnectLivelinkSource](UEConnectLivelinkSource.png)
-  
-  
-  > When use UDP Please do not use  255.255.255.255 as destination IP in Software(Axis Studio or AHM)
 
 * If the source is ready you will see Live link Subject(s) on the window, in the picture it is **chr00** you will use the name in the following steps.
     ![LivelinkSourceReady](LivelinkSourceReady.png)
@@ -306,6 +303,8 @@ After version 1.2.06, you can send some control commands to AxisStudio in both e
 * Resume original posture
   
   > Do not suggest switch to another neuron livel link source and send commands to that source for the plugin do not know whether Axis studio is start recording data.
+  > 
+  > When use UDP Please do not use 255.255.255.255 as destination IP in Software(Axis Studio)
 
 ## 9.2 How to use in editor
 
@@ -538,3 +537,5 @@ You will be presented with a dialog for selecting the target directory. If packa
 
 * Got compile error when rebuild my project.
     Our plugin use precompiled files and there is a rebuild bug in unreal engine which will delete the precompiled files if you rebuild your project. so please download the plugin again and replace the files in Intermediate folder with the new downloaded files and click build to build again. 
+* Got error when packaging the project in some version of unreal(e.g. UE5)
+  Please convert it to a c++ project and try again, some unreal engine versions have such issue.
