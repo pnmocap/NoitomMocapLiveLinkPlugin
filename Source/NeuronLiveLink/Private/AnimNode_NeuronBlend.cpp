@@ -15,7 +15,7 @@
 #include "Animation/AnimTrace.h"
 
 #define DEFAULT_SOURCEINDEX 0xFF
-//static FName DefaultNeuronBoneFilterName(TEXT("Spine"));
+static FName DefaultNeuronBoneFilterName(TEXT("Spine"));
 
 FAnimNode_NeuronBlend::FAnimNode_NeuronBlend()
 	: RetargetAsset(UNeuronLiveLinkRemapAsset::StaticClass())
@@ -33,21 +33,12 @@ FAnimNode_NeuronBlend::FAnimNode_NeuronBlend()
 	//BlendNode.AddPose();
 	BlendWeights.Empty();
 	BlendWeights.Add(1.f);
-	//BlendPoseBoneName = TEXT("Default");
+	BlendPoseBoneName = TEXT("Default");
 	new (LayerSetup) FInputBlendPose();
-
-	{
-		FBranchFilter F;
-		F.BoneName = TEXT("Default");
-		F.BlendDepth = 0;
-		LayerSetup[0].BranchFilters.Add(F);
-	}
-	{
-		FBranchFilter F;
-		F.BoneName = TEXT("Default");
-		F.BlendDepth = 0;
-		LayerSetup[0].BranchFilters.Add(F);
-	}
+	FBranchFilter F;
+	F.BoneName = DefaultNeuronBoneFilterName;
+	F.BlendDepth = 0;
+	LayerSetup[0].BranchFilters.Add(F);
 }
 
 void FAnimNode_NeuronBlend::OnInitializeAnimInstance(const FAnimInstanceProxy* InProxy, const UAnimInstance* InAnimInstance)
@@ -171,7 +162,7 @@ static FName FindParentUnderHip(const FReferenceSkeleton& InSkeleton, FName Bone
 		}
 	}
 
-	return TEXT("Default");
+	return DefaultNeuronBoneFilterName;
 }
 
 void FAnimNode_NeuronBlend::PreUpdate(const UAnimInstance* InAnimInstance)
@@ -189,26 +180,33 @@ void FAnimNode_NeuronBlend::PreUpdate(const UAnimInstance* InAnimInstance)
 	if (!CurrentRetargetAsset || RetargetAssetPtr != CurrentRetargetAsset->GetClass())
 	{
 		CurrentRetargetAsset = NewObject<UNeuronLiveLinkRemapAsset>(const_cast<UAnimInstance*>(InAnimInstance), RetargetAssetPtr);
-		CurrentRetargetAsset->bUseDisplacementData = true/*false*/;
+		CurrentRetargetAsset->bUseDisplacementData = false;
 		CurrentRetargetAsset->Initialize();
 	}
 
 	if (!CurrentRetargetAssetWithDisp || RetargetAssetPtr != CurrentRetargetAssetWithDisp->GetClass())
 	{
 		CurrentRetargetAssetWithDisp = NewObject<UNeuronLiveLinkRemapAsset>(const_cast<UAnimInstance*>(InAnimInstance), RetargetAssetPtr);
-		CurrentRetargetAssetWithDisp->bUseDisplacementData = false/*true*/;
+		CurrentRetargetAssetWithDisp->bUseDisplacementData = true;
 		CurrentRetargetAssetWithDisp->Initialize();
 	}
 
-	const FReferenceSkeleton& Skeleton = InAnimInstance->CurrentSkeleton->GetReferenceSkeleton();
-	if (LayerSetup[0].BranchFilters.Num() == 2)
+	//BlendNode.PreUpdate(InAnimInstance);
+	
+	FName SpineName = DefaultNeuronBoneFilterName;
+	if (BlendPoseBoneName != TEXT("Default"))
 	{
-		LayerSetup[0].BranchFilters[0].BoneName = CurrentRetargetAsset->GetRemappedBoneName(FName("LeftLeg"));
-		LayerSetup[0].BranchFilters[0].BlendDepth = 0;
-		LayerSetup[0].BranchFilters[1].BoneName = CurrentRetargetAsset->GetRemappedBoneName(FName("RightLeg"));
-		LayerSetup[0].BranchFilters[1].BlendDepth = 0;
-		RebuildCacheData(InAnimInstance->CurrentSkeleton);
+		SpineName = BlendPoseBoneName;
 	}
+	else if (InAnimInstance->CurrentSkeleton)
+	{
+		const FReferenceSkeleton& Skeleton = InAnimInstance->CurrentSkeleton->GetReferenceSkeleton();
+		FName HipsName = CurrentRetargetAsset->GetRemappedBoneName(FName("Hips"));
+		FName HeadName = CurrentRetargetAsset->GetRemappedBoneName(FName("Head"));
+		SpineName = FindParentUnderHip(Skeleton, HeadName, HipsName);
+	}
+	LayerSetup[0].BranchFilters[0].BoneName = SpineName;
+	RebuildCacheData(InAnimInstance->CurrentSkeleton);
 }
 
 void FAnimNode_NeuronBlend::Update_AnyThread(const FAnimationUpdateContext& Context)
@@ -288,7 +286,7 @@ void FAnimNode_NeuronBlend::Update_AnyThread(const FAnimationUpdateContext& Cont
 	//	BasePose.Update(Context);
 	//}
 
-
+	
 	// Accumulate Delta time from update
 	CachedDeltaTime += Context.GetDeltaTime();
 
@@ -331,7 +329,7 @@ void FAnimNode_NeuronBlend::Evaluate_AnyThread(FPoseContext& Output)
 
 				CurrentRetargetAsset->BuildPoseFromAnimationData(CachedDeltaTime, SkeletonData, FrameData, OutputBlend.Pose);
 				CurrentRetargetAsset->BuildPoseAndCurveFromBaseData(CachedDeltaTime, SkeletonData, FrameData, OutputBlend.Pose, OutputBlend.Curve);
-
+				
 				CurrentRetargetAssetWithDisp->BuildPoseFromAnimationData(CachedDeltaTime, SkeletonData, FrameData, OutputBase.Pose);
 				CurrentRetargetAssetWithDisp->BuildPoseAndCurveFromBaseData(CachedDeltaTime, SkeletonData, FrameData, OutputBase.Pose, OutputBase.Curve);
 
@@ -419,7 +417,7 @@ void FAnimNode_NeuronBlend::Evaluate_AnyThread(FPoseContext& Output)
 			}
 			FAnimationRuntime::BlendPosesPerBoneFilter(BasePoseContext.Pose, TargetBlendPoses, BasePoseContext.Curve, TargetBlendCurves, Output.Pose, Output.Curve, CurrentBoneBlendWeights, BlendFlags, CurveBlendOption);
 			Output.Pose.NormalizeRotations();
-
+			
 			//TArray<float> WeightsOfSource2;
 			//WeightsOfSource2.Init(0, Output.Pose.GetNumBones());
 			//FName DstBoneName = FName("Spine");// CurrentRetargetAsset->GetRemappedBoneName(FName("Spine1"));
@@ -440,7 +438,7 @@ void FAnimNode_NeuronBlend::CacheBones_AnyThread(const FAnimationCacheBonesConte
 
 	InputPose.CacheBones(Context);
 	//BlendNode.CacheBones_AnyThread(Context);
-
+	
 	ReinitializeBoneBlendWeights(Context.AnimInstanceProxy->GetRequiredBones(), Context.AnimInstanceProxy->GetSkeleton());
 }
 

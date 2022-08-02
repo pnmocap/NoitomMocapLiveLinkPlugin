@@ -387,7 +387,8 @@ Axis studio作为网络中的服务端向客户端电脑上的应用发送动捕
   
   ```txt
   其中InputPose和RetargetAsset和使用方式同LiveLinkPose节点
-  BlendWeights为权重
+  BlendPoseBoneName是分隔带位移和不带位移两个层的骨骼名称，默认使用Hips到Head骨骼链中Hips的下一根骨骼
+  BlendWeights为附加不带位移层的权重
   ```
   
   > 1.2.06版之后提供次节点且使用此节点是需要AxisStudio中设置发送位移数据
