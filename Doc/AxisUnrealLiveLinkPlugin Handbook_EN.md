@@ -98,7 +98,11 @@ Foe Axis Hybrid Manager Users, Please follow the steps to setup mocap data outpu
 
 * In Live Link Window, follow the steps to add Axis Neuron Live Source
     ![UEConnectLivelinkSource](UEConnectLivelinkSource.png)
-    If the source is ready you will see Live link Subject(s) on the window, in the picture it is **chr00** you will use the name in the following steps.
+  
+  
+  > When use UDP Please do not use  255.255.255.255 as destination IP in Software(Axis Studio or AHM)
+
+* If the source is ready you will see Live link Subject(s) on the window, in the picture it is **chr00** you will use the name in the following steps.
     ![LivelinkSourceReady](LivelinkSourceReady.png)
 
 * Go to Content browser, Open DemoMap(World'/NeuronLiveLink/Content/Demo/DemoMap.uMap') in Neuron Live Link Plugin

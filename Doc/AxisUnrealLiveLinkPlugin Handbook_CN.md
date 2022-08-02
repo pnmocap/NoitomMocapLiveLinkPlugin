@@ -205,7 +205,9 @@ Axis studio作为网络中的服务端向客户端电脑上的应用发送动捕
   3. Setup and Click OK -> 设置并点击OK
   ```
   
-    如果源已就绪你就会在窗口中看到可用的对象命名，在图中就是 **chr00** 你要在后续的步骤中使用这个名称
+  > 使用UDP模式时，软件（Axis Studio或AHM）的目标IP 地址不要使用255.255.255.255
+  
+  如果源已就绪你就会在窗口中看到可用的对象命名，在图中就是 **chr00** 你要在后续的步骤中使用这个名称
     ![LivelinkSourceReady](LivelinkSourceReady.png)
   
   ```txt
