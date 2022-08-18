@@ -62,6 +62,38 @@ void UNeuronLiveLinkBPLibrary::GetNeuronFrameInUE4( const FName& AvatarName,
 	}
 }
 
+bool UNeuronLiveLinkBPLibrary::GetFootContactInfo(const FName& AvatarName, float& SourceHipsHeight, bool& LeftHeel, bool& LeftBall, bool& RightHeel, bool& RightBall, float& LeftLowest, float& RightLowest)
+{
+	if (!AvatarName.IsValid())
+	{
+		return false;
+	}
+
+	const FMocapAvatar* AvatarData = FMocapAppManager::GetInstance().GetAvatarData(AvatarName);
+	if (AvatarData)
+	{
+		LeftBall = AvatarData->LeftBallContact;
+		LeftHeel = AvatarData->LeftHeelContact;
+		RightBall = AvatarData->RightBallContact;
+		RightHeel = AvatarData->RightHeelContact;
+		LeftLowest = AvatarData->LeftContactLowest;
+		RightLowest = AvatarData->RightContactLowest;
+		SourceHipsHeight = AvatarData->HipsInitHeight;
+		return true;
+	}
+	else
+	{
+		LeftBall = false;
+		LeftHeel = false;
+		RightBall = false;
+		RightHeel = false;
+		LeftLowest = 0;
+		RightLowest = 0;
+		SourceHipsHeight = 0.0f;
+		return false;
+	}
+}
+
 class MocapAppDataVisitor : public MocapAppVisitor
 {
 public:

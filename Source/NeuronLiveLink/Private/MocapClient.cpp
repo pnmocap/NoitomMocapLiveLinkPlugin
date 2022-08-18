@@ -152,21 +152,21 @@ void FMocapAppClient::PollEvents()
 
                 const TArray<FName> PropertyNames({ 
                     FName(TEXT("WithDisplacement")),
-                    FName(TEXT("Hips_Grounding")),
-                    FName(TEXT("RightFoot_Grounding")),
-                    FName(TEXT("LeftFoot_Grounding")),
-                    FName(TEXT("Head_Grounding")),
-                    FName(TEXT("RightHand_Grounding")),
-                    FName(TEXT("LeftHand_Grounding")),
+//                     FName(TEXT("Hips_Grounding")),
+//                     FName(TEXT("RightFoot_Grounding")),
+//                     FName(TEXT("LeftFoot_Grounding")),
+//                     FName(TEXT("Head_Grounding")),
+//                     FName(TEXT("RightHand_Grounding")),
+//                     FName(TEXT("LeftHand_Grounding")),
                 });;
                 TArray<float> PropertyValues({
                     (float)(Data->HasLocalPositions[1]? 1.0: 0.0),
-                    (Data->JointIsGrounding[MocapApi::JointTag_Hips]? 1.0f: 0.0f),
-                    (Data->JointIsGrounding[MocapApi::JointTag_RightFoot]? 1.0f: 0.0f),
-                    (Data->JointIsGrounding[MocapApi::JointTag_LeftFoot] ? 1.0f : 0.0f),
-                    (Data->JointIsGrounding[MocapApi::JointTag_Head] ? 1.0f : 0.0f),
-                    (Data->JointIsGrounding[MocapApi::JointTag_RightHand] ? 1.0f : 0.0f),
-                    (Data->JointIsGrounding[MocapApi::JointTag_LeftHand] ? 1.0f : 0.0f),
+//                     (Data->JointIsGrounding[MocapApi::JointTag_Hips]? 1.0f: 0.0f),
+//                     (Data->JointIsGrounding[MocapApi::JointTag_RightFoot]? 1.0f: 0.0f),
+//                     (Data->JointIsGrounding[MocapApi::JointTag_LeftFoot] ? 1.0f : 0.0f),
+//                     (Data->JointIsGrounding[MocapApi::JointTag_Head] ? 1.0f : 0.0f),
+//                     (Data->JointIsGrounding[MocapApi::JointTag_RightHand] ? 1.0f : 0.0f),
+//                     (Data->JointIsGrounding[MocapApi::JointTag_LeftHand] ? 1.0f : 0.0f),
                 });
 
                 QualifiedTime = GetTimecode(Data->ReceiveTime);

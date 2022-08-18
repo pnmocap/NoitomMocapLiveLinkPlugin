@@ -255,11 +255,20 @@ struct FMocapAvatar
     UPROPERTY()
     TArray<FQuat> LocalRotation;
 
-    TMap<int, bool> JointIsGrounding;
-    TArray<FVector> LeftFootGroundablePoints;
-    TArray<FVector> RightFootGroundablePoints;
-    int LeftFootLowestIndex;
-    int RightFootLowestIndex;
+//     TMap<int, bool> JointIsGrounding;
+//     TArray<FVector> LeftFootGroundablePoints;
+//     TArray<FVector> RightFootGroundablePoints;
+//     int LeftFootLowestIndex;
+//     int RightFootLowestIndex;
+
+    // for foot skate cleanup
+	bool LeftBallContact = false;
+	bool RightBallContact = false;
+	bool LeftHeelContact = false;
+	bool RightHeelContact = false;
+	float LeftContactLowest = 0.0f;
+	float RightContactLowest = 0.0f;
+    float HipsInitHeight = 1.0f;
 };
 
 /**

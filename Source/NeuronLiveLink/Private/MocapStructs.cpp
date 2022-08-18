@@ -539,40 +539,40 @@ bool UMocapApp::HasMocapCommandInQueue()
     return QueuedCommands.Num() > 0;
 }
 
-static TArray<int> GroundableJoints = {
-    MocapApi::JointTag_Hips,
-    MocapApi::JointTag_RightFoot,
-    MocapApi::JointTag_LeftFoot,
-    MocapApi::JointTag_Head,
-    MocapApi::JointTag_RightHand,
-    MocapApi::JointTag_LeftHand,
-};
-
-static void HandleJointGroundablePoints(MocapApi::IMCPJoint* mcpJoint, uint64 jointHandle, TArray<FVector>& GroundablePoints, int& LowestIndex)
-{
-    const int MaxNumOfPoints = 16;
-    uint32 BufferCount = 0;
-    uint32 plowest_index = 0;
-    MocapApi::EMCPError mcpError = mcpJoint->GetJointGroundablePoints(nullptr, /*0xyz/1xyz */
-        &BufferCount, &plowest_index, jointHandle);
-    if (BufferCount > 0)
-    {
-        float points[MaxNumOfPoints*3];
-        uint32 PointCount = BufferCount / 3;
-        ensureMsgf(PointCount <= MaxNumOfPoints, TEXT("Point size is bigger than %d"), MaxNumOfPoints);
-        mcpError = mcpJoint->GetJointGroundablePoints(points, /*0xyz/1xyz */
-            &BufferCount, &plowest_index, jointHandle);
-        LowestIndex = plowest_index;
-        GroundablePoints.SetNum(BufferCount/3);
-
-        for (uint32 i = 0; i < PointCount; ++i)
-        {
-            GroundablePoints[i].X = points[i * 3];
-            GroundablePoints[i].Y = points[i * 3 + 1];
-            GroundablePoints[i].Z = points[i * 3 + 2];
-        }
-    }
-}
+// static TArray<int> GroundableJoints = {
+//     MocapApi::JointTag_Hips,
+//     MocapApi::JointTag_RightFoot,
+//     MocapApi::JointTag_LeftFoot,
+//     MocapApi::JointTag_Head,
+//     MocapApi::JointTag_RightHand,
+//     MocapApi::JointTag_LeftHand,
+// };
+// 
+// static void HandleJointGroundablePoints(MocapApi::IMCPJoint* mcpJoint, uint64 jointHandle, TArray<FVector>& GroundablePoints, int& LowestIndex)
+// {
+//     const int MaxNumOfPoints = 16;
+//     uint32 BufferCount = 0;
+//     uint32 plowest_index = 0;
+//     MocapApi::EMCPError mcpError = mcpJoint->GetJointGroundablePoints(nullptr, /*0xyz/1xyz */
+//         &BufferCount, &plowest_index, jointHandle);
+//     if (BufferCount > 0)
+//     {
+//         float points[MaxNumOfPoints*3];
+//         uint32 PointCount = BufferCount / 3;
+//         ensureMsgf(PointCount <= MaxNumOfPoints, TEXT("Point size is bigger than %d"), MaxNumOfPoints);
+//         mcpError = mcpJoint->GetJointGroundablePoints(points, /*0xyz/1xyz */
+//             &BufferCount, &plowest_index, jointHandle);
+//         LowestIndex = plowest_index;
+//         GroundablePoints.SetNum(BufferCount/3);
+// 
+//         for (uint32 i = 0; i < PointCount; ++i)
+//         {
+//             GroundablePoints[i].X = points[i * 3];
+//             GroundablePoints[i].Y = points[i * 3 + 1];
+//             GroundablePoints[i].Z = points[i * 3 + 2];
+//         }
+//     }
+// }
 
 bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
 {
@@ -603,9 +603,9 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
     
     FMocapAvatar& avatar = Avatars.FindOrAdd(Name);
     avatar.Name = FName(Name);
-    avatar.JointIsGrounding.Empty();
-    avatar.LeftFootLowestIndex = -1;
-    avatar.RightFootLowestIndex = -1;
+//     avatar.JointIsGrounding.Empty();
+//     avatar.LeftFootLowestIndex = -1;
+//     avatar.RightFootLowestIndex = -1;
 
     // Get Root Joint at Avatar [1/8/2021 brian.wang]
     MocapApi::MCPJointHandle_t RootJoint = 0;
@@ -672,21 +672,148 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
             mcpJoint->GetJointLocalRotation(&RotX, &RotY, &RotZ, &RotW, handle);
             q = FQuat(RotX, RotY, RotZ, RotW);
 
-            if (GroundableJoints.Contains(jointTag))
+
+//             if (GroundableJoints.Contains(jointTag))
+//             {
+// 				MocapApi::EMCPGroundingState GroundingState = MocapApi::GroundingState_Flying;
+// 				mcpJoint->GetJointGroundingState(&GroundingState, handle);
+// 				avatar.JointIsGrounding.Add(jointTag, (GroundingState == MocapApi::GroundingState_Grounding));
+//             }
+
+            if (jointTag == MocapApi::JointTag_Hips)
             {
-                MocapApi::EMCPGroundingState GroundingState = MocapApi::GroundingState_Flying;
-                mcpJoint->GetJointGroundingState(&GroundingState, handle);
-                avatar.JointIsGrounding.Add(jointTag, (GroundingState == MocapApi::GroundingState_Grounding));
+                avatar.HipsInitHeight = d.Z;
             }
 
+            
             if (jointTag == MocapApi::JointTag_LeftFoot)
             {
-                HandleJointGroundablePoints(mcpJoint, handle, avatar.LeftFootGroundablePoints, avatar.LeftFootLowestIndex);
-            }
+				MocapApi::EMCPGroundingState GroundingState = MocapApi::GroundingState_Flying;
+				mcpJoint->GetJointGroundingState(&GroundingState, handle);
 
-            if (jointTag == MocapApi::JointTag_RightFoot)
+                if (GroundingState == MocapApi::GroundingState_Grounding)
+                {
+                    const int MaxNumOfPoints = 10;
+                    uint32 BufferCount = 0;
+                    uint32 plowest_index = 0;
+                    float Points[3 * MaxNumOfPoints] = { 0 };
+
+                    mcpJoint->GetJointGroundablePoints(nullptr, &BufferCount, nullptr, handle);
+
+                    mcpError = mcpJoint->GetJointGroundablePoints(Points, &BufferCount, &plowest_index, handle);
+
+                    if (mcpError == MocapApi::Error_None && BufferCount > 0)
+                    {
+                        avatar.LeftContactLowest = Points[plowest_index * 3 + 1];
+
+                        if (plowest_index < 5)
+                        {
+                            avatar.LeftHeelContact = true;
+
+                            if ((Points[16] - avatar.LeftContactLowest) < 0.001f
+                                || (Points[19] - avatar.LeftContactLowest) < 0.001f
+                                || (Points[22] - avatar.LeftContactLowest) < 0.001f
+                                || (Points[25] - avatar.LeftContactLowest) < 0.001f
+                                || (Points[28] - avatar.LeftContactLowest) < 0.001f
+                                )
+                            {
+                                avatar.LeftBallContact = true;
+                            }
+                            else
+                            {
+                                avatar.LeftBallContact = false;
+                            }
+                        }
+                        else
+                        {
+                            avatar.LeftBallContact = true;
+
+                            if ((Points[1] - avatar.LeftContactLowest) < 0.001f
+                                || (Points[4] - avatar.LeftContactLowest) < 0.001f
+                                || (Points[7] - avatar.LeftContactLowest) < 0.001f
+                                || (Points[10] - avatar.LeftContactLowest) < 0.001f
+                                || (Points[13] - avatar.LeftContactLowest) < 0.001f
+                                )
+                            {
+                                avatar.LeftHeelContact = true;
+                            }
+                            else
+                            {
+                                avatar.LeftHeelContact = false;
+                            }
+                        }
+
+                    }
+                }
+                else
+                {
+					avatar.LeftHeelContact = false;
+					avatar.LeftBallContact = false;
+                }
+            }
+            else if (jointTag == MocapApi::JointTag_RightFoot)
             {
-                HandleJointGroundablePoints(mcpJoint, handle, avatar.RightFootGroundablePoints, avatar.RightFootLowestIndex);
+				MocapApi::EMCPGroundingState GroundingState = MocapApi::GroundingState_Flying;
+				mcpJoint->GetJointGroundingState(&GroundingState, handle);
+
+                if (GroundingState == MocapApi::GroundingState_Grounding)
+                {
+                    const int MaxNumOfPoints = 10;
+                    uint32 BufferCount = 0;
+                    uint32 plowest_index = 0;
+                    float Points[3 * MaxNumOfPoints] = { 0 };
+
+                    mcpJoint->GetJointGroundablePoints(nullptr, &BufferCount, nullptr, handle);
+
+                    mcpError = mcpJoint->GetJointGroundablePoints(Points, &BufferCount, &plowest_index, handle);
+
+                    if (mcpError == MocapApi::Error_None && BufferCount > 0)
+                    {
+                        avatar.RightContactLowest = Points[plowest_index * 3 + 1];
+
+                        if (plowest_index < 5)
+                        {
+                            avatar.RightHeelContact = true;
+
+                            if ((Points[16] - avatar.RightContactLowest) < 0.001f
+                                || (Points[19] - avatar.RightContactLowest) < 0.001f
+                                || (Points[22] - avatar.RightContactLowest) < 0.001f
+                                || (Points[25] - avatar.RightContactLowest) < 0.001f
+                                || (Points[28] - avatar.RightContactLowest) < 0.001f
+                                )
+                            {
+                                avatar.RightBallContact = true;
+                            }
+                            else
+                            {
+                                avatar.RightBallContact = false;
+                            }
+                        }
+                        else
+                        {
+                            avatar.RightBallContact = true;
+
+                            if ((Points[1] - avatar.RightContactLowest) < 0.001f
+                                || (Points[4] - avatar.RightContactLowest) < 0.001f
+                                || (Points[7] - avatar.RightContactLowest) < 0.001f
+                                || (Points[10] - avatar.RightContactLowest) < 0.001f
+                                || (Points[13] - avatar.RightContactLowest) < 0.001f
+                                )
+                            {
+                                avatar.RightHeelContact = true;
+                            }
+                            else
+                            {
+                                avatar.RightHeelContact = false;
+                            }
+                        }
+                    }
+                }
+				else
+				{
+					avatar.RightHeelContact = false;
+					avatar.RightBallContact = false;
+				}
             }
         }
     }

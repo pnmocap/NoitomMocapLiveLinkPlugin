@@ -85,6 +85,9 @@ class NEURONLIVELINK_API UNeuronLiveLinkBPLibrary : public UBlueprintFunctionLib
 	static void GetNeuronFrameInUE4( const FName& AvatarName, bool& WithDisplacement, TArray<FVector>& Locations, TArray<FQuat>& Rotations );
 
 	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
+	static bool GetFootContactInfo(const FName& AvatarName, float& SourceHipsHeight, bool& LeftHeel, bool& LeftBall, bool& RightHeel, bool& RightBall, float& LeftLowest, float& RightLowest);
+
+	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
 	static FMocapServerCommand MakeMocapCommand(EMCCommandType Cmd);
 
 	UFUNCTION(BlueprintCallable, meta = (Name = "ParamDeviceRadio", Val = 2471), Category = "NeuronLiveLink")

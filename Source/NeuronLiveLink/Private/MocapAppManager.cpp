@@ -89,8 +89,13 @@ const FMocapRigidBody* FMocapAppManager::GetRigidBody(FName RigidName)
 
 const FMocapAvatar* FMocapAppManager::GetAvatarData(FName AvatarName)
 {
+    if (NameResolver.Num() == 0)
+    {
+        return nullptr;
+    }
+
     UMocapApp** App = NameResolver.Find(AvatarName);
-    if (*App != nullptr)
+    if (App != nullptr && *App != nullptr)
     {
         return (*App)->GetAvatarData(AvatarName.ToString());
     }
