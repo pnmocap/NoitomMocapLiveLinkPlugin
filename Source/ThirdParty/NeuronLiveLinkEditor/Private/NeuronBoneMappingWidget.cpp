@@ -5,6 +5,8 @@
 #include "Widgets/Layout/SSeparator.h"
 #include "DetailLayoutBuilder.h"
 #include "Internationalization/Regex.h"
+#include "EditorStyleSet.h"
+#include "EngineVersionCompare.h"
 
 
 #define LOCTEXT_NAMESPACE "NeuronBoneMappingWidget"
@@ -290,7 +292,11 @@ TSharedRef<SWidget> SNeuronBoneMappingWidget::CreateDstBoneSelectWidgetMenu()
     TSharedPtr<SSearchBox> SearchWidgetToFocus = NULL;
     TSharedRef<SBorder> MenuWidget = SNew(SBorder)
         .Padding(6)
+#if UE_ENGINE_VER_LESS_THAN(5,1)
         .BorderImage(FEditorStyle::GetBrush("NoBorder"))
+#else
+        .BorderImage(FAppStyle::GetBrush("NoBorder"))
+#endif
         .Content()
         [
             SNew(SBox)
@@ -303,14 +309,22 @@ TSharedRef<SWidget> SNeuronBoneMappingWidget::CreateDstBoneSelectWidgetMenu()
                 .AutoHeight()
                 [
                     SNew(STextBlock)
+#if UE_ENGINE_VER_LESS_THAN(5,1)
                     .Font(FEditorStyle::GetFontStyle("BoldFont"))
+#else
+                    .Font(FAppStyle::GetFontStyle("BoldFont"))
+#endif
                     .Text(LOCTEXT("BonePickerTitle", "Pick Bone Mapping To..."))
                 ]
                 + SVerticalBox::Slot()
                 .AutoHeight()
                 [
                     SNew(SSeparator)
+#if UE_ENGINE_VER_LESS_THAN(5,1)
                     .SeparatorImage(FEditorStyle::GetBrush("Menu.Separator"))
+#else
+                    .SeparatorImage(FAppStyle::GetBrush("Menu.Separator"))
+#endif
                     .Orientation(Orient_Horizontal)
                 ]
                 + SVerticalBox::Slot()
