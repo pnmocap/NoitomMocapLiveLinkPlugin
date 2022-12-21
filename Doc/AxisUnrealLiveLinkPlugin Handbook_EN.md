@@ -8,13 +8,13 @@
 
 Axis Studio not only allows the export of motion capture data but also be able to stream motion capture data in real-time to third party applications, making the data available to drive characters in animation.
 
-Axis studio act as a server on a network and stream motion capture data live to a client PC running a client application. In this document specifically go through the process about streaming data to UE4 from Axis Studio with the NeuronLiveLink Plugin.
+Axis studio act as a server on a network and stream motion capture data live to a client PC running a client application. In this document specifically go through the process about streaming data to Unreal Engine from Axis Studio with the NeuronLiveLink Plugin.
 
 ![NeuronVersion](NeuronVersion.png)
 
 ## 1.1 Features
 
-* Support UE4 version 4.26 4.27 5.0
+* Support UE4 version 4.26 4.27 5.0 5.1
 * Support to receive and process the props (PWR-tracker) motion capture data (refer to our VPS project)
 * Support to drive a skeleton that is not using T-pose based model, such as A-pose based model.
 * Support to receive and process the displacement data from Axis Studio
