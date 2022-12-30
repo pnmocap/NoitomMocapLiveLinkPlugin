@@ -14,7 +14,7 @@ Axis studio act as a server on a network and stream motion capture data live to 
 
 ## 1.1 Features
 
-* Support UE4 version 4.26 4.27 5.0 5.1
+* Support Unreal Engine version 4.26 4.27 5.0 5.1
 * Support to receive and process the props (PWR-tracker) motion capture data (refer to our VPS project)
 * Support to drive a skeleton that is not using T-pose based model, such as A-pose based model.
 * Support to receive and process the displacement data from Axis Studio
@@ -36,9 +36,9 @@ Axis studio act as a server on a network and stream motion capture data live to 
    
    ![InstallPlugin](InstallPlugin.png)
 
-# 3. UE4 Project Setup
+# 3. Unreal Project Setup
 
-1. Inside your UE4 project, from the Menu Bar under Edit, select Plugins.
+1. Inside your Unreal project, from the Menu Bar under Edit, select Plugins.
    ![OpenPluginMenu](OpenPluginMenu.png)
 
 2. Under the Animation section, click Enabled for Live Link.
@@ -53,7 +53,7 @@ Axis studio act as a server on a network and stream motion capture data live to 
     ![ClickViewOptononCB](ClickViewOptononCB.png)
     ![EnableShowPluginContent](EnableShowPluginContent.png)
    
-   > This will enable the Live Link Plugin, which can be used to connect to external Digital Content Creation (DCC) tools. In order for your DCC tool to connect to UE4, you will need to enable the corresponding plugin. In this section, we are establishing a connection with Axis Studio.
+   > This will enable the Live Link Plugin, which can be used to connect to external Digital Content Creation (DCC) tools. In order for your DCC tool to connect to Unreal, you will need to enable the corresponding plugin. In this section, we are establishing a connection with Axis Studio.
 
 # 4. Quick Start
 
@@ -429,8 +429,8 @@ You will be presented with a dialog for selecting the target directory. If packa
 |   NeuronLiveLink.uplugin    Plugin description file
 |   BuildInfo    Basic Build info for plugin 
 +---Arts
-|       Mannequin_Tpose.FBX UE4 default Mannequin Tpose animation FBX
-|       SK_Mannequin.FBX    UE4 default Mannequin skeletal mesh
+|       Mannequin_Tpose.FBX Unreal engine default Mannequin Tpose animation FBX
+|       SK_Mannequin.FBX    Unreal engine default Mannequin skeletal mesh
 |       Mixamo_Ch46_nonPBR.fbx Mixamo Ch46 model in FBX format
 |       PN_Avatar.fbx    FBX File for import skeletal animation to unreal engine
 |       PN_Avatar_Stickman01.fbx  Plugin default skeletal mesh
