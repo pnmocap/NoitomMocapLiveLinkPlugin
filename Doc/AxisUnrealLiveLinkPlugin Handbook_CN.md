@@ -43,7 +43,7 @@ Axis studio作为网络中的服务端向客户端电脑上的应用发送动捕
     2. 添加NeuronLiveLink插件目录（加压缩）到Plugins目录
    ```
 
-# 3. 虚幻引擎4工程设置
+# 3. 虚幻引擎工程设置
 
 1. 打开你的工程, 在编辑菜单下选择插件菜单项
    ![OpenPluginMenu](OpenPluginMenu.png)
