@@ -1,8 +1,0 @@
-{
-	"BuildId": "19206456",
-	"Modules": 
-	{
-		"NeuronLiveLink": "UnrealEditor-NeuronLiveLink.dll",
-		"NeuronLiveLinkEditor": "UnrealEditor-NeuronLiveLinkEditor.dll"
-	}
-}
