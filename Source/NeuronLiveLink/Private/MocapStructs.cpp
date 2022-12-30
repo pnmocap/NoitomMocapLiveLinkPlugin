@@ -44,7 +44,8 @@ FMocapAvatar::FMocapAvatar()
 static std::unordered_map<EMCCommandParamName, std::function<MocapApi::EMCPError(MocapApi::IMCPCommand*, MocapApi::MCPCommandHandle_t, const FString&)>> CommandParamBuildMap;
 UMocapApp::UMocapApp()
 {
-    CommandsHistory.MaxItems = 16;
+    MaxCommandHistory = 16;
+    LastCommandHistoryIndex = 0;
     
     if (CommandParamBuildMap.empty())
     {
@@ -215,6 +216,8 @@ void UMocapApp::Disconnect()
     LastError = 0;
     ExtraErrorMsg = TEXT("");
 
+    PendingDestroy = true;
+
     MocapApi::MCPApplicationHandle_t appcliation;
     appcliation = AppHandle;
 
@@ -226,6 +229,7 @@ void UMocapApp::Disconnect()
     mcpError = mcpApplication->CloseApplication(appcliation);
     ReturnIFError();
 
+    uint64 h = AppHandle;
     AppHandle = 0;
     AppHandleInternal = TEXT("0");
     IsConnecting = false;
@@ -234,10 +238,12 @@ void UMocapApp::Disconnect()
     Avatars.Empty();
     QueuedCommands.Empty();
     CommandsHistory.Empty();
+    LastCommandHistoryIndex = 0;
 
     FMocapAppManager::GetInstance().RemoveMocapApp(this);
-    UE_LOG(LogMocapApi, Log, TEXT("App %s Disconnect."),
-        *AppName
+    UE_LOG(LogMocapApi, Log, TEXT("App %s handle %llu Disconnect."),
+        *AppName,
+        h
     );
 }
 
@@ -281,6 +287,7 @@ bool UMocapApp::PollEvents()
     }
     if (hasUnhandledEvents) {
         FScopeLock Lock(&CriticalSection);
+
         for (const auto & e : events) {
             if (e.eventType == MocapApi::MCPEvent_AvatarUpdated) {
                 // handle received acvatar data
@@ -301,7 +308,7 @@ bool UMocapApp::PollEvents()
                 // handle error, just output the error, so use can see it
                 LastError = e.eventData.systemError.error;
                 ExtraErrorMsg = FString();
-                UE_LOG(LogMocapApi, Warning, TEXT("Got Error Event %d: %s"), LastError, *GetLastErrorMessage());
+                UE_LOG(LogMocapApi, Warning, TEXT("Got Error Event (app:%lld) %d: %s"), AppHandle, LastError, *GetLastErrorMessage());
                 //LastError = MocapApi::Error_None;-
                 IsReady = !((LastError == MocapApi::Error_ServerNotReady) || (LastError == MocapApi::Error_ClientNotReady) || (LastError == MocapApi::Error_AddressInUse));
             }
@@ -324,6 +331,9 @@ bool UMocapApp::PollEvents()
             IsReady = true;
         }
     }
+    
+    HandleMocapCommandsTimeout();
+
     return hasUnhandledEvents;
 }
 
@@ -620,7 +630,13 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
             avatar.BoneParents[jointTag] = parentJointTag;
 
             FVector& d = avatar.DefaultLocalPositions[jointTag];
+#if 0
             mcpJoint->GetJointDefaultLocalPosition(&PosX, &PosY, &PosZ, handle);
+#else
+            PosX = 0;
+            PosY = 0;
+            PosZ = 0;
+#endif
             d = FVector(PosX, PosY, PosZ);
 
             FVector& p = avatar.LocalPositions[jointTag];
@@ -634,6 +650,11 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
             q = FQuat(RotX, RotY, RotZ, RotW);
         }
     }
+
+    uint32 PostureIndex = 0;
+    mcpError = avatarMgr->GetAvatarPostureIndex(&PostureIndex, Avatarhandle);
+    ReturnFalseIFError();
+    avatar.PostureIndex = PostureIndex;
     
     //CheckAvatarJoint(Avatarhandle, RootJoint, avatar);
     FMocapAppManager::GetInstance().OnRecieveMocapData(avatar.Name, this);
@@ -800,15 +821,17 @@ bool UMocapApp::HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle, int ReservedD
     rigid.Name = FName(RigidName);
 
     RigidBodyMgr->GetRigidBodyPosition(&PosX, &PosY, &PosZ, RigidBodyHandle);
-    rigid.Position.X = PosX;
-    rigid.Position.Y = PosZ;
-    rigid.Position.Z = PosY;
+    //rigid.Position.X = PosX;
+    //rigid.Position.Y = PosZ;
+    //rigid.Position.Z = PosY;
+    rigid.Position = FVector(PosX, PosY, PosZ);
 
     RigidBodyMgr->GetRigidBodyRotation(&RotX, &RotY, &RotZ, &RotW, RigidBodyHandle);
-    rigid.Rotation.X = RotX;
-    rigid.Rotation.Y = RotZ;
-    rigid.Rotation.Z = RotY;
-    rigid.Rotation.W = -RotW;
+    //rigid.Rotation.X = RotX;
+    //rigid.Rotation.Y = RotZ;
+    //rigid.Rotation.Z = RotY;
+    //rigid.Rotation.W = -RotW;
+    rigid.Rotation = FQuat(RotX, RotY, RotZ, RotW);
     RigidBodyMgr->GetRigidBodyStatus(&rigid.Status, RigidBodyHandle);
     MocapApi::EMCPJointTag Tag;
     RigidBodyMgr->GetRigidBodyJointTag(&Tag, RigidBodyHandle);
@@ -837,6 +860,7 @@ bool UMocapApp::HandleCommandReplyEvent(uint64 CommandHandle, int replay)
         if (QueuedCommands[0].CommandHandle == CommandHandle)
         {
             Cmd = &QueuedCommands[0];
+            Cmd->ResponseTime = FDateTime::UtcNow().GetTicks();
         }
     }
 
@@ -965,17 +989,60 @@ void UMocapApp::PrepareAndSendMocapCommand(MocapApi::IMCPApplication* mcpApplica
                 ReturnIFError();
             }
             MocapApi::MCPApplicationHandle_t appcliation = AppHandle;
-            mcpApplication->QueuedServerCommand(command, appcliation);
+            mcpError = mcpApplication->QueuedServerCommand(command, appcliation);
+            
+            UEnum* EMCCommandTypeEnum = StaticEnum<EMCCommandType>();
+            FString CmdName = EMCCommandTypeEnum->GetValueAsString(Cmd.Cmd);
+            UE_LOG(LogMocapApi, Log, TEXT("QueuedServerCommand app: %s[%lld] Cmd %s[%lld] result %d"),
+                *AppName,
+                appcliation,
+                *CmdName,
+                command,
+                mcpError
+            );
             ReturnIFError();
             Cmd.CommandHandle = command;
             Cmd.SendTime = FDateTime::UtcNow().GetTicks();
+            Cmd.ResponseTime = Cmd.SendTime;
+        }
+    }
+}
+
+void UMocapApp::HandleMocapCommandsTimeout()
+{
+    if (QueuedCommands.Num() > 0)
+    {
+        FMocapServerCommand& Cmd = QueuedCommands[0];
+        if (Cmd.CommandHandle != 0)
+        {
+            // has command and already send to axis
+            // timeout duratiuon default 30 seconds
+            int64 TimeoutDur = FTimespan(0, 0, 20).GetTicks();
+            int64 Delta = FDateTime::UtcNow().GetTicks() - Cmd.ResponseTime;
+            if (Delta > TimeoutDur)
+            {
+                FString MsgStr = TEXT("Timeout");
+                uint32 code = 999;// fake timeout error code
+                Cmd.Result = FString::Printf(TEXT("Code %d\nMsg: %s"), code, *MsgStr);
+                Cmd.OnResult.Broadcast(code, MsgStr);
+                PushCommandToHistory(Cmd);
+                QueuedCommands.RemoveAt(0);
+            }
         }
     }
 }
 
 void UMocapApp::PushCommandToHistory(const FMocapServerCommand& Cmd)
 {
-    CommandsHistory.Add(Cmd);
+    if (CommandsHistory.Num() < MaxCommandHistory)
+    {
+        CommandsHistory.Add(Cmd);
+    }
+    else
+    {
+        CommandsHistory[LastCommandHistoryIndex] = Cmd;
+    }
+    LastCommandHistoryIndex = (LastCommandHistoryIndex + 1) % MaxCommandHistory;
 }
 
 void UMocapApp::DumpData()
@@ -1049,8 +1116,11 @@ void UMocapApp::DumpData()
     if (CommandsHistory.Num() > 0)
     {
         UE_LOG(LogMocapApi, Log, TEXT("==== Commands History ===="));
-        for (auto& Cmd : CommandsHistory)
+        int CommandCnt = FMath::Min(MaxCommandHistory, CommandsHistory.Num());
+        for (int i = 0; i < CommandCnt; ++i)
         {
+            int realIndex = (LastCommandHistoryIndex + MaxCommandHistory - 1 - i) % MaxCommandHistory;
+            auto& Cmd = CommandsHistory[realIndex];
             FString CmdName = EMCCommandTypeEnum->GetValueAsString(Cmd.Cmd);
             UE_LOG(LogMocapApi, Log, TEXT("Cmd %s handle %lld SendTime %lld"), *CmdName, Cmd.CommandHandle, Cmd.SendTime);
             if (Cmd.Params.Num() > 0)

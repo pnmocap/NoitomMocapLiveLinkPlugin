@@ -3,6 +3,7 @@
 #include "NeuronLiveLinkBPLibrary.h"
 #include "NeuronLiveLinkSourceFactory.h"
 #include "ILiveLinkClient.h"
+#include "LiveLinkClient.h"
 #include "LiveLinkClientReference.h"
 #include "MocapAppManager.h"
 #include "MocapStructs.h"
@@ -82,23 +83,55 @@ void UNeuronLiveLinkBPLibrary::GetMocapAppNames(TArray<FName>& AppNames)
 	}
 }
 
+void UNeuronLiveLinkBPLibrary::RemoveMocapAppByName(FName AppName)
+{
+	//FLiveLinkClientReference ClientRef;
+	//ILiveLinkClient* Client = ClientRef.GetClient();
+	FLiveLinkClient* Client = &IModularFeatures::Get().GetModularFeature<FLiveLinkClient>(FLiveLinkClient::ModularFeatureName);
+	MocapAppDataVisitor Visitor;
+	FMocapAppManager::GetInstance().EachRunningApp(Visitor);
+	for (UMocapApp* App : Visitor.Apps)
+	{
+		if (App->AppName.Equals(AppName.ToString()))
+		{
+			FGuid Src = App->GetBindingLiveLinkSource();
+			if (Src.IsValid())
+			{
+				Client->RemoveSource(Src);
+			}
+		}
+	}
+}
+
 void UNeuronLiveLinkBPLibrary::RemoveAllMocapLivelinkSource()
 {
+	//FLiveLinkClientReference ClientRef;
+	//ILiveLinkClient* Client = ClientRef.GetClient();
+	//TArray<FGuid> Sources = Client->GetSources();
+	//for (FGuid Src : Sources)
+	//{
+	//	FText Tp = Client->GetSourceType(Src);
+	//	if (Tp.ToString().Contains(FNeuronLiveLinkSource::SourceType.ToString()))
+	//	{
+	//		ULiveLinkSourceSettings* Sett = Client->GetSourceSettings(Src);
+	//		FString Conn;
+	//		if (Sett)
+	//		{
+	//			Conn = Sett->ConnectionString;
+	//		}
+	//		UE_LOG(LogMocapApi, Warning, TEXT("Remove MocapSource Guid %s SourceType [%s] ConnectionString [%s] "), *Src.ToString(), *Tp.ToString(), *Conn);
+	//		Client->RemoveSource(Src);
+	//	}
+	//}
 	FLiveLinkClientReference ClientRef;
 	ILiveLinkClient* Client = ClientRef.GetClient();
-	TArray<FGuid> Sources = Client->GetSources();
-	for (FGuid Src : Sources)
+	MocapAppDataVisitor Visitor;
+	FMocapAppManager::GetInstance().EachRunningApp(Visitor);
+	for (UMocapApp* App : Visitor.Apps)
 	{
-		FText Tp = Client->GetSourceType(Src);
-		if (Tp.ToString().Contains(FNeuronLiveLinkSource::SourceType.ToString()))
+		FGuid Src = App->GetBindingLiveLinkSource();
+		if (Src.IsValid())
 		{
-			ULiveLinkSourceSettings* Sett = Client->GetSourceSettings(Src);
-			FString Conn;
-			if (Sett)
-			{
-				Conn = Sett->ConnectionString;
-			}
-			UE_LOG(LogMocapApi, Warning, TEXT("Remove MocapSource Guid %s SourceType [%s] ConnectionString [%s] "), *Src.ToString(), *Tp.ToString(), *Conn);
 			Client->RemoveSource(Src);
 		}
 	}

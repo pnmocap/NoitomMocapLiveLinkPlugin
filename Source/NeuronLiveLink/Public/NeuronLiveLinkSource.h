@@ -22,7 +22,7 @@ public:
 	virtual bool RequestSourceShutdown ();
 
 	virtual FText GetSourceType( ) const;
-	virtual FText GetSourceMachineName () const;
+	virtual FText GetSourceMachineName () const override;
 	virtual FText GetSourceStatus( ) const;
 	//~ End ILiveLinkSource interface
 
@@ -32,6 +32,9 @@ public:
 	void PushTrackSubject( FName Subject );
 	void PushTrackerFrameData( FName Subject, FLiveLinkFrameDataStruct& Frame );
 
+	const FGuid& GetSourceGuid() {
+		return mGuid;
+	}
 private:
 	FGuid mGuid;
 	ILiveLinkClient* m_pLiveLinkClient;

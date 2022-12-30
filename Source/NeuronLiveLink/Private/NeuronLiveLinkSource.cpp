@@ -29,7 +29,11 @@ FNeuronLiveLinkSource::FNeuronLiveLinkSource( EForceInit )
 
 FNeuronLiveLinkSource::~FNeuronLiveLinkSource ()
 {
-
+    if (mocapClient)
+    {
+        delete mocapClient;
+        mocapClient = nullptr;
+    }
 }
 
 void FNeuronLiveLinkSource::Init( FIPv4Endpoint InLocalEndpoint, bool InIsUDP, FIPv4Endpoint InRemoteEndpoint, const FString& InOrder, int InUDPRecvPoint)
@@ -91,8 +95,6 @@ bool FNeuronLiveLinkSource::RequestSourceShutdown ()
     if (mocapClient)
     {
         mocapClient->Exit();
-        delete mocapClient;
-        mocapClient = nullptr;
     }
 	AN_LOG(Log, TEXT("RequestSourceShutdown"));
 	return true;
@@ -114,18 +116,17 @@ FText FNeuronLiveLinkSource::GetSourceType() const
 
 FText FNeuronLiveLinkSource::GetSourceMachineName () const
 {
-	FString HostStr;
-	if (IsUDP)
-	{
-		HostStr = TEXT( "UDP://" ) + LocalEndpoint.ToString( );
-	}
-	else
-	{
-		HostStr = TEXT( "TCP://" ) + RemoteEndpoint.ToString( );
-	}
+    FString SourceMachineName = TEXT("???");
+    if (IsUDP)
+    {
+        SourceMachineName = FString::Printf(TEXT("udp://%s"), *LocalEndpoint.ToString());
+    }
+    else
+    {
+        SourceMachineName = FString::Printf(TEXT("tcp://%s"), *RemoteEndpoint.ToString());
+    }
 
-	FString SourceMachineName = HostStr;
-	FText MachineText = FText::FromString (SourceMachineName);
+	FText MachineText = FText::FromString(SourceMachineName);
 	return MachineText;
 }
 

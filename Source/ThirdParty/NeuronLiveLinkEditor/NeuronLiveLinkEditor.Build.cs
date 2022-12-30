@@ -73,6 +73,8 @@ public class NeuronLiveLinkEditor : ModuleRules
 				"WorkspaceMenuStructure",
 				"NeuronLiveLink",
 				"ContentBrowser",
+                "ToolMenus",
+				"UMG",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

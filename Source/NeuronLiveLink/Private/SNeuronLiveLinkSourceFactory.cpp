@@ -9,7 +9,7 @@
 
 #define LOCTEXT_NAMESPACE "FNeuronLiveLinkModule"
 
-const uint16 DEFAULT_LOCALPORT = 7004;
+const uint16 DEFAULT_UDPPORT = 7003;
 const uint16 DEFAULT_LOCALRECVPORT = 7004;
 const uint16 DEFAULT_REMOTEPORT = 7003;
 const FString DEFAULT_REMOTEIP = TEXT( "127.0.0.1" );
@@ -82,10 +82,10 @@ void SNeuronLiveLinkSourceFactory::Construct( const FArguments& Args )
 {
 	OkClicked = Args._OnOkClicked;
 
-	FIPv4Endpoint LocalEndpoint;
+	FIPv4Endpoint UdpEndpoint;
 	//LocalEndpoint.Address = FIPv4Address::Any;
-    FIPv4Address::Parse(DEFAULT_REMOTEIP, LocalEndpoint.Address);
-	LocalEndpoint.Port = DEFAULT_LOCALPORT;
+    FIPv4Address::Parse(DEFAULT_REMOTEIP, UdpEndpoint.Address);
+	UdpEndpoint.Port = DEFAULT_UDPPORT;
     FString LocalRecvPort = FString::FromInt(DEFAULT_LOCALRECVPORT);
 
 	bool IsUDP = true;
@@ -105,7 +105,7 @@ void SNeuronLiveLinkSourceFactory::Construct( const FArguments& Args )
 	ChildSlot
 		[
 			SNew( SBox )
-				.WidthOverride( 250 )
+				.WidthOverride( 300 )
 				[
 					SNew( SVerticalBox )
 					+ SVerticalBox::Slot( )
@@ -124,7 +124,7 @@ void SNeuronLiveLinkSourceFactory::Construct( const FArguments& Args )
 								.FillWidth( 0.5f )
 								[
 									SAssignNew( LocalAddressText, SEditableTextBox )
-										.Text( FText::FromString( LocalEndpoint.ToString( ) ) )
+										.Text( FText::FromString( UdpEndpoint.ToString( ) ) )
 										.OnTextCommitted( this, &SNeuronLiveLinkSourceFactory::OnLocalEndpointChanged )
 								]
 						]
@@ -256,7 +256,7 @@ void SNeuronLiveLinkSourceFactory::OnLocalEndpointChanged( const FText& NewValue
 		if (!FIPv4Endpoint::Parse( NewValue.ToString( ), LocalEndpoint ))
 		{
 			LocalEndpoint.Address = FIPv4Address::Any;
-			LocalEndpoint.Port = DEFAULT_LOCALPORT;
+			LocalEndpoint.Port = DEFAULT_UDPPORT;
 			EditabledTextPin->SetText( FText::FromString( LocalEndpoint.ToString( ) ) );
             TSharedPtr<SCheckBox> CheckBoxPin = Checkbox.Pin();
             if (CheckBoxPin)

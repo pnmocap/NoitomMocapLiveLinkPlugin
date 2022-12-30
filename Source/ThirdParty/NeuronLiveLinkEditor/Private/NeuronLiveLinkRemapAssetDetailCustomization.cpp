@@ -11,6 +11,8 @@
 #include "NeuronBoneMappingWidget.h"
 #include "ContentBrowserModule.h"
 #include "IContentBrowserSingleton.h"
+#include "EditorStyleSet.h"
+#include "EngineVersionCompare.h"
 
 #define LOCTEXT_NAMESPACE "NeuronLiveLinkRemapAssetDetailCustomization"
 
@@ -120,7 +122,11 @@ void FNeuronLiveLinkRemapAssetDetailCustomization::CustomizeDetails(IDetailLayou
                         .AutoHeight()
                         [
                             SAssignNew(SkeletonNameBlock, STextBlock)
+#if UE_ENGINE_VER_LESS_THAN(5,1)
                             .Font(FEditorStyle::GetFontStyle("BoldFont"))
+#else
+                            .Font(FAppStyle::GetFontStyle("BoldFont"))
+#endif
                             .Text(LOCTEXT("SelSkeleton", "Select a skeleton for mapping"))
                         ]
                         + SVerticalBox::Slot()
@@ -159,7 +165,11 @@ TSharedRef<SWidget> FNeuronLiveLinkRemapAssetDetailCustomization::MakeSkeletonPi
     UClass* FilterClass = USkeleton::StaticClass();
     if (FilterClass != NULL)
     {
+#if UE_ENGINE_VER_LESS_THAN(5,1)
         AssetPickerConfig.Filter.ClassNames.Add(FilterClass->GetFName());
+#else
+        AssetPickerConfig.Filter.ClassPaths.Add(FilterClass->GetClassPathName());
+#endif
         AssetPickerConfig.Filter.bRecursiveClasses = true;
     }
 

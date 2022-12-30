@@ -53,6 +53,9 @@ class NEURONLIVELINK_API UNeuronLiveLinkBPLibrary : public UBlueprintFunctionLib
 		static void GetMocapAppNames(TArray<FName>& AppNames);
 
 	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
+		static void RemoveMocapAppByName(FName AppName);
+
+	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
 		static void RemoveAllMocapLivelinkSource();
 
 	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")

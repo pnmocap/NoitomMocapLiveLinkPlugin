@@ -54,11 +54,22 @@ FMocapAppClient::~FMocapAppClient()
     }
 
     Exit();
+    if (App)
+    {
+        //Thread->WaitForCompletion();
+        App->SetBindingLiveLinkSource(FGuid());
+        DestroyApplication();
+    }
+    mSource.Reset();
 }
 
 void FMocapAppClient::SetSource(TSharedPtr<FNeuronLiveLinkSource> Source)
 {
     mSource = Source;
+    if (App)
+    {
+        App->SetBindingLiveLinkSource(Source->GetSourceGuid());
+    }
 }
 
 //~ Begin FRunnable interface
@@ -74,6 +85,13 @@ uint32 FMocapAppClient::Run()
         PollEvents();
         FPlatformProcess::Sleep(1.0f/60);
     }
+    if (App)
+    {
+        //Thread->WaitForCompletion();
+        App->SetBindingLiveLinkSource(FGuid());
+        DestroyApplication();
+    }
+    mSource.Reset();
     return 0;
 }
 
@@ -88,7 +106,10 @@ void FMocapAppClient::Exit()
     {
         Stop();
     }
-    DestroyApplication();
+    if (App)
+    {
+        App->SetPendingToDestroy();
+    }
 }
 
 //~ End FRunnable interface
@@ -114,6 +135,7 @@ void FMocapAppClient::DestroyApplication()
 {
     if (App)
     {
+        App->SetBindingLiveLinkSource(FGuid());
         App->RemoveFromRoot();
         App->Disconnect();
     }

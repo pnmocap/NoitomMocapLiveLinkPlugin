@@ -2,7 +2,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Containers/MRUArray.h"
 #include "MocapStructs.generated.h"
 
 /**
@@ -254,6 +253,9 @@ struct FMocapAvatar
 
     UPROPERTY()
     TArray<FQuat> LocalRotation;
+
+    UPROPERTY()
+    uint32 PostureIndex;
 };
 
 /**
@@ -324,6 +326,8 @@ struct FMocapServerCommand
     uint64 ProgressHandle;
 
     int64 SendTime;
+
+    int64 ResponseTime;
 };
 
 namespace MocapApi
@@ -438,9 +442,16 @@ public:
 
     // dump app date for debug use
     void DumpData();
+
+    void SetBindingLiveLinkSource(FGuid SourceID) { BindingLiveLinkSource = SourceID;  }
+    FGuid GetBindingLiveLinkSource() { return BindingLiveLinkSource; }
+
+    void SetPendingToDestroy() { PendingDestroy = true; }
+    bool GetIsPendingToDestroy() { return PendingDestroy; }
 private:
     bool IsConnecting = false;
     bool IsReady = true;
+    bool PendingDestroy = false;
     int LastError = 0;
     FString ExtraErrorMsg;
 
@@ -448,6 +459,7 @@ private:
     FString AppHandleInternal;// store handler use string because uint64 cannot expose to blueprint
 
     uint64 AppHandle; // MocapApi::MCPApplicationHandle_t used for MocapApi
+    FGuid BindingLiveLinkSource;
 
     bool HandleAvatarUpdateEvent(uint64 Avatarhandle);
     void CheckAvatarJoint(uint64 Avatarhandle, uint64 JointHandle, const FMocapAvatar& avatar);
@@ -459,6 +471,7 @@ private:
     bool HandleCommandReplyEvent(uint64 CommandHandle, int replay);
 
     void PrepareAndSendMocapCommand(MocapApi::IMCPApplication* mcpApplication);
+    void HandleMocapCommandsTimeout();
 
     void PushCommandToHistory(const FMocapServerCommand& Cmd);
 
@@ -466,7 +479,9 @@ private:
 	TMap<FString, FMocapRigidBody> RigidBodies;
     TMap<FString, FMocapAvatar> Avatars;
     TArray<FMocapServerCommand> QueuedCommands;
-    TMRUArray<FMocapServerCommand> CommandsHistory;
+    TArray<FMocapServerCommand> CommandsHistory;
+    int MaxCommandHistory;
+    int LastCommandHistoryIndex;
     static TArray<FName> AvatarBoneNames;
     static TArray<int> AvatarBoneParents;
     static void InitAvatarBuildinInfo();

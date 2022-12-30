@@ -42,6 +42,7 @@ public class NeuronLiveLink : ModuleRules
                 "LiveLinkInterface",
                 "LiveLink",
                 "Networking",
+                "AnimGraphRuntime",
                 // ... add other public dependencies that you statically link with here ...
             }
             );

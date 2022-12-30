@@ -18,8 +18,16 @@ bool FMocapAppManager::AddMocapApp(UMocapApp* App)
     if (App)
     {
         FName AppName(App->AppName);
-        if (RunningApps.Find(AppName) == nullptr)
+        UMocapApp** OldApp = RunningApps.Find(AppName);
+        if (OldApp == nullptr)
         {
+            RunningApps.Add(AppName, App);
+            return true;
+        }
+        else
+        {
+            //(*OldApp)->Disconnect();
+            RemoveMocapApp(*OldApp);
             RunningApps.Add(AppName, App);
             return true;
         }
@@ -31,6 +39,12 @@ bool FMocapAppManager::RemoveMocapApp(UMocapApp* App)
 {
     if (App)
     {
+        FName AppName(App->AppName);
+        UMocapApp** OldApp = RunningApps.Find(AppName);
+        if (OldApp == nullptr || *OldApp != App)
+        {
+            return true;
+        }
         RunningApps.Remove(FName(App->AppName));
         TArray<FName> NamesInApp;
         for (auto& It : NameResolver)
@@ -61,9 +75,22 @@ UMocapApp* FMocapAppManager::GetMocapAppByName(FName AppName)
 
 void FMocapAppManager::EachRunningApp(MocapAppVisitor& Visitor)
 {
+    //void
+    TArray<UMocapApp*> AppsNeedToDestroy;
     for (auto& It : RunningApps)
     {
-        Visitor.Visit(It.Value);
+        if (!It.Value->GetIsPendingToDestroy())
+        {
+            Visitor.Visit(It.Value);
+        }
+        else
+        {
+            AppsNeedToDestroy.Add(It.Value);
+        }
+    }
+    for (auto App : AppsNeedToDestroy)
+    {
+        App->Disconnect();
     }
 }
 
