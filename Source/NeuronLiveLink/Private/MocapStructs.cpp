@@ -61,6 +61,22 @@ UMocapApp::UMocapApp()
             const char* V = FTCHARToUTF8(*Value).Get();
             return CommandInterface->SetCommandExtraLong(MocapApi::CommandExtraLong_AvatarName, reinterpret_cast<intptr_t>(V), handle);
         };
+        CommandParamBuildMap[EMCCommandParamName::ParamTakeName] = [](MocapApi::IMCPCommand* CommandInterface, MocapApi::MCPCommandHandle_t handle, const FString& Value) -> MocapApi::EMCPError {
+            const char* V = FTCHARToUTF8(*Value).Get();
+            MocapApi::IMCPStartRecoredExtra* StartRecoredExtraInterface = nullptr;
+            MocapApi::EMCPError mcpError = MocapApi::MCPGetGenericInterface(MocapApi::IMCPStartRecoredExtra_Version,
+                reinterpret_cast<void**>(&StartRecoredExtraInterface));
+            if (mcpError == MocapApi::Error_None && StartRecoredExtraInterface != nullptr)
+            {
+                MocapApi::MCPStartRecoredExtraHandle_t ext;
+                StartRecoredExtraInterface->CreateStartRecoredExtra(&ext);
+                StartRecoredExtraInterface->SetStartRecoredExtraTakeName(V, ext);
+                mcpError = CommandInterface->SetCommandExtraLong(MocapApi::CommandExtraLong_Extra0, ext, handle);
+                StartRecoredExtraInterface->DestroyStartRecoredExtra(&ext);
+                return mcpError;
+            }
+            return MocapApi::Error_None;
+        };
     }
 }
 

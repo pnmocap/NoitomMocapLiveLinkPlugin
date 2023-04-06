@@ -289,6 +289,7 @@ enum class EMCCommandParamName : uint8
     ParamStopCatpureExtraFlag,
     ParamDeviceRadio,
     ParamAvatarName,
+    ParamTakeName,
 };
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnMocapServerCommandResult, int/*Code*/, const FString&/*Result*/)

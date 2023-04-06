@@ -391,7 +391,7 @@ Axis studio作为网络中的服务端向客户端电脑上的应用发送动捕
   BlendWeights为附加不带位移层的权重
   ```
   
-  > 1.2.06版之后提供次节点且使用此节点是需要AxisStudio中设置发送位移数据
+  > 1.2.06版之后提供此节点且使用此节点时需要AxisStudio中设置发送位移数据
 
 * 进入内容浏览器为骨骼添加NeuronLiveLinkRemapAsset
     ![AddBoneRemapBP](AddBoneRemapBP.png)
