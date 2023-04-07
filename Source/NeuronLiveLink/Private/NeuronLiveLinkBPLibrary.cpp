@@ -11,6 +11,8 @@
 #include "Kismet/KismetStringLibrary.h"
 
 
+TArray<FWeakObjectPtr> UNeuronLiveLinkBPLibrary::RecordNotifyEventHandlers;
+
 UNeuronLiveLinkBPLibrary::UNeuronLiveLinkBPLibrary(const FObjectInitializer& ObjectInitializer)
 : Super(ObjectInitializer)
 {
@@ -382,6 +384,41 @@ void UNeuronLiveLinkBPLibrary::SendNeuronCommand(const UObject* WorldContextObje
 	else
 	{
 		UE_LOG(LogMocapApi, Log, TEXT("Failed to find Mocap App Name: %s"), *(AppName.ToString()));
+	}
+}
+
+void UNeuronLiveLinkBPLibrary::AddMocapRecordNotifyEventHandler(const UObject* obj)
+{
+	RecordNotifyEventHandlers.AddUnique(obj);
+}
+
+void UNeuronLiveLinkBPLibrary::RemoveMocapRecordNotifyEventHandler(const UObject* obj)
+{
+	RecordNotifyEventHandlers.Remove(obj);
+}
+
+void UNeuronLiveLinkBPLibrary::HandleMocapRecordNotifyEvent(const FMocapRecordNotify& evt)
+{
+	for (FWeakObjectPtr Ptr : RecordNotifyEventHandlers)
+	{
+		if (Ptr.IsValid())
+		{
+			UObject* Obj = Ptr.Get();
+			FOutputDeviceNull Ar;
+			FString EventWithParam = FString::Printf(TEXT("%s \"%s\" \"%s\" \"%s\" \"%s\" \"%s\""),
+				TEXT("HandleMocapRecordNotifyEvent"),
+				*evt.NotifyType.ToString(),
+				*evt.TakeName,
+				*evt.TakePath,
+				*evt.TakeSaveDir,
+				*evt.TakeFileSuffix
+			);
+			bool result = Obj->CallFunctionByNameWithArguments(*EventWithParam, Ar, nullptr, true);
+			if (!result)
+			{
+				UE_LOG(LogMocapApi, Warning, TEXT("UNeuronLiveLinkBPLibrary::HandleMocapRecordNotifyEvent Failed to Delegate event on %s function [%s]"), *Obj->GetFName().ToString(), *EventWithParam);
+			}
+		}
 	}
 }
 

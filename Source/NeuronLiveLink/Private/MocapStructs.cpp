@@ -3,6 +3,7 @@
 #include "MocapApiLog.h"
 #include "Misc/ScopeLock.h"
 #include "MocapAppManager.h"
+#include "NeuronLiveLinkBPLibrary.h"
 #include <unordered_map>
 #include <functional>
 
@@ -331,6 +332,12 @@ bool UMocapApp::PollEvents()
             else if (e.eventType == MocapApi::MCPEvent_SensorModulesUpdated) {
                 // ignore
             }
+            else if (e.eventType == MocapApi::MCPEvent_Notify)
+            {
+                MocapApi::EMCPNotify tp = e.eventData.notifyData._notify;
+                uint64_t notifyHandle = e.eventData.notifyData._notifyHandle;
+                HandleRecordNotifyEvent(tp, notifyHandle);
+            }
             else if (e.eventType == MocapApi::MCPEvent_None) {
                 // ignore
             }
@@ -349,6 +356,8 @@ bool UMocapApp::PollEvents()
     }
     
     HandleMocapCommandsTimeout();
+
+    //TreatNotifyEvents();
 
     return hasUnhandledEvents;
 }
@@ -999,9 +1008,13 @@ void UMocapApp::PrepareAndSendMocapCommand(MocapApi::IMCPApplication* mcpApplica
 
             MocapApi::MCPCommandHandle_t command;
             CommandInterface->CreateCommand((int)Cmd.Cmd, &command);
+            FString CmdParams;
+            UEnum* EMCCommandParamEnum = StaticEnum<EMCCommandParamName>();
             for (auto It : Cmd.Params)
             {
                 mcpError = CommandParamBuildMap[It.Key](CommandInterface, command, It.Value);
+
+                CmdParams += FString::Printf(TEXT("%s=%s "), *EMCCommandParamEnum->GetValueAsString(It.Key), *It.Value);
                 ReturnIFError();
             }
             MocapApi::MCPApplicationHandle_t appcliation = AppHandle;
@@ -1009,11 +1022,12 @@ void UMocapApp::PrepareAndSendMocapCommand(MocapApi::IMCPApplication* mcpApplica
             
             UEnum* EMCCommandTypeEnum = StaticEnum<EMCCommandType>();
             FString CmdName = EMCCommandTypeEnum->GetValueAsString(Cmd.Cmd);
-            UE_LOG(LogMocapApi, Log, TEXT("QueuedServerCommand app: %s[%lld] Cmd %s[%lld] result %d"),
+            UE_LOG(LogMocapApi, Log, TEXT("QueuedServerCommand app: %s[%lld] Cmd %s[%lld] (%s) result %d"),
                 *AppName,
                 appcliation,
                 *CmdName,
                 command,
+                *CmdParams,
                 mcpError
             );
             ReturnIFError();
@@ -1060,6 +1074,81 @@ void UMocapApp::PushCommandToHistory(const FMocapServerCommand& Cmd)
     }
     LastCommandHistoryIndex = (LastCommandHistoryIndex + 1) % MaxCommandHistory;
 }
+
+static TArray<FName> RecordNotifyNames = {
+    TEXT("Notify_RecordStarted"),
+    TEXT("Notify_RecordStoped"),
+    TEXT("Notify_RecordFinished"),
+};
+bool UMocapApp::HandleRecordNotifyEvent(int NotifyType, uint64 notifyHandle)
+{
+    MocapApi::IMCPRecordNotify* notifyMgr = nullptr;
+    MocapApi::EMCPError mcpError = MocapApi::MCPGetGenericInterface(MocapApi::IMCPRecordNotify_Version,
+        reinterpret_cast<void**>(&notifyMgr));
+    ReturnFalseIFError();
+
+    FMocapRecordNotify n;
+    n.NotifyType = (NotifyType>=0 && NotifyType< RecordNotifyNames.Num())? RecordNotifyNames[NotifyType]: NAME_None;
+    const char* name = nullptr;
+    notifyMgr->RecordNotifyGetTakeName(&name, notifyHandle);
+    if (name)
+    {
+        FUTF8ToTCHAR conv(name);
+        n.TakeName = conv.Get();
+    }
+    name = nullptr;
+    notifyMgr->RecordNotifyGetTakePath(&name, notifyHandle);
+    if (name)
+    {
+        FUTF8ToTCHAR conv(name);
+        n.TakePath = conv.Get();
+    }
+    name = nullptr;
+    notifyMgr->RecordNotifyGetTakeSaveDir(&name, notifyHandle);
+    if (name)
+    {
+        FUTF8ToTCHAR conv(name);
+        n.TakeSaveDir = conv.Get();
+    }
+    name = nullptr;
+    notifyMgr->RecordNotifyGetTakeFileSuffix(&name, notifyHandle);
+    if (name)
+    {
+        FUTF8ToTCHAR conv(name);
+        n.TakeFileSuffix = conv.Get();
+    }
+
+    //RecordNotifies.Enqueue(n);
+
+    FMocapRecordNotify& item = n;
+    //RecordNotifies.Dequeue(item);
+    UE_LOG(LogMocapApi, Log, TEXT("Receive Record NotifyEvent %s : TakeName %s, path %s dir %s suffix %s"),
+        *item.NotifyType.ToString(),
+        *item.TakeName,
+        *item.TakePath,
+        *item.TakeSaveDir,
+        *item.TakeFileSuffix);
+    UNeuronLiveLinkBPLibrary::HandleMocapRecordNotifyEvent(item);
+
+    return true;
+}
+
+//void UMocapApp::TreatNotifyEvents()
+//{
+//    while (!RecordNotifies.IsEmpty())
+//    {
+//        FMocapRecordNotify item;
+//        RecordNotifies.Dequeue(item);
+//
+//        UE_LOG(LogMocapApi, Log, TEXT("Receive Record NotifyEvent %s : TakeName %s, path %s dir %s suffix %s"),
+//            *item.NotifyType.ToString(),
+//            *item.TakeName,
+//            *item.TakePath,
+//            *item.TakeSaveDir,
+//            *item.TakeFileSuffix);
+//        UNeuronLiveLinkBPLibrary::HandleMocapRecordNotifyEvent(item);
+//    }
+//}
 
 void UMocapApp::DumpData()
 {
