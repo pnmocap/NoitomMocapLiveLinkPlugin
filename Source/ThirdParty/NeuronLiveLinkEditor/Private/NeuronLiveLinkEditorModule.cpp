@@ -113,7 +113,7 @@ public:
 			{
 				FVector2D pos = ParentWindowPtr->GetPositionInScreen();
 				float Dpi = FPlatformApplicationMisc::GetDPIScaleFactorAtPoint(pos.X, pos.Y);
-				FVector2D ClientSize(402, 200);
+				FVector2D ClientSize(400, 200);
 				FVector2D WinSize = ParentWindowPtr->GetWindowSizeFromClientSize(ClientSize*Dpi, Dpi);
 				ParentWindowPtr->Resize(WinSize);
 			}
