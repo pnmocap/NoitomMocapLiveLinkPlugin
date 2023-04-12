@@ -23,6 +23,8 @@ void FNeuronLiveLinkModule::StartupModule()
 	if (MocapApiLibraryHandle)
 	{
 		UE_LOG(LogTemp, Log, TEXT("MocapApi lib loaded success."));
+		FMD5Hash hash = FMD5Hash::HashFile(*LibraryPath);
+		UE_LOG(LogTemp, Log, TEXT("MocapApi.dll Hash: %s"), *LexToString(hash));
 	}
 	else
 	{
