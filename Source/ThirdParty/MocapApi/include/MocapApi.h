@@ -282,7 +282,7 @@ namespace MocapApi {
         CommandStopCapture,     // EMCPCommandStopCatpureExtraFlag [3/24/2023 Brian.Wang]
         CommandZeroPosition,
         CommandCalibrateMotion,
-        CommandStartRecored,    // CommandExtraLong_Extra0 (optional) : MCPStartRecoredExtraHandle_t [3/24/2023 Brian.Wang]
+        CommandStartRecored,    // const char * utf8str
         CommandStopRecored,
         CommandResumeOriginalPosture,
     };
@@ -682,19 +682,6 @@ namespace MocapApi {
         virtual EMCPError DestroyRecordNotify(MCPRecordNotifyHandle_t recordNotifyHandle) = 0;
     };
     static const char* const IMCPRecordNotify_Version = "IMCPRecordNotify_001";
-
-    typedef uint64_t MCPStartRecoredExtraHandle_t;
-    class IMCPStartRecoredExtra
-    {
-    public:
-        virtual EMCPError CreateStartRecoredExtra(MCPStartRecoredExtraHandle_t* pHandle) = 0;
-
-        virtual EMCPError SetStartRecoredExtraTakeName(const char* takeName,
-            MCPStartRecoredExtraHandle_t startRecoredExtraHandle_t) = 0;
-
-        virtual EMCPError DestroyStartRecoredExtra(MCPStartRecoredExtraHandle_t* pHandle) = 0;
-    };
-    static const char* const IMCPStartRecoredExtra_Version = "IMCPStartRecoredExtra _001";
 
     struct MCPMocapApiVersion
     {
