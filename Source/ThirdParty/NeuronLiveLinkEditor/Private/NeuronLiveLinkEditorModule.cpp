@@ -7,6 +7,7 @@
 #include "Widgets/Docking/SDockTab.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Text/STextBlock.h"
+#include "HAL/PlatformApplicationMisc.h"
 #include "ToolMenus.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetBlueprintGeneratedClass.h"
@@ -110,7 +111,11 @@ public:
 			TSharedPtr<SWindow> ParentWindowPtr = Tab->GetParentWindow();
 			if ((Tab->GetTabRole() == ETabRole::MajorTab || Tab->GetTabRole() == ETabRole::NomadTab) && ParentWindowPtr.IsValid() && ParentWindowPtr != FGlobalTabmanager::Get()->GetRootWindow())
 			{
-				ParentWindowPtr->Resize(FVector2D(402, 158));
+				FVector2D pos = ParentWindowPtr->GetPositionInScreen();
+				float Dpi = FPlatformApplicationMisc::GetDPIScaleFactorAtPoint(pos.X, pos.Y);
+				FVector2D ClientSize(400, 200);
+				FVector2D WinSize = ParentWindowPtr->GetWindowSizeFromClientSize(ClientSize*Dpi, Dpi);
+				ParentWindowPtr->Resize(WinSize);
 			}
 		}
     }

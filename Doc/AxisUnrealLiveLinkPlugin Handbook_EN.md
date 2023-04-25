@@ -305,6 +305,8 @@ After version 1.2.06, you can send some control commands to AxisStudio in both e
   > Do not suggest switch to another neuron livel link source and send commands to that source for the plugin do not know whether Axis studio is start recording data.
   > 
   > When use UDP Please do not use 255.255.255.255 as destination IP in Software(Axis Studio)
+  > 
+  > Scine version v1.2.20 user can add a 'TakeName' paremeter when sending Start Recording command, Axis Stusio will use a take name according the parameter.
 
 ## 9.2 How to use in editor
 
@@ -355,41 +357,41 @@ Do not support sent command to multi servers in edit mode. But you can add more 
 
 * Add A variable for handle live link
   
-     * Move Mouse over **+** button, click **+Variable** button to add **Variable** in My Blueprint panel and type a new name for the Variable in the Details panel and press Enter.
-       ![LevelBP_AddVar_1](LevelBP_AddVar_1.png)
-       ![LevelBP_AddVar_2](LevelBP_AddVar_2.png)
-     * Set Variable Type as Structure (Live Link Source Handle) in the Details Panel.
-         ![LevelBP_AddVar_3](LevelBP_AddVar_3.png)
+  * Move Mouse over **+** button, click **+Variable** button to add **Variable** in My Blueprint panel and type a new name for the Variable in the Details panel and press Enter.
+    ![LevelBP_AddVar_1](LevelBP_AddVar_1.png)
+    ![LevelBP_AddVar_2](LevelBP_AddVar_2.png)
+  * Set Variable Type as Structure (Live Link Source Handle) in the Details Panel.
+      ![LevelBP_AddVar_3](LevelBP_AddVar_3.png)
 
 * Create Neuron Live Link Source at runtime and connect it to **Event BeginPlay** in Event Graph.
   
-     * Add **Create Neuron Live Link Source at runtime** Node and link to BeginPlay 
-         ![LevelBP_EvtBeginPlay_1](LevelBP_EvtBeginPlay_1.png)
-         ![LevelBP_EvtBeginPlay_2](LevelBP_EvtBeginPlay_2.png)
+  * Add **Create Neuron Live Link Source at runtime** Node and link to BeginPlay 
+      ![LevelBP_EvtBeginPlay_1](LevelBP_EvtBeginPlay_1.png)
+      ![LevelBP_EvtBeginPlay_2](LevelBP_EvtBeginPlay_2.png)
   
-     * Create Set node and connect to **Create Neuron Live Link Source at runtime**.
-         ![LevelBP_EvtBeginPlay_3](LevelBP_EvtBeginPlay_3.png)
-         ![LevelBP_EvtBeginPlay_4](LevelBP_EvtBeginPlay_4.png)
+  * Create Set node and connect to **Create Neuron Live Link Source at runtime**.
+      ![LevelBP_EvtBeginPlay_3](LevelBP_EvtBeginPlay_3.png)
+      ![LevelBP_EvtBeginPlay_4](LevelBP_EvtBeginPlay_4.png)
   
-     * Fill Connection String  Pin in **Create Neuron Live Link Source at runtime**
-         Go back to Live Link Window
-         ![LevelBP_ConnectionStr_1](LevelBP_ConnectionStr_1.png)
-         Select Axis Studio source and Click **Show Advanced** in Settings panel
-         ![LevelBP_ConnectionStr_2](LevelBP_ConnectionStr_2.png)
-         Connect string and Factory will display in the Settings panel. 
-       
-         ![LevelBP_ConnectionStr_3](LevelBP_ConnectionStr_3.png)
-         Copy Connection String in settings panel and paste it into **Create Neuron Live Link Source at runtime** node in Event Graph.
-         ![LevelBP_EvtBeginPlay_5](LevelBP_EvtBeginPlay_5.png)
+  * Fill Connection String  Pin in **Create Neuron Live Link Source at runtime**
+      Go back to Live Link Window
+      ![LevelBP_ConnectionStr_1](LevelBP_ConnectionStr_1.png)
+      Select Axis Studio source and Click **Show Advanced** in Settings panel
+      ![LevelBP_ConnectionStr_2](LevelBP_ConnectionStr_2.png)
+      Connect string and Factory will display in the Settings panel. 
+    
+      ![LevelBP_ConnectionStr_3](LevelBP_ConnectionStr_3.png)
+      Copy Connection String in settings panel and paste it into **Create Neuron Live Link Source at runtime** node in Event Graph.
+      ![LevelBP_EvtBeginPlay_5](LevelBP_EvtBeginPlay_5.png)
 
 * Remove live link source and connect to **Event EndPlay** node
   
-     * Right-Click to create **Event EndPlay**.
-         ![LevelBP_EvtEndPlay_1](LevelBP_EvtEndPlay_1.png)
-     * Create remove Source Node and link
-         ![LevelBP_EvtEndPlay_2](LevelBP_EvtEndPlay_2.png)
-     * Create **Get** node and connect to **Remove Source** node
-         ![LevelBP_EvtEndPlay_3](LevelBP_EvtEndPlay_3.png)
+  * Right-Click to create **Event EndPlay**.
+      ![LevelBP_EvtEndPlay_1](LevelBP_EvtEndPlay_1.png)
+  * Create remove Source Node and link
+      ![LevelBP_EvtEndPlay_2](LevelBP_EvtEndPlay_2.png)
+  * Create **Get** node and connect to **Remove Source** node
+      ![LevelBP_EvtEndPlay_3](LevelBP_EvtEndPlay_3.png)
 
 * The event graph will show like the following image, Click Compile and Save the level blueprint
   

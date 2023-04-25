@@ -6,6 +6,7 @@
 #include "MocapStructs.h"
 #include "Engine/Engine.h"
 #include "LatentActions.h"
+#include "UObject/WeakObjectPtr.h"
 #include "NeuronLiveLinkBPLibrary.generated.h"
 
 /* 
@@ -112,5 +113,16 @@ class NEURONLIVELINK_API UNeuronLiveLinkBPLibrary : public UBlueprintFunctionLib
 	static void SendNeuronCommand(const UObject* WorldContextObject, FName AppName, UPARAM(ref) FMocapServerCommand& Cmd, FLatentActionInfo LatentInfo, int& Result, FString& ResultStr);
 
 	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
+	static void AddMocapRecordNotifyEventHandler(const UObject* obj);
+
+	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
+	static void RemoveMocapRecordNotifyEventHandler(const UObject* obj);
+
+	static void HandleMocapRecordNotifyEvent(const FMocapRecordNotify& evt);
+
+	UFUNCTION(BlueprintCallable, Category = "NeuronLiveLink")
 	static void DumpAllMocapApp();
+
+private:
+	static TArray<FWeakObjectPtr> RecordNotifyEventHandlers;
 };

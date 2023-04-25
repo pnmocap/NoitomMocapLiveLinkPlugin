@@ -259,6 +259,30 @@ struct FMocapAvatar
 };
 
 /**
+ * FMocapRecordNotify is the unreal type for MocapApi IMCPRecordNotify
+ */
+USTRUCT(BlueprintType)
+struct FMocapRecordNotify
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+        FName NotifyType;
+
+    UPROPERTY()
+        FString TakeName;
+
+    UPROPERTY()
+        FString TakePath;
+
+    UPROPERTY()
+        FString TakeSaveDir;
+
+    UPROPERTY()
+        FString TakeFileSuffix;
+};
+
+/**
  * EMCCommandType is the unreal type for MocapApi EMCPCommand
  */
 UENUM(BlueprintType)
@@ -289,6 +313,7 @@ enum class EMCCommandParamName : uint8
     ParamStopCatpureExtraFlag,
     ParamDeviceRadio,
     ParamAvatarName,
+    ParamTakeName,
 };
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnMocapServerCommandResult, int/*Code*/, const FString&/*Result*/)
@@ -475,11 +500,16 @@ private:
 
     void PushCommandToHistory(const FMocapServerCommand& Cmd);
 
+    bool HandleRecordNotifyEvent(int NotifyType, uint64 notifyHandle);
+
+    //void TreatNotifyEvents();
+
 	TMap<FString, FMocapTracker> Trackers;
 	TMap<FString, FMocapRigidBody> RigidBodies;
     TMap<FString, FMocapAvatar> Avatars;
     TArray<FMocapServerCommand> QueuedCommands;
     TArray<FMocapServerCommand> CommandsHistory;
+    //TQueue<FMocapRecordNotify> RecordNotifies;
     int MaxCommandHistory;
     int LastCommandHistoryIndex;
     static TArray<FName> AvatarBoneNames;

@@ -391,7 +391,7 @@ Axis studio作为网络中的服务端向客户端电脑上的应用发送动捕
   BlendWeights为附加不带位移层的权重
   ```
   
-  > 1.2.06版之后提供次节点且使用此节点是需要AxisStudio中设置发送位移数据
+  > 1.2.06版之后提供此节点且使用此节点时需要AxisStudio中设置发送位移数据
 
 * 进入内容浏览器为骨骼添加NeuronLiveLinkRemapAsset
     ![AddBoneRemapBP](AddBoneRemapBP.png)
@@ -620,6 +620,8 @@ Spine3,
 > 目前插件无法获取Axis Studio的录制状态, 不建议在Axis Studio处于录制状态时切换到其他源进行指令发送操作。
 > 
 > 使用UDP模式进行指令通信时，软件（Axis Studio或AHM）的目标IP 地址不要使用255.255.255.255
+> 
+> v1.2.20版本使用录制指令时可以附加录制文件名称,AxisStudio会参考使用录制的文件名称
 
 ## 9.2 在编辑器中使用
 
@@ -696,52 +698,52 @@ Spine3,
 
 * 添加一个控制实时链接(Live Link)一个新变量
   
-     * 将鼠标指针移动到**+** 按钮, 点击 **+变量(+Variable)**按钮在蓝图面板中添加显变量，在细节面板之后为他命名为LiveLinkHandle并按下回车键
-       ![LevelBP_AddVar_1](LevelBP_AddVar_1.png)
-       ![LevelBP_AddVar_2](LevelBP_AddVar_2.png)
+  * 将鼠标指针移动到**+** 按钮, 点击 **+变量(+Variable)**按钮在蓝图面板中添加显变量，在细节面板之后为他命名为LiveLinkHandle并按下回车键
+    ![LevelBP_AddVar_1](LevelBP_AddVar_1.png)
+    ![LevelBP_AddVar_2](LevelBP_AddVar_2.png)
   
-     * 在细节面板之后设置变量类型(Variable Type)为结构（Structure）LiveLink源处理 (Live Link Source Handle)
-         ![LevelBP_AddVar_3](LevelBP_AddVar_3.png)
-       
-       ```txt
-       图片中英文翻译：
-       Variable -> 变量
-       Variable Name -> 变量命名
-       Variable Type -> 变量类型
-       Search Live Link source -> 搜索Live Link source
-       Structure -> 结构
-       Live Link Source Handle -> Live Link源处理
-       ```
+  * 在细节面板之后设置变量类型(Variable Type)为结构（Structure）LiveLink源处理 (Live Link Source Handle)
+      ![LevelBP_AddVar_3](LevelBP_AddVar_3.png)
+    
+    ```txt
+    图片中英文翻译：
+    Variable -> 变量
+    Variable Name -> 变量命名
+    Variable Type -> 变量类型
+    Search Live Link source -> 搜索Live Link source
+    Structure -> 结构
+    Live Link Source Handle -> Live Link源处理
+    ```
 
 * 在事件图表(Event Graph)中创建Neuron Live Link Source at runtime节点并与**事件开始运行(Event BeginPlay)**连接
   
-     * 添加**Create Neuron Live Link Source at runtime**节点并与**事件开始运行(Event BeginPlay)**连接
-         ![LevelBP_EvtBeginPlay_1](LevelBP_EvtBeginPlay_1.png)
-         ![LevelBP_EvtBeginPlay_2](LevelBP_EvtBeginPlay_2.png)
+  * 添加**Create Neuron Live Link Source at runtime**节点并与**事件开始运行(Event BeginPlay)**连接
+      ![LevelBP_EvtBeginPlay_1](LevelBP_EvtBeginPlay_1.png)
+      ![LevelBP_EvtBeginPlay_2](LevelBP_EvtBeginPlay_2.png)
   
-     * 创建**LiveLinkHandle**的设置节点并与**Create Neuron Live Link Source at runtime**连接
-         ![LevelBP_EvtBeginPlay_3](LevelBP_EvtBeginPlay_3.png)
-         ![LevelBP_EvtBeginPlay_4](LevelBP_EvtBeginPlay_4.png)
+  * 创建**LiveLinkHandle**的设置节点并与**Create Neuron Live Link Source at runtime**连接
+      ![LevelBP_EvtBeginPlay_3](LevelBP_EvtBeginPlay_3.png)
+      ![LevelBP_EvtBeginPlay_4](LevelBP_EvtBeginPlay_4.png)
   
-     * 填充**Create Neuron Live Link Source at runtime**的Connection String引脚
-         打开实时链接(Live Link)窗口
-         ![LevelBP_ConnectionStr_1](LevelBP_ConnectionStr_1.png)
-         选择 Axis Studio源并点击设置面板的显示高级选项(Show Advanced)箭头（如下图中2所示）
-         ![LevelBP_ConnectionStr_2](LevelBP_ConnectionStr_2.png)
-         链接字符串(Connect string)和Factory将在面板中显示出来
-       
-         ![LevelBP_ConnectionStr_3](LevelBP_ConnectionStr_3.png)
-         将链接字符串(Connection String)的值拷贝出来并粘贴到关卡蓝图时间图表的**Create Neuron Live Link Source at runtime**节点的Connection String引脚
-         ![LevelBP_EvtBeginPlay_5](LevelBP_EvtBeginPlay_5.png)
+  * 填充**Create Neuron Live Link Source at runtime**的Connection String引脚
+      打开实时链接(Live Link)窗口
+      ![LevelBP_ConnectionStr_1](LevelBP_ConnectionStr_1.png)
+      选择 Axis Studio源并点击设置面板的显示高级选项(Show Advanced)箭头（如下图中2所示）
+      ![LevelBP_ConnectionStr_2](LevelBP_ConnectionStr_2.png)
+      链接字符串(Connect string)和Factory将在面板中显示出来
+    
+      ![LevelBP_ConnectionStr_3](LevelBP_ConnectionStr_3.png)
+      将链接字符串(Connection String)的值拷贝出来并粘贴到关卡蓝图时间图表的**Create Neuron Live Link Source at runtime**节点的Connection String引脚
+      ![LevelBP_EvtBeginPlay_5](LevelBP_EvtBeginPlay_5.png)
 
 * 移除live link 源处理结构并与**事件结束运行(Event EndPlay)**节点相连
   
-     * 右键在空白处单击以创建 **事件结束运行(Event EndPlay)**.
-         ![LevelBP_EvtEndPlay_1](LevelBP_EvtEndPlay_1.png)
-     * 创建Remove Source节点并连接
-         ![LevelBP_EvtEndPlay_2](LevelBP_EvtEndPlay_2.png)
-     * 创建LiveLinkHandle的获取节点并与**Remove Source**节点相连
-         ![LevelBP_EvtEndPlay_3](LevelBP_EvtEndPlay_3.png)
+  * 右键在空白处单击以创建 **事件结束运行(Event EndPlay)**.
+      ![LevelBP_EvtEndPlay_1](LevelBP_EvtEndPlay_1.png)
+  * 创建Remove Source节点并连接
+      ![LevelBP_EvtEndPlay_2](LevelBP_EvtEndPlay_2.png)
+  * 创建LiveLinkHandle的获取节点并与**Remove Source**节点相连
+      ![LevelBP_EvtEndPlay_3](LevelBP_EvtEndPlay_3.png)
 
 * The event graph will show like the following image, Click Compile and Save the level blueprint
   
