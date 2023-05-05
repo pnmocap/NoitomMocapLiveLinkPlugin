@@ -21,6 +21,12 @@
 #else
 #error "Unsupported Platform."
 #endif
+
+#define MOCAP_API_VERSION_MAJOR 0
+#define MOCAP_API_VERSION_MINOR 0
+#define MOCAP_API_VERSION_BUILD 11
+#define MOCAP_API_VERSION_REVISION ed4a7791
+
 namespace MocapApi
 {
     enum EMCPError
