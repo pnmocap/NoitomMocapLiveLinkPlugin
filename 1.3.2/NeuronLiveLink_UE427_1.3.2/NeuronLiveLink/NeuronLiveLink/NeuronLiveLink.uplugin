@@ -1,0 +1,48 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.3.2",
+	"FriendlyName": "NeuronLiveLink",
+	"Description": "Axis to Unreal Plugin",
+	"Category": "Animation",
+	"CreatedBy": "NOITOM",
+	"CreatedByURL": "www.neuronmocap.com",
+	"DocsURL": "https://support.neuronmocap.com/hc/en-us/articles/1260805698170-Download-and-install-Neuron-Live-link",
+	"MarketplaceURL": "",
+	"SupportURL": "www.neuronmocap.com/content/support",
+	"EngineVersion": "4.27.0",
+	"CanContainContent": true,
+	"Installed": true,
+	"Modules": [
+		{
+			"Name": "NeuronLiveLink",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+				"Win64"
+			]
+		},
+		{
+			"Name": "NeuronLiveLinkEditor",
+			"Type": "Editor",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+				"Win64"
+			]
+		},
+		{
+			"Name": "NeuronGraphNode",
+			"Type": "UncookedOnly",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [
+				"Win64"
+			]
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "LiveLink",
+			"Enabled": true
+		}
+	]
+}
