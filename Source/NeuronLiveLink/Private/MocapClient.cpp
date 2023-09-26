@@ -171,7 +171,7 @@ void FMocapAppClient::PollEvents()
                     continue;
                 }
 
-                const TArray<FName> PropertyNames({ FName(TEXT("WithDisplacement")) });;
+                const TArray<FName> PropertyNames({ FName(TEXT("WithDisplacement")) });
                 TArray<float> PropertyValues({ (float)(Data->HasLocalPositions[1]? 1.0: 0.0) });
 
                 QualifiedTime = GetTimecode(Data->ReceiveTime);

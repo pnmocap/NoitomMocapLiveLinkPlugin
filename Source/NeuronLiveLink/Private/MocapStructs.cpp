@@ -650,19 +650,40 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
             PosY = 0;
             PosZ = 0;
 #endif
-            d = FVector(PosX, PosY, PosZ);
+            d.Set(PosX, PosY, PosZ);// = FVector(PosX, PosY, PosZ);
 
             FVector& p = avatar.LocalPositions[jointTag];
             mcpError = mcpJoint->GetJointLocalPosition(&PosX, &PosY, &PosZ, handle);
-            p = FVector(PosX, PosY, PosZ);
+            p.Set(PosX, PosY, PosZ);// = FVector(PosX, PosY, PosZ);
 
             avatar.HasLocalPositions[jointTag] = (mcpError == MocapApi::EMCPError::Error_None);
 
             FQuat& q = avatar.LocalRotation[jointTag];
             mcpJoint->GetJointLocalRotation(&RotX, &RotY, &RotZ, &RotW, handle);
-            q = FQuat(RotX, RotY, RotZ, RotW);
+            //q = FQuat(RotX, RotY, RotZ, RotW);
+            q.X = RotX;
+            q.Y = RotY;
+            q.Z = RotZ;
+            q.W = RotW;
         }
     }
+
+    //UE_LOG(LogMocapApi, Log, TEXT("Recv Avatar %d(%s): [0]%s %s [1]%s [2]%s"),
+    //    avatar.Index, *avatar.Name.ToString(),
+    //    *avatar.LocalPositions[0].ToString(), *avatar.LocalRotation[0].Rotator().ToString(),
+    //    *avatar.LocalRotation[1].Rotator().ToString(),
+    //    *avatar.LocalRotation[2].Rotator().ToString());
+    //uint32_t f = 0xbf329d6f;// 0x3e800000;// 0x41c80000;
+    //UE_LOG(LogMocapApi, Log, TEXT("-- d 0x%x -- f %f"), f, *((float*)(&f)));
+    //TArray<FString> BoneTrans;
+    //BoneTrans.SetNum(Count);
+    //for (uint32 b = 0; b < Count; ++b)
+    //{
+    //    //UE_LOG(LogMocapApi, Log, TEXT("bone(%d): %s #%s "), b, *avatar.LocalRotation[b].Rotator().ToString(), *avatar.LocalRotation[b].ToString());
+    //    BoneTrans[b] = FString::Printf(TEXT("bone(%d) %s: %s #%s "), b, *avatar.BoneNames[b].ToString() ,*avatar.LocalRotation[b].Rotator().ToString(), *avatar.LocalRotation[b].ToString());
+    //}
+    //FString LineStr = FString::Join(BoneTrans, TEXT("\r\n"));
+    //UE_LOG(LogMocapApi, Log, TEXT("%s"), *LineStr);
 
     uint32 PostureIndex = 0;
     mcpError = avatarMgr->GetAvatarPostureIndex(&PostureIndex, Avatarhandle);

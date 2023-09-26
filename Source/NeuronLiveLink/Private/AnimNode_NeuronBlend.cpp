@@ -6,13 +6,13 @@
 #include "ILiveLinkClient.h"
 
 #include "Features/IModularFeatures.h"
-
 #include "Animation/AnimInstanceProxy.h"
 #include "LiveLinkCustomVersion.h"
 #include "LiveLinkRemapAsset.h"
 #include "Roles/LiveLinkAnimationRole.h"
 #include "Roles/LiveLinkAnimationTypes.h"
 #include "Animation/AnimTrace.h"
+#include "EngineVersionCompare.h"
 
 #define DEFAULT_SOURCEINDEX 0xFF
 static FName DefaultNeuronBoneFilterName(TEXT("Spine"));
@@ -312,8 +312,11 @@ void FAnimNode_NeuronBlend::Evaluate_AnyThread(FPoseContext& Output)
 	}
 
 	FLiveLinkSubjectFrameData SubjectFrameData;
-
+#if UE_ENGINE_VER_LESS_THAN(5,0)
 	TSubclassOf<ULiveLinkRole> SubjectRole = LiveLinkClient_AnyThread->GetSubjectRole(LiveLinkSubjectName);
+#else
+    TSubclassOf<ULiveLinkRole> SubjectRole = LiveLinkClient_AnyThread->GetSubjectRole_AnyThread(LiveLinkSubjectName);
+#endif
 	if (SubjectRole)
 	{
 
@@ -415,8 +418,15 @@ void FAnimNode_NeuronBlend::Evaluate_AnyThread(FPoseContext& Output)
 			{
 				BlendFlags |= FAnimationRuntime::EBlendPosesPerBoneFilterFlags::MeshSpaceScale;
 			}
+#if UE_ENGINE_VER_LESS_THAN(4, 26)
 			FAnimationRuntime::BlendPosesPerBoneFilter(BasePoseContext.Pose, TargetBlendPoses, BasePoseContext.Curve, TargetBlendCurves, Output.Pose, Output.Curve, CurrentBoneBlendWeights, BlendFlags, CurveBlendOption);
-			Output.Pose.NormalizeRotations();
+#else
+            UE::Anim::FStackAttributeContainer TempAttributes;
+            FAnimationPoseData AnimationPoseData = { Output.Pose, Output.Curve, TempAttributes };
+
+            FAnimationRuntime::BlendPosesPerBoneFilter(BasePoseContext.Pose, TargetBlendPoses, BasePoseContext.Curve, TargetBlendCurves, TempAttributes, {}, AnimationPoseData, CurrentBoneBlendWeights, BlendFlags, CurveBlendOption);
+#endif
+            Output.Pose.NormalizeRotations();
 			
 			//TArray<float> WeightsOfSource2;
 			//WeightsOfSource2.Init(0, Output.Pose.GetNumBones());

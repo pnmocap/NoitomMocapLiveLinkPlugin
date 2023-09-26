@@ -57,15 +57,22 @@ void MakeCurveMapFromFrame (const FCompactPose& InPose, const FLiveLinkSkeletonS
 //void UNeuronLiveLinkRemapAsset::BuildPoseForSubject (float DeltaTime, const FLiveLinkSubjectFrame& InFrame, FCompactPose& OutPose, FBlendedCurve& OutCurve)
 void UNeuronLiveLinkRemapAsset::BuildPoseFromAnimationData( float DeltaTime, const FLiveLinkSkeletonStaticData* InSkeletonData, const FLiveLinkAnimationFrameData* InFrameData, FCompactPose& OutPose )
 {
-	float Out_WithDisplacement = 0.0f;
+	float Out_PropVal = 0.0f;
 	const FName Property_WithDisplacement( TEXT( "WithDisplacement" ) );
-	if (!InSkeletonData->FindPropertyValue( *InFrameData, Property_WithDisplacement, Out_WithDisplacement ))
+	if (!InSkeletonData->FindPropertyValue( *InFrameData, Property_WithDisplacement, Out_PropVal))
 	{
-		AN_LOG( Error, TEXT( "Cannot find [WithDisplacement] property in Axis Studio BVH stream data." ) );
+		AN_LOG( Error, TEXT( "Cannot find [WithDisplacement] property in Axis Studio BVH stream data or received data is not an Axis Studio BVH stream ." ) );
 		return; // lihongce fix bug
 	}
 
-	bool bWithDisplacement = bUseDisplacementData && (Out_WithDisplacement > 0.5f);
+    bool bWithDisplacement = bUseDisplacementData && (Out_PropVal > 0.5f);
+    
+    bool FF = false;
+    const FName Property_(TEXT("WithDisplacement"));
+    if (!InSkeletonData->FindPropertyValue(*InFrameData, Property_WithDisplacement, Out_PropVal))
+    {
+        FF = (Out_PropVal > 0.5f);
+    }
 
 	// SourceBoneNames是BoneLists里预定义的BoneName
 	const TArray<FName>& SourceBoneNames = InSkeletonData->GetBoneNames ();
