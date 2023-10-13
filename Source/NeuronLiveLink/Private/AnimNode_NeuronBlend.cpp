@@ -420,6 +420,10 @@ void FAnimNode_NeuronBlend::Evaluate_AnyThread(FPoseContext& Output)
 			}
 #if UE_ENGINE_VER_LESS_THAN(4, 26)
 			FAnimationRuntime::BlendPosesPerBoneFilter(BasePoseContext.Pose, TargetBlendPoses, BasePoseContext.Curve, TargetBlendCurves, Output.Pose, Output.Curve, CurrentBoneBlendWeights, BlendFlags, CurveBlendOption);
+#elif UE_ENGINE_VER_LESS_THAN(5, 0)
+            FStackCustomAttributes TempAttributes;
+            FAnimationPoseData AnimationPoseData = { Output.Pose, Output.Curve, TempAttributes };
+            FAnimationRuntime::BlendPosesPerBoneFilter(BasePoseContext.Pose, TargetBlendPoses, BasePoseContext.Curve, TargetBlendCurves, TempAttributes, {}, AnimationPoseData, CurrentBoneBlendWeights, BlendFlags, CurveBlendOption);
 #else
             UE::Anim::FStackAttributeContainer TempAttributes;
             FAnimationPoseData AnimationPoseData = { Output.Pose, Output.Curve, TempAttributes };
