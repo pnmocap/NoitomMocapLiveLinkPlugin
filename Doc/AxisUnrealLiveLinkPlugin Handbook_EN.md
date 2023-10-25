@@ -14,7 +14,7 @@ Axis studio act as a server on a network and stream motion capture data live to 
 
 ## 1.1 Features
 
-* Support Unreal Engine version 4.26 4.27 5.0 5.1 5.2
+* Support Unreal Engine version 4.26 4.27 5.0 5.1 5.2 5.3
 * Support to receive and process the props (PWR-tracker) motion capture data (refer to our VPS project)
 * Support to drive a skeleton that is not using T-pose based model, such as A-pose based model.
 * Support to receive and process the displacement data from Axis Studio
