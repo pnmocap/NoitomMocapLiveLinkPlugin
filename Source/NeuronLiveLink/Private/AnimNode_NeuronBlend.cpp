@@ -107,9 +107,31 @@ void FAnimNode_NeuronBlend::ReinitializeBoneBlendWeights(const FBoneContainer& R
 	//Reinitialize bone blend weights now that we have cleared them
 	FAnimationRuntime::UpdateDesiredBoneWeight(DesiredBoneBlendWeights, CurrentBoneBlendWeights, BlendWeights);
 
+#if UE_ENGINE_VER_GREAT_THAN(5,2)
+    {
+        CurvePoseSourceIndices.Empty();
+        CurvePoseSourceIndices.Reserve(Skeleton->GetNumCurveMetaData());
+
+        Skeleton->ForEachCurveMetaData([this, &RequiredBones](const FName& InCurveName, const FCurveMetaData& InMetaData)
+            {
+                for (const FBoneReference& LinkedBone : InMetaData.LinkedBones)
+                {
+                    FCompactPoseBoneIndex CompactPoseIndex = LinkedBone.GetCompactPoseIndex(RequiredBones);
+                    if (CompactPoseIndex != INDEX_NONE)
+                    {
+                        if (DesiredBoneBlendWeights[CompactPoseIndex.GetInt()].BlendWeight > 0.f)
+                        {
+                            CurvePoseSourceIndices.Add(InCurveName, DesiredBoneBlendWeights[CompactPoseIndex.GetInt()].SourceIndex);
+                            break;
+                        }
+                    }
+                }
+            });
+    }
+#else
 	TArray<uint16> const& CurveUIDFinder = RequiredBones.GetUIDToArrayLookupTable();
 	const int32 CurveUIDCount = CurveUIDFinder.Num();
-	const int32 TotalCount = FBlendedCurve::GetValidElementCount(&CurveUIDFinder);
+	const int32 TotalCount = RequiredBones.GetCurveFilter().Num();
 	CurvePoseSourceIndices.Reset(TotalCount);
 	// initialize with FF - which is default
 	CurvePoseSourceIndices.Init(DEFAULT_SOURCEINDEX, TotalCount);
@@ -141,6 +163,7 @@ void FAnimNode_NeuronBlend::ReinitializeBoneBlendWeights(const FBoneContainer& R
 			}
 		}
 	}
+#endif
 }
 
 static FName FindParentUnderHip(const FReferenceSkeleton& InSkeleton, FName BoneName, FName HipsName)
@@ -382,7 +405,26 @@ void FAnimNode_NeuronBlend::Evaluate_AnyThread(FPoseContext& Output)
 					TargetBlendCurves[ChildIndex].InitFrom(Output.Curve);
 				}
 			}
+#if UE_ENGINE_VER_GREAT_THAN(5,2)
+            // filter to make sure it only includes curves that are linked to the correct bone filter
+            UE::Anim::FNamedValueArrayUtils::RemoveByPredicate(BasePoseContext.Curve, CurvePoseSourceIndices,
+                [](const UE::Anim::FCurveElement& InOutBasePoseElement, const UE::Anim::FCurveElementIndexed& InSourceIndexElement)
+                {
+                    // if source index is set, remove base pose curve value
+                    return (InSourceIndexElement.Index != INDEX_NONE);
+                });
 
+            // Filter child pose curves
+            for (int32 ChildIndex = 0; ChildIndex < NumPoses; ++ChildIndex)
+            {
+                UE::Anim::FNamedValueArrayUtils::RemoveByPredicate(TargetBlendCurves[ChildIndex], CurvePoseSourceIndices,
+                    [ChildIndex](const UE::Anim::FCurveElement& InOutBasePoseElement, const UE::Anim::FCurveElementIndexed& InSourceIndexElement)
+                    {
+                        // if not source, remove it
+                        return (InSourceIndexElement.Index != INDEX_NONE) && (InSourceIndexElement.Index != ChildIndex);
+                    });
+            }
+#else
 			// filter to make sure it only includes curves that is linked to the correct bone filter
 			TArray<uint16> const* CurveUIDFinder = Output.Curve.UIDToArrayIndexLUT;
 			const int32 TotalCount = Output.Curve.NumValidCurveCount;
@@ -408,7 +450,7 @@ void FAnimNode_NeuronBlend::Evaluate_AnyThread(FPoseContext& Output)
 					}
 				}
 			}
-
+#endif
 			FAnimationRuntime::EBlendPosesPerBoneFilterFlags BlendFlags = FAnimationRuntime::EBlendPosesPerBoneFilterFlags::None;
 			if (bMeshSpaceRotationBlend)
 			{

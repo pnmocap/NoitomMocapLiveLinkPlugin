@@ -5,6 +5,7 @@
 #include "MocapStructs.h"
 #include "HAL/Runnable.h"
 #include "HAL/RunnableThread.h"
+#include "HAL/ThreadSafeBool.h"
 
 class FNeuronLiveLinkSource;
 /*
