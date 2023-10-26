@@ -131,7 +131,7 @@ void FAnimNode_NeuronBlend::ReinitializeBoneBlendWeights(const FBoneContainer& R
 #else
 	TArray<uint16> const& CurveUIDFinder = RequiredBones.GetUIDToArrayLookupTable();
 	const int32 CurveUIDCount = CurveUIDFinder.Num();
-	const int32 TotalCount = RequiredBones.GetCurveFilter().Num();
+	const int32 TotalCount = FBlendedCurve::GetValidElementCount(&CurveUIDFinder);
 	CurvePoseSourceIndices.Reset(TotalCount);
 	// initialize with FF - which is default
 	CurvePoseSourceIndices.Init(DEFAULT_SOURCEINDEX, TotalCount);
