@@ -24,8 +24,8 @@
 
 #define MOCAP_API_VERSION_MAJOR 0
 #define MOCAP_API_VERSION_MINOR 0
-#define MOCAP_API_VERSION_BUILD 13
-#define MOCAP_API_VERSION_REVISION bbfa29bb
+#define MOCAP_API_VERSION_BUILD 14
+#define MOCAP_API_VERSION_REVISION f731c8c0
 
 namespace MocapApi
 {
@@ -238,6 +238,15 @@ namespace MocapApi
         CommandStartRecored=4,
         CommandStopRecored=5,
         CommandResumeOriginalPosture=6
+    };
+    enum EMCPCalibrateMotionFlag
+    {
+        CalibrateMotionFlag_AutoNextStep=0,
+        CalibrateMotionFlag_ManualNextStep=1
+    };
+    enum EMCPCalibrateMotionOperation
+    {
+        CalibrateMotionOperation_Next=0
     };
     enum EMCPCommandStopCatpureExtraFlag
     {

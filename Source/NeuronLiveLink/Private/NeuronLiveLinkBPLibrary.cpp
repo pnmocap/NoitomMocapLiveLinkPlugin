@@ -7,6 +7,7 @@
 #include "LiveLinkClientReference.h"
 #include "MocapAppManager.h"
 #include "MocapStructs.h"
+#include "MocapApiLog.h"
 #include "Misc/OutputDeviceNUll.h"
 #include "Kismet/KismetStringLibrary.h"
 
