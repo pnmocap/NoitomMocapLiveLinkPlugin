@@ -68,7 +68,11 @@ UMocapApp* FMocapAppManager::GetMocapAppByName(FName AppName)
 {
     if (AppName != NAME_None)
     {
-        return *RunningApps.Find(AppName);
+        UMocapApp** Result = RunningApps.Find(AppName);
+        if (Result != nullptr)
+        {
+            return *Result;
+        }
     }
     return nullptr;
 }
