@@ -1073,8 +1073,9 @@ void UMocapApp::PrepareAndSendMocapCommand(MocapApi::IMCPApplication* mcpApplica
             bool CurrentCommandIsCalibrate = IsCalibrateCmd(Cmd.Cmd);
             const FMocapServerCommand* LastCmd = GetLastCommandInHistory();
             bool LastCommandIsCalibrate = LastCmd && IsCalibrateCmd(LastCmd->Cmd);
+            bool GetManualCaliPosesAlwaysCreateNew = (Cmd.Cmd == EMCCommandType::GetManualCaliPoses);
             
-            if (!CurrentCommandIsCalibrate || !LastCommandIsCalibrate || LastCalibrationFinished)
+            if (!CurrentCommandIsCalibrate || !LastCommandIsCalibrate || LastCalibrationFinished || GetManualCaliPosesAlwaysCreateNew)
             {
                 MocapApi::EMCPCommand InnetCommandType = MappingCommandTypeToMocapCommand(Cmd.Cmd);
                 CommandInterface->CreateCommand((uint32_t)InnetCommandType, &command);
