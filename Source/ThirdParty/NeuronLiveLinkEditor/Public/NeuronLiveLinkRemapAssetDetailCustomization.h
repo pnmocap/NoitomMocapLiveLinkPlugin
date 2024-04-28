@@ -5,6 +5,7 @@
 #include "NeuronLiveLinkRemapAsset.h"
 #include "ContentBrowserModule.h"
 #include "IContentBrowserSingleton.h"
+#include "NeuronBoneMappingWidget.h"
 
 class FNeuronLiveLinkRemapAssetDetailCustomization : public IDetailCustomization
 {

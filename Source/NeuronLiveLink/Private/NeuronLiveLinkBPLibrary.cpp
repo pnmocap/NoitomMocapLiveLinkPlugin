@@ -10,6 +10,7 @@
 #include "MocapApiLog.h"
 #include "Misc/OutputDeviceNUll.h"
 #include "Kismet/KismetStringLibrary.h"
+#include "Features/IModularFeatures.h"
 
 
 TArray<FWeakObjectPtr> UNeuronLiveLinkBPLibrary::RecordNotifyEventHandlers;
