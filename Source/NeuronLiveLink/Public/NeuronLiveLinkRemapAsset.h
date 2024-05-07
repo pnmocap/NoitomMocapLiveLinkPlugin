@@ -6,11 +6,11 @@
 #include "Animation/AnimTypes.h"
 #include "NeuronBoneMappingInfo.h"
 #include "Runtime/Launch/Resources/Version.h"
-#if ENGINE_MAJOR_VERSION > 4
-#include "LiveLinkAnimationCore/Public/LiveLinkRetargetAsset.h"
-#else
+//#if ENGINE_MAJOR_VERSION > 4
+//#include "LiveLinkAnimationCore/Public/LiveLinkRetargetAsset.h"
+//#else
 #include "LiveLinkRetargetAsset.h"
-#endif
+//#endif
 #include "NeuronLiveLinkRemapAsset.generated.h"
 
 /*

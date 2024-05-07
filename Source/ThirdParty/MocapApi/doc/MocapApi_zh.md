@@ -624,10 +624,10 @@ virtual EMCPError SetSettingsCalcData(MCPSettingsHandle_t ulSettingsHandle) = 0;
 virtual EMCPError SetCommandExtraFlags(uint32_t extraFlags, MCPCommandHandle_t handle_) = 0;
 ```
 
-##### SetCommandExtraLong
-&emsp;&emsp;设置命令的参数。
-```c++
-virtual EMCPError SetCommandExtraLong(uint32_t extraLongIndex, intptr_t extraLong, 
+#### SetCommandExtra
+&emsp;&emsp;设置额外的命令参数，这个参数可是一个句柄。
+```
+virtual EMCPError SetCommandExtra(uint64_t commandExtra,
             MCPCommandHandle_t handle_) = 0;
 ```
 
@@ -727,18 +727,6 @@ virtual EMCPError RecordNotifyGetTakeFileSuffix(const char** takeFileSuffix,
 virtual EMCPError DestroyRecordNotify(MCPRecordNotifyHandle_t recordNotifyHandle) = 0;
 ```
 
-### IMCPStartRecoredExtra && MCPStartRecoredExtraHandle_t
-```c++
-virtual EMCPError CreateStartRecoredExtra(MCPStartRecoredExtraHandle_t * pHandle) = 0;
-```
-```c++
-virtual EMCPError SetStartRecoredExtraTakeName(const char * takeName, 
-            MCPStartRecoredExtraHandle_t startRecoredExtraHandle_t) = 0;
-```
-```c++
-virtual EMCPError DestroyStartRecoredExtra(MCPStartRecoredExtraHandle_t* pHandle) = 0;
-```
-
 ## 枚举类型
 ### EMCPEventType
 ```c++
@@ -766,7 +754,7 @@ enum EMCPEventType
 #### MCPEvent_CommandReply
 &emsp;&emsp;收到命令回复。
 #### MCPEvent_Notify
-&emsp;&emsp;收到来自于Axis的通知消息。
+&emsp;&emsp;收到来自于Axis的通知消息。此时eventData是一个MCPEvent_NotifyData_t。
 ### EMCPBvhRotation
 ```C++
 enum EMCPBvhRotation
@@ -877,17 +865,17 @@ enum EMCPCommand
 };
 ```
 &emsp;&emsp;待发送命令的ID
-##### CommandStartCapture
+#### CommandStartCapture
 &emsp;&emsp;启动采集指令，参数只能是CommandExtraLong_DeviceRadio，如果不指定该参数则把该操作应用于所有角色。
-##### CommandStopCapture
+#### CommandStopCapture
 &emsp;&emsp;停止采集指令，参数可以是EMCPCommandExtraLong枚举类型的任何一个，如果不指定该参数则把该操作应用于所有角色；此还支持EMCPCommandStopCatpureExtraFlag，如果没有额外设置EMCPCommandStopCatpureExtraFlag则缺省为StopCatpureExtraFlag_SensorsModulesHibernate。
-##### CommandZeroPosition
+#### CommandZeroPosition
 &emsp;&emsp;把角色拉到坐标0位置，参数可以是EMCPCommandExtraLong枚举类型的任何一个，如果不指定该参数则把该操作应用于所有角色。
-##### CommandCalibrateMotion
+#### CommandCalibrateMotion
 &emsp;&emsp;把校准角色姿态，参数可以是EMCPCommandExtraLong枚举类型的任何一个，如果不指定该参数则把该操作应用于所有角色。
-##### CommandStartRecored,
-&emsp;&emsp;开始录制数据操作，参数可以是MCPStartRecoredExtraHandle_t，如果不指定该参数则有Axis软件指定相关参数。
-##### CommandStopRecored,
+#### CommandStartRecored,
+&emsp;&emsp;开始录制数据操作，参数CommandExtraLong_Extra0可以是const char * utf8，如果不指定该参数则有Axis软件指定相关参数。
+#### CommandStopRecored,
 
 ##### CommandResumeOriginalPosture
 &emsp;&emsp;参数可以是EMCPCommandExtraLong枚举类型的任何一个，如果不指定该参数则把该操作应用于所有角色。
@@ -908,8 +896,22 @@ enum EMCPCommandExtraLong
 {
         CommandExtraLong_DeviceRadio,
         CommandExtraLong_AvatarName,
+        CommandExtraLong_Extra0,
+        CommandExtraLong_Extra1,
+        CommandExtraLong_Extra2,
+        CommandExtraLong_Extra3,
 };
 ```
+&emsp;&emsp;Mocap Client 发送绐Axis 命令的额外参数。
+#### CommandExtraLong_DeviceRadio
+&emsp;&emsp; 设备频段
+#### CommandExtraLong_AvatarName
+&emsp;&emsp; 角色名称
+#### CommandExtraLong_Extra0
+#### CommandExtraLong_Extra1
+#### CommandExtraLong_Extra2
+#### CommandExtraLong_Extra3
+
 ### EMCPCommandProgress
 ```c++
 enum EMCPCommandProgress 
@@ -920,13 +922,43 @@ enum EMCPCommandProgress
 
 ### EMCP_CalibrateMotionProgressStep
 ```c++
- enum EMCPCalibrateMotionProgressStep 
+enum EMCPCalibrateMotionProgressStep 
 {
         CalibrateMotionProgressStep_Prepare,
         CalibrateMotionProgressStep_Countdown,
         CalibrateMotionProgressStep_Progress,
 };
 ```
+&emsp;&emsp;Server 发送绐MocapApi的校准状态
+
+- ```CalibrateMotionProgressStep_Prepare```: 校准动作准备阶段
+- ```CalibrateMotionProgressStep_Countdown```: 校准动作倒计划时阶段
+- ```CalibrateMotionProgressStep_Progress```: 校准动作进行数据采集阶段
+
+### EMCPCalibrateMotionFlag
+
+```C++
+enum EMCPCalibrateMotionFlag
+{
+    CalibrateMotionFlag_AutoNextStep=0,
+    CalibrateMotionFlag_ManualNextStep=1
+};
+```
+&emsp;&emsp; ```CommandCalibrateMotion```的附加参数，与```CommandExtraLong_Extra2```配合使用
+
+- ```CalibrateMotionFlag_AutoNextStep```：自动校准模式（默认）
+- ```CalibrateMotionFlag_ManualNextStep```：每一步都需要发送```CommandCalibrateMotion```指令时才能进行下一步操作
+
+### EMCPCalibrateMotionOperation
+
+```C++
+enum EMCPCalibrateMotionOperation
+{
+    CalibrateMotionOperation_Next=0
+};
+```
+&emsp;&emsp;```CommandCalibrateMotion```的附加参数，与```CommandExtraLong_Extra3```配合使用。在```CalibrateMotionFlag_ManualNextStep```的时候指定该参数做为下一步的发起指令。
+
 ### EMCPNotify
 ```C++
 enum EMCPNotify
@@ -1045,3 +1077,13 @@ struct MCPEvent_NotifyData_t
         uint64_t _notifyHandle;
 };
 ```
+
+## 其它杂项
+
+### 获取版本号
+&emsp;&emsp;可以通过```MCPGetMocapApiVersion```和```MCPGetMocapApiVersionString```获取MocapApi版本号，其声明如下：
+```C++
+MCP_INTERFACE void MCP_CALLTYPE MCPGetMocapApiVersion(uint32_t * major, uint32_t * minor, uint32_t * build, uint32_t * revision);
+MCP_INTERFACE const char * MCP_CALLTYPE MCPGetMocapApiVersionString();
+```
+&emsp;&emsp;MocapApi的版本号与接口版本号是不一样的。接口```IMCPXXX```一般有一个形如```IMCPXXX_Version```变量与之对应，该变量定义中```_```后面的一组或两组数字串表示版本号，一般的情况下大版本号兼容小版本号的功能

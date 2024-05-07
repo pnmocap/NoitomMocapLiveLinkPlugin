@@ -9,6 +9,7 @@
 #include "LiveLinkRetargetAsset.h"
 #include "LiveLinkTypes.h"
 #include "NeuronLiveLinkRemapAsset.h"
+#include "EngineVersionCompare.h"
 #include "AnimNode_NeuronBlend.generated.h"
 
 
@@ -128,7 +129,12 @@ protected:
 	// this array changes based on required bones
 	TArray<FPerBoneBlendWeight> DesiredBoneBlendWeights;
 	TArray<FPerBoneBlendWeight> CurrentBoneBlendWeights;
+#if UE_ENGINE_VER_GREAT_THAN(5,2)
+    TBaseBlendedCurve<FDefaultAllocator, UE::Anim::FCurveElementIndexed> CurvePoseSourceIndices;
+#else
 	TArray<uint8> CurvePoseSourceIndices;
+#endif
+
 public:
 	virtual int32 GetLODThreshold() const override { return LODThreshold; }
 

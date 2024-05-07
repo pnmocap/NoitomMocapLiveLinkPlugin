@@ -4,6 +4,7 @@
 #include "Interfaces/IPluginManager.h"
 #include "Misc/Paths.h"
 #include "Misc/MessageDialog.h"
+#include "Misc/SecureHash.h"
 #include "HAL/PlatformProcess.h"
 
 #define LOCTEXT_NAMESPACE "FNeuronLiveLinkModule"

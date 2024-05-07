@@ -295,6 +295,12 @@ enum class EMCCommandType : uint8
     StartRecored,
     StopRecored,
     ResumeOriginalPosture,
+
+    // commands below are alias on user side, do not have such commands in mocapapi 
+    // CalibrateMotion for manual
+    GetManualCaliPoses = 200,
+    ManualCalibrateStep,
+    ManualCalibrateFinish,
 };
 
 /**
@@ -314,6 +320,9 @@ enum class EMCCommandParamName : uint8
     ParamDeviceRadio,
     ParamAvatarName,
     ParamTakeName,
+
+    ParamCalibrateMotionFlag,
+    ParamCalibrateMotionOperation,
 };
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnMocapServerCommandResult, int/*Code*/, const FString&/*Result*/)
@@ -329,6 +338,8 @@ struct FMocapServerCommand
         CommandHandle = 0;
         ProgressHandle = 0;
         SendTime = 0;
+        IsManualCalibrating = false;
+        IsManualCaliFisrtStep = false;
     }
 
     UPROPERTY()
@@ -353,6 +364,9 @@ struct FMocapServerCommand
     int64 SendTime;
 
     int64 ResponseTime;
+
+    bool IsManualCalibrating;
+    bool IsManualCaliFisrtStep; //first step to get all poses to calibrate. Cmd is GetManualCaliPoses or CalibrateMotion by setting ParamCalibrateMotionFlag to MocapApi::CalibrateMotionFlag_ManualNextStep(1)
 };
 
 namespace MocapApi
@@ -477,6 +491,7 @@ private:
     bool IsConnecting = false;
     bool IsReady = true;
     bool PendingDestroy = false;
+    bool LastCalibrationFinished = true;
     int LastError = 0;
     FString ExtraErrorMsg;
 
@@ -499,6 +514,7 @@ private:
     void HandleMocapCommandsTimeout();
 
     void PushCommandToHistory(const FMocapServerCommand& Cmd);
+    const FMocapServerCommand* GetLastCommandInHistory();
 
     bool HandleRecordNotifyEvent(int NotifyType, uint64 notifyHandle);
 
@@ -512,6 +528,7 @@ private:
     //TQueue<FMocapRecordNotify> RecordNotifies;
     int MaxCommandHistory;
     int LastCommandHistoryIndex;
+    uint64 LastManualCalibrateCommandHandle;
     static TArray<FName> AvatarBoneNames;
     static TArray<int> AvatarBoneParents;
     static void InitAvatarBuildinInfo();

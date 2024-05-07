@@ -66,6 +66,14 @@ UMocapApp::UMocapApp()
             const char* V = FTCHARToUTF8(*Value).Get();
             return CommandInterface->SetCommandExtraLong(MocapApi::CommandExtraLong_Extra0, reinterpret_cast<intptr_t>(V), handle);
         };
+        CommandParamBuildMap[EMCCommandParamName::ParamCalibrateMotionFlag] = [](MocapApi::IMCPCommand* CommandInterface, MocapApi::MCPCommandHandle_t handle, const FString& Value) -> MocapApi::EMCPError {
+            int32 V = FCString::Atoi(*Value);
+            return CommandInterface->SetCommandExtraLong(MocapApi::CommandExtraLong_Extra2, V, handle);
+        };
+        CommandParamBuildMap[EMCCommandParamName::ParamCalibrateMotionOperation] = [](MocapApi::IMCPCommand* CommandInterface, MocapApi::MCPCommandHandle_t handle, const FString& Value) -> MocapApi::EMCPError {
+            int32 V = FCString::Atoi(*Value);
+            return CommandInterface->SetCommandExtraLong(MocapApi::CommandExtraLong_Extra3, V, handle);
+        };
     }
 }
 
@@ -244,6 +252,7 @@ void UMocapApp::Disconnect()
     QueuedCommands.Empty();
     CommandsHistory.Empty();
     LastCommandHistoryIndex = 0;
+    LastCalibrationFinished = true;
 
     FMocapAppManager::GetInstance().RemoveMocapApp(this);
     UE_LOG(LogMocapApi, Log, TEXT("App %s handle %llu Disconnect."),
@@ -650,19 +659,40 @@ bool UMocapApp::HandleAvatarUpdateEvent(uint64 Avatarhandle)
             PosY = 0;
             PosZ = 0;
 #endif
-            d = FVector(PosX, PosY, PosZ);
+            d.Set(PosX, PosY, PosZ);// = FVector(PosX, PosY, PosZ);
 
             FVector& p = avatar.LocalPositions[jointTag];
             mcpError = mcpJoint->GetJointLocalPosition(&PosX, &PosY, &PosZ, handle);
-            p = FVector(PosX, PosY, PosZ);
+            p.Set(PosX, PosY, PosZ);// = FVector(PosX, PosY, PosZ);
 
             avatar.HasLocalPositions[jointTag] = (mcpError == MocapApi::EMCPError::Error_None);
 
             FQuat& q = avatar.LocalRotation[jointTag];
             mcpJoint->GetJointLocalRotation(&RotX, &RotY, &RotZ, &RotW, handle);
-            q = FQuat(RotX, RotY, RotZ, RotW);
+            //q = FQuat(RotX, RotY, RotZ, RotW);
+            q.X = RotX;
+            q.Y = RotY;
+            q.Z = RotZ;
+            q.W = RotW;
         }
     }
+
+    //UE_LOG(LogMocapApi, Log, TEXT("Recv Avatar %d(%s): [0]%s %s [1]%s [2]%s"),
+    //    avatar.Index, *avatar.Name.ToString(),
+    //    *avatar.LocalPositions[0].ToString(), *avatar.LocalRotation[0].Rotator().ToString(),
+    //    *avatar.LocalRotation[1].Rotator().ToString(),
+    //    *avatar.LocalRotation[2].Rotator().ToString());
+    //uint32_t f = 0xbf329d6f;// 0x3e800000;// 0x41c80000;
+    //UE_LOG(LogMocapApi, Log, TEXT("-- d 0x%x -- f %f"), f, *((float*)(&f)));
+    //TArray<FString> BoneTrans;
+    //BoneTrans.SetNum(Count);
+    //for (uint32 b = 0; b < Count; ++b)
+    //{
+    //    //UE_LOG(LogMocapApi, Log, TEXT("bone(%d): %s #%s "), b, *avatar.LocalRotation[b].Rotator().ToString(), *avatar.LocalRotation[b].ToString());
+    //    BoneTrans[b] = FString::Printf(TEXT("bone(%d) %s: %s #%s "), b, *avatar.BoneNames[b].ToString() ,*avatar.LocalRotation[b].Rotator().ToString(), *avatar.LocalRotation[b].ToString());
+    //}
+    //FString LineStr = FString::Join(BoneTrans, TEXT("\r\n"));
+    //UE_LOG(LogMocapApi, Log, TEXT("%s"), *LineStr);
 
     uint32 PostureIndex = 0;
     mcpError = avatarMgr->GetAvatarPostureIndex(&PostureIndex, Avatarhandle);
@@ -859,6 +889,21 @@ bool UMocapApp::HandleRigidBodyUpdateEvent(uint64 RigidBodyHandle, int ReservedD
     return true;
 }
 
+static bool IsCalibrateCmd(EMCCommandType Cmd)
+{
+    return (Cmd == EMCCommandType::CalibrateMotion) || (Cmd >= EMCCommandType::GetManualCaliPoses && Cmd<= EMCCommandType::ManualCalibrateFinish);
+}
+
+static MocapApi::EMCPCommand MappingCommandTypeToMocapCommand(EMCCommandType Cmd)
+{
+    int result = (int)Cmd;
+    if (IsCalibrateCmd(Cmd))
+    {
+        result = MocapApi::CommandCalibrateMotion;
+    }
+    return MocapApi::EMCPCommand(result);
+}
+
 bool UMocapApp::HandleCommandReplyEvent(uint64 CommandHandle, int replay)
 {
     MocapApi::IMCPCommand* CommandInterface = nullptr;
@@ -891,6 +936,10 @@ bool UMocapApp::HandleCommandReplyEvent(uint64 CommandHandle, int replay)
         {
             Cmd->Result = FString::Printf(TEXT("Code %d\nMsg: %s"), code, *MsgStr);
             Cmd->OnResult.Broadcast(code, MsgStr);
+            if (IsCalibrateCmd(Cmd->Cmd))
+            {
+                LastCalibrationFinished = true;
+            }
             PushCommandToHistory(*Cmd);
             QueuedCommands.RemoveAt(0);
         }
@@ -905,9 +954,9 @@ bool UMocapApp::HandleCommandReplyEvent(uint64 CommandHandle, int replay)
             reinterpret_cast<void**>(&CalibrateMotionProgress));
         ReturnFalseIFError();
 
-        if (Cmd && Cmd->Cmd == EMCCommandType::CalibrateMotion)
+        if (Cmd && IsCalibrateCmd(Cmd->Cmd))
         {
-            const uint32_t maxPoseCnt = 256;
+            const uint32_t maxPoseCnt = 128;
             uint32_t step = 0;
             uint32_t substep = 0;
             uint32_t subsubstep = 0;
@@ -923,6 +972,7 @@ bool UMocapApp::HandleCommandReplyEvent(uint64 CommandHandle, int replay)
                 Cmd->ProgressHandle = _calibrateMotionProgressHandle;
 
                 uint32_t countOfSupportPoses = 0;
+                Cmd->ProgressChain.Empty(128);
                 mcpError = CalibrateMotionProgress->GetCalibrateMotionProgressCountOfSupportPoses(
                     &countOfSupportPoses, _calibrateMotionProgressHandle);
                 for (uint32_t i = 0; i < countOfSupportPoses; ++i) {
@@ -932,8 +982,13 @@ bool UMocapApp::HandleCommandReplyEvent(uint64 CommandHandle, int replay)
                     poseStr[lenOfPose] = '\0';
                     Cmd->ProgressChain += FString::Printf(TEXT("%s->"), UTF8_TO_TCHAR(poseStr));
                 }
+                if (Cmd->ProgressChain.Len() > 0)
+                {
+                    Cmd->ProgressChain = Cmd->ProgressChain.LeftChop(2);
+                }
             }
 
+            lenOfPose = maxPoseCnt;
             mcpError = CalibrateMotionProgress->GetCalibrateMotionProgressStepOfCurrentPose(
                 &step, poseStr, &lenOfPose, Cmd->ProgressHandle);
             poseStr[lenOfPose] = '\0';
@@ -968,6 +1023,26 @@ bool UMocapApp::HandleCommandReplyEvent(uint64 CommandHandle, int replay)
                 *PoseName, step, *PoseSubStepName, step, substep, subsubstep);
 
             Cmd->OnProgress.Broadcast(Cmd->ProgressChain, ProgressString, PoseName, step, substep, subsubstep);
+            if (Cmd->IsManualCalibrating)
+            {
+                if (Cmd->IsManualCaliFisrtStep)
+                {
+                    uint32 code = 0;
+                    FString Poses = Cmd->ProgressChain.Replace(TEXT("->"), TEXT(","));
+                    Cmd->Result = FString::Printf(TEXT("Code %d\nMsg: %s"), code, *Poses);
+                    Cmd->OnResult.Broadcast(code, Poses);
+                    PushCommandToHistory(*Cmd);
+                    QueuedCommands.RemoveAt(0);
+                }
+                else if (substep >= 100 && step == MocapApi::CalibrateMotionProgressStep_Progress)
+                {
+                    uint32 code = 0;
+                    Cmd->Result = FString::Printf(TEXT("Code %d\nMsg: %s"), code, *PoseName);
+                    Cmd->OnResult.Broadcast(code, PoseName);
+                    PushCommandToHistory(*Cmd);
+                    QueuedCommands.RemoveAt(0);
+                }
+            }
         }
         else
         {
@@ -995,7 +1070,44 @@ void UMocapApp::PrepareAndSendMocapCommand(MocapApi::IMCPApplication* mcpApplica
             ReturnIFError();
 
             MocapApi::MCPCommandHandle_t command;
-            CommandInterface->CreateCommand((int)Cmd.Cmd, &command);
+            bool CurrentCommandIsCalibrate = IsCalibrateCmd(Cmd.Cmd);
+            const FMocapServerCommand* LastCmd = GetLastCommandInHistory();
+            bool LastCommandIsCalibrate = LastCmd && IsCalibrateCmd(LastCmd->Cmd);
+            bool GetManualCaliPosesAlwaysCreateNew = (Cmd.Cmd == EMCCommandType::GetManualCaliPoses);
+            
+            if (!CurrentCommandIsCalibrate || !LastCommandIsCalibrate || LastCalibrationFinished || GetManualCaliPosesAlwaysCreateNew)
+            {
+                MocapApi::EMCPCommand InnetCommandType = MappingCommandTypeToMocapCommand(Cmd.Cmd);
+                CommandInterface->CreateCommand((uint32_t)InnetCommandType, &command);
+                if (Cmd.Cmd == EMCCommandType::GetManualCaliPoses)
+                {
+                    // set EMCPCalibrateMotionFlag to CalibrateMotionFlag_ManualNextStep(1)
+                    Cmd.Params.Add(EMCCommandParamName::ParamCalibrateMotionFlag, FString::FromInt(MocapApi::CalibrateMotionFlag_ManualNextStep));
+                }
+                if (CurrentCommandIsCalibrate)
+                {
+                    FString* Flag = Cmd.Params.Find(EMCCommandParamName::ParamCalibrateMotionFlag);
+                    if (Flag)
+                    {
+                        int MotionFlag = FCString::Atoi(*(*Flag));
+                        Cmd.IsManualCalibrating = (MotionFlag == MocapApi::CalibrateMotionFlag_ManualNextStep);
+                    }
+                    if (Cmd.IsManualCalibrating)
+                    {
+                        LastManualCalibrateCommandHandle = command;
+                        Cmd.IsManualCaliFisrtStep = true;
+                    }
+                    LastCalibrationFinished = false;
+                }
+            }
+            else
+            {
+                command = LastManualCalibrateCommandHandle;
+                // set EMCPCalibrateMotionOperation to CalibrateMotionOperation_Next(0)
+                Cmd.Params.Add(EMCCommandParamName::ParamCalibrateMotionOperation, FString::FromInt(MocapApi::CalibrateMotionOperation_Next));
+                Cmd.IsManualCalibrating = true;
+            }
+            
             FString CmdParams;
             UEnum* EMCCommandParamEnum = StaticEnum<EMCCommandParamName>();
             for (auto It : Cmd.Params)
@@ -1061,6 +1173,16 @@ void UMocapApp::PushCommandToHistory(const FMocapServerCommand& Cmd)
         CommandsHistory[LastCommandHistoryIndex] = Cmd;
     }
     LastCommandHistoryIndex = (LastCommandHistoryIndex + 1) % MaxCommandHistory;
+}
+
+const FMocapServerCommand* UMocapApp::GetLastCommandInHistory()
+{
+    int Idx = (LastCommandHistoryIndex - 1 + MaxCommandHistory) % MaxCommandHistory;
+    if (Idx < CommandsHistory.Num())
+    {
+        return &CommandsHistory[Idx];
+    }
+    return nullptr;
 }
 
 static TArray<FName> RecordNotifyNames = {
