@@ -298,15 +298,30 @@ After version 1.2.06, you can send some control commands to AxisStudio in both e
 
 * Back to origin
 
-* Calibratiuon for all
+* Calibrate for all characters
+
+* Calibrate for character step by step (since 1.3.4)
+  
+  > Since there are so many steps to send to Axis Studio and results to display, we do not add step by step calibrate command to Axis Command Window but provide a blueprint named '/NeuronLiveLink/Demo/ManualCalibrateDemoActor.ManualCalibrateDemoActor' to demonstrate how to use step by step calibration:
+  > 
+  > 1. Add blueprint ManualCalibrateDemoActor to your level
+  > 2. Setup four properties (UseTCP, ServerIP, SrvPort and ClientPort) in ManualCalibrateDemoActor to connect Axis Studio
+  > 3. The BeginPlay event in ManualCalibrateDemoActor will call ConnectAxisLiveLink to connect Axis Studio, or you can break the connection in Beginplay event and call ConnectAxisLiveLink before sending any commands
+  > 4. Call QueryManualCalibrateSteps in ManualCalibrateDemoActor to query the steps need in calibration
+  > 5. After the steps returned, Call SendCalibratePose in ManualCalibrateDemoActor to calibrate a specific pose
+  > 6. When All steps finishedm Call SendCalibrateFinish in ManualCalibrateDemoActor to tell Axis Studio finish calibration
+  > 7. (Optional) Call DisconnectAxisLiveLink in ManualCalibrateDemoActor to end communication with Axis Studio. if will call it in its EndPlay event too
+  > 8. if you need to communicate with more than one Axis Studio server, you can either add more ManualCalibrateDemoActor actors and one actor connect to one server or using ReconnectWithParam in ManualCalibrateDemoActor to connect another Axis Studio with different connection parameters and send step by step calibration commands to that server.
 
 * Resume original posture
-  
-  > Do not suggest switch to another neuron livel link source and send commands to that source for the plugin do not know whether Axis studio is start recording data.
-  > 
-  > When use UDP Please do not use 255.255.255.255 as destination IP in Software(Axis Studio)
-  > 
-  > Scine version v1.2.20 user can add a 'TakeName' paremeter when sending Start Recording command, Axis Stusio will use a take name according the parameter.
+
+> Do not suggest switch to another neuron livel link source and send commands to that source for the plugin do not know whether Axis studio is start recording data.
+> 
+> When use UDP Please do not use 255.255.255.255 as destination IP in Software(Axis Studio)
+> 
+> Scine version v1.2.20 user can add a 'TakeName' paremeter when sending Start Recording command, Axis Stusio will use a take name according the parameter.
+> 
+> 
 
 ## 9.2 How to use in editor
 

@@ -14,7 +14,7 @@ Axis studio作为网络中的服务端向客户端电脑上的应用发送动捕
 
 ## 1.1 插件特点
 
-* 支持虚幻引擎版本4.26 4.27 5.0 5.1 5.2 5.3
+* 支持虚幻引擎版本4.26 4.27 5.0 5.1 5.2 5.3 5.4
 * 支持接收和处理道具 (PWR跟踪道具)动作捕捉数据 (参考我们的VPS工程)
 * 支持驱动不是使用T-Pose作为基准姿态(比如使用A-Pose)的模型
 * 支持接收和处理Axis Studio发送的带有位移的数据
@@ -615,13 +615,28 @@ Spine3,
 
 * 校准所有角色
 
+* 分步骤进行校准(1.3.4后)
+  
+  > 对于分步骤进行校准,由于过程复杂且需要需要多次和Axis Studio进行通信并未添加到Neuron指令发送窗口,添加了蓝图Blueprint'/NeuronLiveLink/Demo/ManualCalibrateDemoActor.ManualCalibrateDemoActor'用于展示分步校准,使用方法:
+  > 
+  > 1. 将ManualCalibrateDemoActor蓝图添加到关卡
+  > 2. 设置ManualCalibrateDemoActor中的UseTCP, ServerIP, SrvPort, ClientPort四个参数用于连接Axis Studio
+  > 3. ManualCalibrateDemoActor的BeginPlay事件会自动调用ConnectAxisLiveLink连接Axis Studio,如果需要自己控制可以断开调用ConnectAxisLiveLink的调用,在发送指令前自己调用
+  > 4. 用户调用ManualCalibrateDemoActor的QueryManualCalibrateSteps查询分步较准需要执行的校准步骤
+  > 5. 校准步骤结果返回后,调用ManualCalibrateDemoActor的SendCalibratePose进行一个Pose的校准,调用次数为上一步查询的校准步骤数量
+  > 6. 所有校准步骤都执行完成后,调用ManualCalibrateDemoActor的SendCalibrateFinish通知Axis Studio结束校准
+  > 7. (非必须)不再校准后,调用ManualCalibrateDemoActor的DisconnectAxisLiveLink断开与Axis Studio的连接. ManualCalibrateDemoActor的Endplay事件会自动调用
+  > 8. 如果涉及到与多台Axis Studio连接进行校准操作,除了添加多个ManualCalibrateDemoActor进行控制外,还可以调用ManualCalibrateDemoActor的ReconnectWithParam断开之前的连接适应新的四个连接参数连接Axis Studio,之后在进行校准步骤
+
 * 恢复初始姿态
 
 > 目前插件无法获取Axis Studio的录制状态, 不建议在Axis Studio处于录制状态时切换到其他源进行指令发送操作。
 > 
 > 使用UDP模式进行指令通信时，软件（Axis Studio或AHM）的目标IP 地址不要使用255.255.255.255
 > 
-> v1.2.20版本使用录制指令时可以附加录制文件名称,AxisStudio会参考使用录制的文件名称
+> v1.2.20版本使用录制指令时可以附加录制文件名称,Axis Studio会参考使用录制的文件名称
+> 
+> 
 
 ## 9.2 在编辑器中使用
 
