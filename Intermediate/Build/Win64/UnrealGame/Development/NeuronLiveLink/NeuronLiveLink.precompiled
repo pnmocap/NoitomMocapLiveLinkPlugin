@@ -1,0 +1,20 @@
+{
+	"OutputFiles": [
+		"..\\..\\..\\x64\\UnrealGame\\Development\\NeuronLiveLink\\Module.NeuronLiveLink.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\NeuronLiveLink\\AnimNode_NeuronBlend.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\NeuronLiveLink\\MocapApiLog.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\NeuronLiveLink\\MocapAppManager.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\NeuronLiveLink\\MocapClient.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\NeuronLiveLink\\MocapStructs.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\NeuronLiveLink\\NeuronLiveLink.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\NeuronLiveLink\\NeuronLiveLinkBPLibrary.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\NeuronLiveLink\\NeuronLiveLinkLog.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\NeuronLiveLink\\NeuronLiveLinkRemapAsset.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\NeuronLiveLink\\NeuronLiveLinkSource.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\NeuronLiveLink\\NeuronLiveLinkSourceFactory.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\NeuronLiveLink\\NeuronVPVolume.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\NeuronLiveLink\\PNSAnimInstance.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\NeuronLiveLink\\SNeuronLiveLinkSourceFactory.cpp.obj",
+		"..\\..\\..\\x64\\UnrealGame\\Development\\NeuronLiveLink\\SubjectNameSetter.cpp.obj"
+	]
+}
