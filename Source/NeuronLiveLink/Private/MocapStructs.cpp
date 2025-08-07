@@ -9,13 +9,13 @@
 
 #define ReturnIFError(...) if (mcpError!=MocapApi::Error_None) { \
     LastError = mcpError; \
-    ExtraErrorMsg = FString::Printf(TEXT("(%s@%d) Error %d"), __FILE__, __LINE__, (int)mcpError); \
+    ExtraErrorMsg = FString::Printf(TEXT("({}@{}) Error {}"), __FILE__, __LINE__, (int)mcpError); \
     return; \
 }
 
 #define ReturnFalseIFError(...) if (mcpError!=MocapApi::Error_None) { \
     LastError = mcpError; \
-    ExtraErrorMsg = FString::Printf(TEXT("(%s@%d) Error %d"), __FILE__, __LINE__, (int)mcpError); \
+    ExtraErrorMsg = FString::Printf(TEXT("({}@{}) Error {}"), __FILE__, __LINE__, (int)mcpError); \
     return false; \
 }
 
