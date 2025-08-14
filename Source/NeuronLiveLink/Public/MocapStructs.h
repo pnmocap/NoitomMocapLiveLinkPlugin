@@ -161,18 +161,18 @@ struct FMocapRigidBody
     //int ID;
 
     UPROPERTY()
-    FVector Position;
+    FVector Position = FVector::ZeroVector;
 
     UPROPERTY()
-    FQuat Rotation;
+    FQuat Rotation = FQuat::Identity;
 
     UPROPERTY()
-    int Status;
+    int Status = 0;
     
     UPROPERTY()
-    int JointTag;
+    int JointTag = 0;
 
-    int64 ReceiveTicks;
+    int64 ReceiveTicks = 0;
     //UPROPERTY()
     //int Reserved; // used to store avatar id
 };
@@ -192,10 +192,10 @@ struct FMocapTracker
     //int ID;
 
     UPROPERTY()
-    FVector Position;
+    FVector Position = FVector::ZeroVector;
 
     UPROPERTY()
-    FQuat Rotation;
+    FQuat Rotation = FQuat::Identity;
 
     UPROPERTY()
     int Status;
@@ -267,19 +267,19 @@ struct FMocapRecordNotify
     GENERATED_BODY()
 
     UPROPERTY()
-        FName NotifyType;
+    FName NotifyType;
 
     UPROPERTY()
-        FString TakeName;
+    FString TakeName;
 
     UPROPERTY()
-        FString TakePath;
+    FString TakePath;
 
     UPROPERTY()
-        FString TakeSaveDir;
+    FString TakeSaveDir;
 
     UPROPERTY()
-        FString TakeFileSuffix;
+    FString TakeFileSuffix;
 };
 
 /**
@@ -386,13 +386,13 @@ public:
     UMocapApp();
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MocapApi")
-        FString AppName;
+    FString AppName;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MocapApi")
-        FMCAppSettings AppSettings;
+    FMCAppSettings AppSettings;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MocapApi")
-        FMCRenderSetting RenderSettings;
+    FMCRenderSetting RenderSettings;
 
     UFUNCTION(BlueprintCallable, Category=MocapApi)
     const FString GetConnectionString();
