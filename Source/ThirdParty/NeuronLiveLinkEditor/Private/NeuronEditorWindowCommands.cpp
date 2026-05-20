@@ -6,7 +6,7 @@
 
 void FNeuronEditorWindowCommands::RegisterCommands()
 {
-	UI_COMMAND(OpenPluginWindow, "Neuron", "Bring up NeuronEditorWindow", EUserInterfaceActionType::Button, FInputGesture());
+	UI_COMMAND(OpenPluginWindow, "Neuron", "Bring up NeuronEditorWindow", EUserInterfaceActionType::Button, FInputChord());
 }
 
 #undef LOCTEXT_NAMESPACE

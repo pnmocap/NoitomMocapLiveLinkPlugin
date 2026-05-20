@@ -1,7 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "NeuronVPVolume.h"
-#include "Core.h"
 #include "Interfaces/IPluginManager.h"
 #include "Misc/Paths.h"
 #include "Engine/EngineTypes.h"
