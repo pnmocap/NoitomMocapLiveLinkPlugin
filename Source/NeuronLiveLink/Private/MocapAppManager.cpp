@@ -252,7 +252,12 @@ class PollAppEventVisitor : public MocapAppVisitor
 {
     virtual void Visit(UMocapApp* App) override
     {
-        App->PollEvents();
+        // LiveLink's FMocapAppClient already polls this app on its own thread.
+        // A second PollEvents here steals MCP events and skips LiveLink pushes.
+        if (App && !App->GetBindingLiveLinkSource().IsValid())
+        {
+            App->PollEvents();
+        }
     }
 };
 

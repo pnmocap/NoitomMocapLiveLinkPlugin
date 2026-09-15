@@ -33,7 +33,7 @@ public:
     void DestroyApplication();
 
     bool IsRunning() { return bRunning; }
-    void PollEvents();
+    bool PollEvents();
 
     const FString GetClientName() { return AppName;  };
 

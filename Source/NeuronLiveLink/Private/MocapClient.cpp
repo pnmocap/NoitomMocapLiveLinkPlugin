@@ -82,8 +82,12 @@ uint32 FMocapAppClient::Run()
 {
     while (bRunning)
     {
-        PollEvents();
-        FPlatformProcess::Sleep(1.0f/60);
+        // Keep polling at source rate. Sleep(1/60) capped LiveLink far below Axis/MocapApi.
+        // Idle: Sleep(0) yields without the ~15.6ms Windows timer quantum.
+        if (!PollEvents())
+        {
+            FPlatformProcess::Sleep(0.0f);
+        }
     }
     if (App)
     {
@@ -143,14 +147,14 @@ void FMocapAppClient::DestroyApplication()
     AppName = TEXT("");
 }
 
-void FMocapAppClient::PollEvents()
+bool FMocapAppClient::PollEvents()
 {
     if (App)
     {
         bool hasNewEvents = App->PollEvents();
         if (!hasNewEvents)
         {
-            return;
+            return false;
         }
         TSharedPtr<FNeuronLiveLinkSource> Source = mSource.Pin();
         if (Source)
@@ -259,7 +263,9 @@ void FMocapAppClient::PollEvents()
 				}
 			}
         }
+        return true;
     }
+    return false;
 }
 
 const FString FMocapAppClient::GetStatus()

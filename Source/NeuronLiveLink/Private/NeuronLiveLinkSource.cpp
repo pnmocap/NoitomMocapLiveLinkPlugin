@@ -2,6 +2,7 @@
 #include "NeuronLiveLinkSource.h"
 #include "IPAddress.h"
 #include "ILiveLinkClient.h"
+#include "LiveLinkSourceSettings.h"
 #include "Roles/LiveLinkTransformTypes.h"
 #include "Roles/LiveLinkTransformRole.h"
 #include "Roles/LiveLinkAnimationTypes.h"
@@ -76,6 +77,11 @@ void FNeuronLiveLinkSource::ReceiveClient (ILiveLinkClient* InClient, FGuid InSo
 
 void FNeuronLiveLinkSource::InitializeSettings(ULiveLinkSourceSettings* Settings)
 {
+    // Latest: no EngineTime interpolation buffer. EngineTime added 1-3 frames of mocap latency.
+    Settings->Mode = ELiveLinkSourceMode::Latest;
+    Settings->BufferSettings.LatestOffset = 0;
+    Settings->BufferSettings.EngineTimeOffset = 0.0f;
+    Settings->BufferSettings.MaxNumberOfFrameToBuffered = 4;
     Settings->ConnectionString = FString::Printf(TEXT("%s:%d,%d,%s:%d,%s,%d"),
         *LocalEndpoint.Address.ToString(), LocalEndpoint.Port,
         IsUDP?1:0,
